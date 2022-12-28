@@ -5,6 +5,7 @@
         <LangVersion>latest</LangVersion>
         <Nullable>enable</Nullable>
         <IsTestProject>false</IsTestProject>
+        <SonarQubeTestProject>false</SonarQubeTestProject>
     </PropertyGroup>
 
     <ItemGroup>
