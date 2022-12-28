@@ -25,7 +25,7 @@ public class InitializationUtility : IInitializationUtility
     public bool IsGlobal { get; }
 
     /// <inheritdoc />
-    public IReadOnlyCollection<string> Characteristics => this._characteristics.AsReadonlySafe();
+    public IReadOnlyCollection<string> Characteristics => this._characteristics.AsReadOnlyCollection();
 
     /// <inheritdoc />
     public ICleanTestInitializationCollection<string> GlobalDemands { get; } = new CleanTestInitializationCollection<string>();

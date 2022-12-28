@@ -23,7 +23,7 @@ public class CleanTestInitializationCollection<TValue> : ICleanTestInitializatio
         if (initializationUtility is null)
             return;
 
-        this._data.EnsureValue(category, out var utilities);
+        var utilities = this._data.EnsureValue(category);
         utilities.Add(initializationUtility);
     }
 

@@ -23,6 +23,6 @@ public class DemandsAttribute : Attribute
     {
         if (string.IsNullOrWhiteSpace(category)) throw new ArgumentNullException(nameof(category));
         this.Category = category;
-        this.Demands = demands.OrEmptyIfNull().IgnoreNullOrWhitespaceValues().AsReadonlySafe();
+        this.Demands = demands.OrEmptyIfNull().IgnoreNullOrWhitespaceValues().AsReadOnlyCollection();
     }
 }

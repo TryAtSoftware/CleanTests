@@ -17,6 +17,6 @@ public class InitializationUtilityAttribute : Attribute
     {
         this.Category = category;
         this.Name = name ?? throw new ArgumentNullException(nameof(name));
-        this.Characteristics = characteristics.OrEmptyIfNull().IgnoreNullOrWhitespaceValues().AsReadonlySafe();
+        this.Characteristics = characteristics.OrEmptyIfNull().IgnoreNullOrWhitespaceValues().AsReadOnlyCollection();
     }
 }

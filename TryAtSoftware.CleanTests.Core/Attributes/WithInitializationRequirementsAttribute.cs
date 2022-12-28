@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using TryAtSoftware.Extensions.Collections;
 
 [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = true)]
 public class WithInitializationRequirementsAttribute : Attribute
@@ -10,6 +11,6 @@ public class WithInitializationRequirementsAttribute : Attribute
 
     public WithInitializationRequirementsAttribute(params string[] categories)
     {
-        this.Categories = categories.IgnoreNullOrWhitespaceValues().OrEmptyIfNull();
+        this.Categories = categories.OrEmptyIfNull().IgnoreNullOrWhitespaceValues();
     }
 }

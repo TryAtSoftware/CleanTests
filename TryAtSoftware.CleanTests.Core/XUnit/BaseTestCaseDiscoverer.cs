@@ -8,6 +8,7 @@ using TryAtSoftware.CleanTests.Core.XUnit.Data;
 using TryAtSoftware.CleanTests.Core.XUnit.Extensions;
 using TryAtSoftware.CleanTests.Core.XUnit.Interfaces;
 using TryAtSoftware.Extensions.Collections;
+using TryAtSoftware.Extensions.Reflection;
 using Xunit.Abstractions;
 using Xunit.Sdk;
 
@@ -33,7 +34,7 @@ public abstract class BaseTestCaseDiscoverer : IXunitTestCaseDiscoverer
     {
         var initializationUtilitiesOptions = new Dictionary<string, IReadOnlyCollection<Guid>>();
         foreach (var (category, utilities) in this._initializationUtilitiesCollection)
-            initializationUtilitiesOptions[category] = utilities.OrEmptyIfNull().IgnoreNullValues().Select(x => x.Id).AsReadonlySafe();
+            initializationUtilitiesOptions[category] = utilities.OrEmptyIfNull().IgnoreNullValues().Select(x => x.Id).AsReadOnlyCollection();
 
         var variationMachine = new VariationMachine<string, Guid>(initializationUtilitiesOptions);
         var variations = variationMachine.GetVariations();
@@ -299,8 +300,8 @@ public abstract class BaseTestCaseDiscoverer : IXunitTestCaseDiscoverer
             var initializationUtility = this._cleanTestAssemblyData.InitializationUtilitiesById[dependencyNode.Id];
             if (!initializationUtility.IsGlobal) continue;
 
-            var genericTypesSetup = ConfigurationHelper.ExtractGenericTypes(initializationUtility.Type, this._testCaseDiscoveryOptions.GenericTypes);
-            var implementationType = ConfigurationHelper.BuildGenericDependency(initializationUtility.Type, genericTypesSetup);
+            var genericTypesSetup = initializationUtility.Type.ExtractGenericParametersSetup(this._testCaseDiscoveryOptions.GenericTypes);
+            var implementationType = initializationUtility.Type.MakeGenericType(genericTypesSetup);
             
             foreach (var implementedInterface in implementationType.GetInterfaces()) this._globalUtilitiesCollection.AddSingleton(implementedInterface, sp => sp.GetService(implementationType));
             this._globalUtilitiesCollection.AddSingleton(implementationType);

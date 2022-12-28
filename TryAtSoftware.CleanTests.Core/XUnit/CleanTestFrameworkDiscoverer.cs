@@ -9,6 +9,7 @@ using TryAtSoftware.CleanTests.Core.XUnit.Data;
 using TryAtSoftware.CleanTests.Core.XUnit.Extensions;
 using TryAtSoftware.CleanTests.Core.XUnit.Interfaces;
 using TryAtSoftware.Extensions.Collections;
+using TryAtSoftware.Extensions.Reflection;
 using Xunit;
 using Xunit.Abstractions;
 using Xunit.Sdk;
@@ -42,8 +43,8 @@ public class CleanTestFrameworkDiscoverer : TestFrameworkDiscoverer
         var genericTypesMap = ExtractGenericTypesMap(@class);
         var runtimeClass = @class.ToRuntimeType();
         
-        var genericTypesSetup = ConfigurationHelper.ExtractGenericTypes(runtimeClass, genericTypesMap);
-        var genericRuntimeClass = ConfigurationHelper.BuildGenericDependency(runtimeClass, genericTypesSetup);
+        var genericTypesSetup = runtimeClass.ExtractGenericParametersSetup(genericTypesMap);
+        var genericRuntimeClass = runtimeClass.MakeGenericType(genericTypesSetup);
         var xUnitTypeInfo = Reflector.Wrap(genericRuntimeClass);
         
         // 2. We can beautify the name of the test class.
@@ -116,7 +117,7 @@ public class CleanTestFrameworkDiscoverer : TestFrameworkDiscoverer
             var currentDemandsCategory = attribute.GetNamedArgument<string>("Category");
             var currentDemands = attribute.GetNamedArgument<IEnumerable<string>>("Demands");
 
-            demands.EnsureValue(currentDemandsCategory, out var categorizedDemands);
+            var categorizedDemands = demands.EnsureValue(currentDemandsCategory);
             foreach (var currentDemand in currentDemands.OrEmptyIfNull().IgnoreNullOrWhitespaceValues()) categorizedDemands.Add(currentDemand);
         }
 
@@ -136,7 +137,7 @@ public class CleanTestFrameworkDiscoverer : TestFrameworkDiscoverer
         
         var decoratedClass = new DecoratedType(typeInfo);
         var genericTypeMappingAttributes = decoratedClass.GetCustomAttributes(typeof(TestSuiteGenericTypeMappingAttribute));
-        return genericTypeMappingAttributes.ToDictionarySafe(a => a.GetNamedArgument<Type>(nameof(TestSuiteGenericTypeMappingAttribute.AttributeType)), a => a.GetNamedArgument<Type>(nameof(TestSuiteGenericTypeMappingAttribute.ParameterType)));
+        return genericTypeMappingAttributes.MapSafely(a => a.GetNamedArgument<Type>(nameof(TestSuiteGenericTypeMappingAttribute.AttributeType)), a => a.GetNamedArgument<Type>(nameof(TestSuiteGenericTypeMappingAttribute.ParameterType)));
     }
 
     private static HashSet<string> ExtractInitializationRequirements(IDecoratedComponent? component)

@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using TryAtSoftware.CleanTests.Core.XUnit.Data;
 using TryAtSoftware.CleanTests.Core.XUnit.Interfaces;
 using TryAtSoftware.Extensions.Collections;
+using TryAtSoftware.Extensions.Reflection;
 using Xunit.Abstractions;
 using Xunit.Sdk;
 
@@ -20,7 +21,7 @@ public class CleanTestInvoker : TestInvoker<ICleanTestCase>
 
     protected override object CreateTestClass()
     {
-        if (this.ConstructorArguments[0] is not IServiceProvider globalUtilitiesProvider) return null;
+        if (this.ConstructorArguments[0] is not IServiceProvider globalUtilitiesProvider) throw new InvalidOperationException("The first constructor argument should be the service provider for global utilities.");
         
         var sanitizedConstructorArguments = new object[this.ConstructorArguments.Length - 1];
         Array.Copy(this.ConstructorArguments, 1, sanitizedConstructorArguments, 0, sanitizedConstructorArguments.Length);
@@ -56,8 +57,8 @@ public class CleanTestInvoker : TestInvoker<ICleanTestCase>
     {
         var initializationUtility = this.TestCase.CleanTestAssemblyData.InitializationUtilitiesById[dependencyNode.Id];
 
-        var genericTypesSetup = ConfigurationHelper.ExtractGenericTypes(initializationUtility.Type, this.TestCase.CleanTestCaseData.GenericTypesMap);
-        var implementationType = ConfigurationHelper.BuildGenericDependency(initializationUtility.Type, genericTypesSetup);
+        var genericTypesSetup = initializationUtility.Type.ExtractGenericParametersSetup(this.TestCase.CleanTestCaseData.GenericTypesMap);
+        var implementationType = initializationUtility.Type.MakeGenericType(genericTypesSetup);
 
         return (initializationUtility, implementationType);
     }

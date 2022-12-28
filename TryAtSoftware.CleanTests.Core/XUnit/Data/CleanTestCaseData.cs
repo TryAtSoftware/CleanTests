@@ -12,6 +12,6 @@ public class CleanTestCaseData
     public CleanTestCaseData(IDictionary<Type, Type>? genericTypesMap, IEnumerable<IndividualInitializationUtilityDependencyNode>? initializationUtilities)
     {
         this.GenericTypesMap = genericTypesMap.OrEmptyIfNull();
-        this.InitializationUtilities = initializationUtilities.OrEmptyIfNull().IgnoreNullValues().AsReadonlySafe();
+        this.InitializationUtilities = initializationUtilities.OrEmptyIfNull().IgnoreNullValues().AsReadOnlyCollection();
     }
 }

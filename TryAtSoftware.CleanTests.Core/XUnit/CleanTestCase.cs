@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using TryAtSoftware.CleanTests.Core.XUnit.Data;
 using TryAtSoftware.CleanTests.Core.XUnit.Interfaces;
 using TryAtSoftware.CleanTests.Core.XUnit.Serialization;
+using TryAtSoftware.Extensions.Collections;
 using Xunit.Abstractions;
 using Xunit.Sdk;
 
@@ -42,10 +43,10 @@ public class CleanTestCase : XunitTestCase, ICleanTestCase
         {
             var initializationUtility = this.GetInitializationUtilityById(initializationUtilityDependencyNode.Id);
             var category = initializationUtility.Category;
-            this.Traits.EnsureValue("Category", out var categories);
+            var categories = this.Traits.EnsureValue("Category");
             categories.Add(category);
 
-            this.Traits.EnsureValue(category, out var initializationUtilities);
+            var initializationUtilities = this.Traits.EnsureValue(category);
             initializationUtilities.Add(this.IterateDependencyNode(initializationUtilityDependencyNode, x => x.DisplayName));
         }
     }
@@ -86,8 +87,6 @@ public class CleanTestCase : XunitTestCase, ICleanTestCase
 
     private string IterateDependencyNode(IndividualInitializationUtilityDependencyNode node, Func<IInitializationUtility, string> propertySelector)
     {
-        if (node is null) return string.Empty;
-
         var initializationUtility = this.GetInitializationUtilityById(node.Id);
         var value = propertySelector(initializationUtility);
         if (node.Dependencies.Count == 0) return value;

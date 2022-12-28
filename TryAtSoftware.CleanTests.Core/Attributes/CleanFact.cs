@@ -1,7 +1,6 @@
 ﻿namespace TryAtSoftware.CleanTests.Core.Attributes;
 
 using System;
-using Quantum.DMS.CleanTests.Attributes;
 using TryAtSoftware.CleanTests.Core.XUnit;
 using Xunit;
 
