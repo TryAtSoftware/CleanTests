@@ -58,8 +58,8 @@ jobs:
     - name: Build the solution
       run: dotnet build --no-restore --configuration "${{ env.CONFIGURATION }}"
 
-    # - name: Test the solution
-    #   run: dotnet test --no-build --configuration "${{ env.CONFIGURATION }}" /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
+    - name: Test the solution
+      run: dotnet test --no-build --configuration "${{ env.CONFIGURATION }}" /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
     
     - name: Finalize analyzation with SonarCloud
       run: ./.sonar/scanner/dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"

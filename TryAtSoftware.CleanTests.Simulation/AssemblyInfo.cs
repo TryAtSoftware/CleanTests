@@ -1,0 +1,1 @@
+﻿[assembly: TestFramework("CleanTestFramework", "TryAtSoftware.CleanTests.Core")]
