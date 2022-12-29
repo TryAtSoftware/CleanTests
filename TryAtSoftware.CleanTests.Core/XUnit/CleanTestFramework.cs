@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using TryAtSoftware.CleanTests.Core.Attributes;
@@ -47,11 +48,13 @@ public class CleanTestFramework : XunitTestFramework
         {
             if (type.IsAbstract) continue;
 
+            var initializationUtilityAttributes = type.GetCustomAttributes(typeof(CleanUtilityAttribute)).ToArray();
+            if (initializationUtilityAttributes.Length == 0) continue;
+
             var internalDemands = ExtractDemands<InternalDemandsAttribute>(type);
             var externalDemands = ExtractDemands<ExternalDemandsAttribute>(type);
             var requirements = ExtractRequirements(type);
 
-            var initializationUtilityAttributes = type.GetCustomAttributes(typeof(CleanUtilityAttribute));
             foreach (var utilityAttribute in initializationUtilityAttributes.OrEmptyIfNull().IgnoreNullValues())
             {
                 var categoryArgument = utilityAttribute.GetNamedArgument<string>(nameof(CleanUtilityAttribute.Category));
