@@ -2,13 +2,24 @@
 
 using System;
 using System.Linq;
+using TryAtSoftware.CleanTests.Core.Extensions;
 using TryAtSoftware.CleanTests.Core.XUnit.Data;
 using TryAtSoftware.Extensions.Collections;
 using Xunit.Abstractions;
 
 public class SerializableIndividualDependencyNode : IXunitSerializable
 {
-    public IndividualInitializationUtilityDependencyNode? DependencyNode { get; private set; }
+    private IndividualInitializationUtilityDependencyNode? _dependencyNode;
+
+    public IndividualInitializationUtilityDependencyNode DependencyNode
+    {
+        get
+        {
+            this._dependencyNode.ValidateInstantiated("individual initialization utility dependency node");
+            return this._dependencyNode;
+        }
+        private set => this._dependencyNode = value;
+    }
 
     public SerializableIndividualDependencyNode()
     {
@@ -36,7 +47,6 @@ public class SerializableIndividualDependencyNode : IXunitSerializable
     public void Serialize(IXunitSerializationInfo info)
     {
         if (info is null) throw new ArgumentNullException(nameof(info));
-        if (this.DependencyNode is null) return;
 
         info.AddValue("id", this.DependencyNode.Id.ToString());
 

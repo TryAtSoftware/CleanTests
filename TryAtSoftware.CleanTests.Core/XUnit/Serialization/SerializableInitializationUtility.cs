@@ -3,13 +3,23 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using TryAtSoftware.CleanTests.Core.Extensions;
 using TryAtSoftware.CleanTests.Core.Interfaces;
-using TryAtSoftware.CleanTests.Core.XUnit.Interfaces;
 using Xunit.Abstractions;
 
 public class SerializableInitializationUtility : IXunitSerializable
 {
-    public IInitializationUtility? InitializationUtility { get; private set; }
+    private IInitializationUtility? _initializationUtility;
+
+    public IInitializationUtility InitializationUtility
+    {
+        get
+        {
+            this._initializationUtility.ValidateInstantiated("initialization utility");
+            return this._initializationUtility;
+        }
+        private set => this._initializationUtility = value;
+    }
 
     public SerializableInitializationUtility()
     {
@@ -51,7 +61,6 @@ public class SerializableInitializationUtility : IXunitSerializable
     public void Serialize(IXunitSerializationInfo info)
     {
         if (info is null) throw new ArgumentNullException(nameof(info));
-        if (this.InitializationUtility is null) return;
 
         info.AddValue("c", this.InitializationUtility.Category);
         info.AddValue("id", this.InitializationUtility.Id.ToString());

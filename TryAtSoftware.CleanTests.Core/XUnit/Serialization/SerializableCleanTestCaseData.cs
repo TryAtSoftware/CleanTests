@@ -3,13 +3,24 @@ namespace TryAtSoftware.CleanTests.Core.XUnit.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using TryAtSoftware.CleanTests.Core.Extensions;
 using TryAtSoftware.CleanTests.Core.XUnit.Data;
 using TryAtSoftware.Extensions.Collections;
 using Xunit.Abstractions;
 
 public class SerializableCleanTestCaseData : IXunitSerializable
 {
-    public CleanTestCaseData? CleanTestData { get; private set; }
+    private CleanTestCaseData? _cleanTestData;
+
+    public CleanTestCaseData CleanTestData
+    {
+        get
+        {
+            this._cleanTestData.ValidateInstantiated("clean test case data");
+            return this._cleanTestData;
+        }
+        private set => this._cleanTestData = value;
+    }
 
     public SerializableCleanTestCaseData()
     {
@@ -38,7 +49,6 @@ public class SerializableCleanTestCaseData : IXunitSerializable
     public void Serialize(IXunitSerializationInfo info)
     {
         if (info is null) throw new ArgumentNullException(nameof(info));
-        if (this.CleanTestData is null) return;
 
         var genericTypes = this.CleanTestData.GenericTypesMap.Select(kvp => new[] { kvp.Key, kvp.Value }).ToArray();
         info.AddValue("gt", genericTypes);

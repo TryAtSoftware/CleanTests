@@ -2,13 +2,24 @@
 
 using System;
 using System.Linq;
+using TryAtSoftware.CleanTests.Core.Extensions;
 using TryAtSoftware.CleanTests.Core.XUnit.Data;
 using TryAtSoftware.Extensions.Collections;
 using Xunit.Abstractions;
 
 public class SerializableCleanTestAssemblyData : IXunitSerializable
 {
-    public CleanTestAssemblyData? CleanTestData { get; private set; }
+    private CleanTestAssemblyData? _cleanTestData;
+
+    public CleanTestAssemblyData CleanTestData
+    {
+        get
+        {
+            this._cleanTestData.ValidateInstantiated("clean test assembly data");
+            return this._cleanTestData;
+        }
+        private set => this._cleanTestData = value;
+    }
 
     public SerializableCleanTestAssemblyData()
     {
@@ -34,7 +45,6 @@ public class SerializableCleanTestAssemblyData : IXunitSerializable
     public void Serialize(IXunitSerializationInfo info)
     {
         if (info is null) throw new ArgumentNullException(nameof(info));
-        if (this.CleanTestData is null) return;
 
         info.AddValue("iu", this.CleanTestData.InitializationUtilities.GetAllValues().Select(x => new SerializableInitializationUtility(x)).ToArray());
     }

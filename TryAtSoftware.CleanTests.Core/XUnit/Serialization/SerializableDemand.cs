@@ -5,8 +5,8 @@ using Xunit.Abstractions;
 
 public class SerializableDemand : IXunitSerializable
 {
-    public string? InitializationCategory { get; private set; }
-    public string? Demand { get; private set; }
+    public string InitializationCategory { get; private set; }
+    public string Demand { get; private set; }
 
     public SerializableDemand()
     {
@@ -34,7 +34,6 @@ public class SerializableDemand : IXunitSerializable
     public void Serialize(IXunitSerializationInfo info)
     {
         if (info is null) throw new ArgumentNullException(nameof(info));
-        if (string.IsNullOrWhiteSpace(this.InitializationCategory) || string.IsNullOrWhiteSpace(this.Demand)) return;
         
         info.AddValue("c", this.InitializationCategory);
         info.AddValue("d", this.Demand);

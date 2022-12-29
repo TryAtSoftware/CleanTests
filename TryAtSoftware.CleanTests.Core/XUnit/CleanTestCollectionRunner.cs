@@ -23,7 +23,7 @@ public class CleanTestCollectionRunner : XunitTestCollectionRunner
 
     protected override Task<RunSummary> RunTestClassAsync(ITestClass testClass, IReflectionTypeInfo @class, IEnumerable<IXunitTestCase> testCases)
     {
-        this._globalUtilitiesProvider.ValidateInstantiatedSuccessfully(nameof(this._globalUtilitiesProvider), nameof(this.AfterTestCollectionStartingAsync));
+        this._globalUtilitiesProvider.ValidateInstantiated("global utilities provider");
 
         var testClassRunner = new CleanTestClassRunner(testClass, @class, testCases, this.DiagnosticMessageSink, this.MessageBus, this.TestCaseOrderer, new ExceptionAggregator(this.Aggregator), this.CancellationTokenSource, this.CollectionFixtureMappings, this._globalUtilitiesProvider);
         return testClassRunner.RunAsync();
@@ -40,7 +40,7 @@ public class CleanTestCollectionRunner : XunitTestCollectionRunner
 
     protected override async Task BeforeTestCollectionFinishedAsync()
     {
-        this._globalUtilitiesProvider.ValidateInstantiatedSuccessfully(nameof(this._globalUtilitiesProvider), nameof(this.AfterTestCollectionStartingAsync));
+        this._globalUtilitiesProvider.ValidateInstantiated("global utilities provider");
 
         foreach (var globalInitializationUtility in this._globalUtilitiesProvider.GetServices<IAsyncLifetime>()) await globalInitializationUtility.DisposeAsync();
         foreach (var globalInitializationUtility in this._globalUtilitiesProvider.GetServices<IDisposable>()) this.Aggregator.Run(globalInitializationUtility.Dispose);

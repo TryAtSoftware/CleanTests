@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using TryAtSoftware.CleanTests.Core.Extensions;
 using TryAtSoftware.CleanTests.Core.Interfaces;
 using TryAtSoftware.CleanTests.Core.XUnit.Data;
 using TryAtSoftware.CleanTests.Core.XUnit.Interfaces;
@@ -15,12 +16,34 @@ using Xunit.Sdk;
 
 public class CleanTestCase : XunitTestCase, ICleanTestCase
 {
-    public CleanTestCaseData CleanTestCaseData { get; private set; }
-    public CleanTestAssemblyData CleanTestAssemblyData { get; private set; }
+    private CleanTestCaseData? _cleanTestCaseData;
+    private CleanTestAssemblyData? _cleanTestAssemblyData;
 
+    public CleanTestCaseData CleanTestCaseData
+    {
+        get
+        {
+            this._cleanTestCaseData.ValidateInstantiated("clean test case data");
+            return this._cleanTestCaseData;
+        }
+        private set => this._cleanTestCaseData = value;
+    }
+
+    public CleanTestAssemblyData CleanTestAssemblyData
+    {
+        get
+        {
+            this._cleanTestAssemblyData.ValidateInstantiated("clean test assembly data");
+            return this._cleanTestAssemblyData;
+        }
+        private set => this._cleanTestAssemblyData = value;
+    }
+
+#pragma warning disable CS0618
     public CleanTestCase()
     {
     }
+#pragma warning restore CS0618
 
     public CleanTestCase(IMessageSink diagnosticMessageSink, TestMethodDisplay defaultMethodDisplay, TestMethodDisplayOptions defaultMethodDisplayOptions, ITestMethod testMethod, object[] testMethodArguments, CleanTestAssemblyData cleanTestAssemblyData, CleanTestCaseData cleanTestData)
         : base(diagnosticMessageSink, defaultMethodDisplay, defaultMethodDisplayOptions, testMethod, testMethodArguments)
