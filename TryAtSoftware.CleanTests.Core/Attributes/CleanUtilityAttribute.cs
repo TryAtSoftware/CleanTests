@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using TryAtSoftware.Extensions.Collections;
 
 [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
-public class InitializationUtilityAttribute : Attribute
+public class CleanUtilityAttribute : Attribute
 {
     public string Name { get; }
     public string Category { get; }
@@ -13,7 +13,7 @@ public class InitializationUtilityAttribute : Attribute
     
     public bool IsGlobal { get; set; }
 
-    public InitializationUtilityAttribute(string category, string name, params string[] characteristics)
+    public CleanUtilityAttribute(string category, string name, params string[] characteristics)
     {
         this.Category = category;
         this.Name = name ?? throw new ArgumentNullException(nameof(name));

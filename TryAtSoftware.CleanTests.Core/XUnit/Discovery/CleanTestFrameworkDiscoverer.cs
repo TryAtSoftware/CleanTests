@@ -78,7 +78,7 @@ public class CleanTestFrameworkDiscoverer : TestFrameworkDiscoverer
         var testCaseDiscoveryOptions = new TestCaseDiscoveryOptions(genericTypesMap);
 
         var decoratedClass = new DecoratedType(testClass.Class);
-        var globalRequirements = ExtractInitializationRequirements(decoratedClass);
+        var globalRequirements = ExtractRequirements(decoratedClass);
         foreach (var methodInfo in testClass.Class.GetMethods(includePrivateMethods: false).OrEmptyIfNull().IgnoreNullValues())
             this.DiscoverTestCasesForMethod(testClass, includeSourceInformation, messageBus, discoveryOptions, methodInfo, testCaseDiscoveryOptions, globalRequirements);
     }
@@ -109,7 +109,7 @@ public class CleanTestFrameworkDiscoverer : TestFrameworkDiscoverer
         var customInitializationUtilitiesCollection = new CleanTestInitializationCollection<ICleanUtilityDescriptor>();
         if (method is null) return customInitializationUtilitiesCollection;
 
-        var initializationRequirements = ExtractInitializationRequirements(method);
+        var initializationRequirements = ExtractRequirements(method);
 
         var demands = new Dictionary<string, HashSet<string>>();
         var demandsAttributeType = typeof(TestDemandsAttribute);
@@ -141,19 +141,19 @@ public class CleanTestFrameworkDiscoverer : TestFrameworkDiscoverer
         return genericTypeMappingAttributes.MapSafely(a => a.GetNamedArgument<Type>(nameof(TestSuiteGenericTypeMappingAttribute.AttributeType)), a => a.GetNamedArgument<Type>(nameof(TestSuiteGenericTypeMappingAttribute.ParameterType)));
     }
 
-    private static HashSet<string> ExtractInitializationRequirements(IDecoratedComponent? component)
+    private static HashSet<string> ExtractRequirements(IDecoratedComponent? component)
     {
-        var initializationRequirements = new HashSet<string>();
-        if (component is null) return initializationRequirements;
+        var requirements = new HashSet<string>();
+        if (component is null) return requirements;
             
-        var initializationRequirementsAttributeType = typeof(WithInitializationRequirementsAttribute);
-        foreach (var attribute in component.GetCustomAttributes(initializationRequirementsAttributeType).OrEmptyIfNull().IgnoreNullValues())
+        var requirementsAttributeType = typeof(WithRequirementsAttribute);
+        foreach (var attribute in component.GetCustomAttributes(requirementsAttributeType).OrEmptyIfNull().IgnoreNullValues())
         {
             var initializationCategories = attribute.GetNamedArgument<IEnumerable<string>>("Categories");
             foreach (var category in initializationCategories.OrEmptyIfNull())
-                initializationRequirements.Add(category);
+                requirements.Add(category);
         }
 
-        return initializationRequirements;
+        return requirements;
     }
 }
