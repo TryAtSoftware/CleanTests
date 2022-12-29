@@ -91,10 +91,6 @@ public class SerializableInitializationUtility : IXunitSerializable
     {
         if (deserializedGlobalDemands is null) throw new ArgumentNullException(nameof(deserializedGlobalDemands));
         if (demandsCollection is null) throw new ArgumentNullException(nameof(demandsCollection));
-        foreach (var deserializedDemand in deserializedGlobalDemands)
-        {
-            if (!string.IsNullOrWhiteSpace(deserializedDemand.InitializationCategory) && !string.IsNullOrWhiteSpace(deserializedDemand.Demand))
-                demandsCollection.Register(deserializedDemand.InitializationCategory, deserializedDemand.Demand);
-        }
+        foreach (var deserializedDemand in deserializedGlobalDemands) demandsCollection.Register(deserializedDemand.InitializationCategory, deserializedDemand.Demand);
     }
 }

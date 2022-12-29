@@ -7,7 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using TryAtSoftware.CleanTests.Core.Extensions;
 using TryAtSoftware.CleanTests.Core.Interfaces;
-using TryAtSoftware.CleanTests.Core.XUnit.Data;
+using TryAtSoftware.CleanTests.Core.XUnit.Execution;
 using TryAtSoftware.CleanTests.Core.XUnit.Interfaces;
 using TryAtSoftware.CleanTests.Core.XUnit.Serialization;
 using TryAtSoftware.Extensions.Collections;

@@ -1,4 +1,4 @@
-﻿namespace TryAtSoftware.CleanTests.Core.XUnit;
+﻿namespace TryAtSoftware.CleanTests.Core.XUnit.Discovery;
 
 using System;
 using System.Collections.Generic;
@@ -7,7 +7,6 @@ using Microsoft.Extensions.DependencyInjection;
 using TryAtSoftware.CleanTests.Core.Extensions;
 using TryAtSoftware.CleanTests.Core.Interfaces;
 using TryAtSoftware.CleanTests.Core.Utilities;
-using TryAtSoftware.CleanTests.Core.XUnit.Data;
 using TryAtSoftware.Extensions.Collections;
 using TryAtSoftware.Extensions.Reflection;
 using Xunit.Abstractions;

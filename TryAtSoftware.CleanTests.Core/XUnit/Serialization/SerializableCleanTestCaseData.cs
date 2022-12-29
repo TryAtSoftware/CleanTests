@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using TryAtSoftware.CleanTests.Core.Extensions;
-using TryAtSoftware.CleanTests.Core.XUnit.Data;
 using TryAtSoftware.Extensions.Collections;
 using Xunit.Abstractions;
 

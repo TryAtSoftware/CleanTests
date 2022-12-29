@@ -1,4 +1,4 @@
-﻿namespace TryAtSoftware.CleanTests.Core.XUnit;
+﻿namespace TryAtSoftware.CleanTests.Core.XUnit.Execution;
 
 using System.Collections.Concurrent;
 using System.Collections.Generic;

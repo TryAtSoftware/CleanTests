@@ -16,4 +16,8 @@
         <PackageReference Include="xunit.core" Version="2.4.2" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="XUnit\Data" />
+    </ItemGroup>
+
 </Project>

@@ -1,4 +1,4 @@
-namespace TryAtSoftware.CleanTests.Core.XUnit;
+namespace TryAtSoftware.CleanTests.Core.XUnit.Execution;
 
 using System;
 using System.Linq;
@@ -6,7 +6,6 @@ using System.Reflection;
 using System.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using TryAtSoftware.CleanTests.Core.Interfaces;
-using TryAtSoftware.CleanTests.Core.XUnit.Data;
 using TryAtSoftware.CleanTests.Core.XUnit.Interfaces;
 using TryAtSoftware.Extensions.Collections;
 using TryAtSoftware.Extensions.Reflection;

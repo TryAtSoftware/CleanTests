@@ -1,4 +1,4 @@
-﻿namespace TryAtSoftware.CleanTests.Core.XUnit.Data;
+﻿namespace TryAtSoftware.CleanTests.Core.XUnit;
 
 using System;
 using System.Collections.Generic;

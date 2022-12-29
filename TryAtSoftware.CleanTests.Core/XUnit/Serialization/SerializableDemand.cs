@@ -1,12 +1,33 @@
 ﻿namespace TryAtSoftware.CleanTests.Core.XUnit.Serialization;
 
 using System;
+using TryAtSoftware.CleanTests.Core.Extensions;
 using Xunit.Abstractions;
 
 public class SerializableDemand : IXunitSerializable
 {
-    public string InitializationCategory { get; private set; }
-    public string Demand { get; private set; }
+    private string? _initializationCategory;
+    private string? _demand;
+
+    public string InitializationCategory
+    {
+        get
+        {
+            this._initializationCategory.ValidateInstantiated("initialization category");
+            return this._initializationCategory;
+        }
+        private set => this._initializationCategory = value;
+    }
+
+    public string Demand
+    {
+        get
+        {
+            this._demand.ValidateInstantiated("demand");
+            return this._demand;
+        }
+        private set => this._demand = value;
+    }
 
     public SerializableDemand()
     {

@@ -1,9 +1,8 @@
-﻿namespace TryAtSoftware.CleanTests.Core.XUnit.Data;
+﻿namespace TryAtSoftware.CleanTests.Core.XUnit;
 
 using System;
 using System.Collections.Generic;
 using TryAtSoftware.CleanTests.Core.Interfaces;
-using TryAtSoftware.CleanTests.Core.XUnit.Interfaces;
 using TryAtSoftware.Extensions.Collections;
 
 public class CleanTestAssemblyData
