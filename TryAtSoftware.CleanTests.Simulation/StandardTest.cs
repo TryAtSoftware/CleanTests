@@ -2,6 +2,7 @@
 
 using TryAtSoftware.CleanTests.Core.Attributes;
 using TryAtSoftware.CleanTests.Simulation.Utilities;
+using TryAtSoftware.CleanTests.Simulation.Utilities.Creations;
 using TryAtSoftware.CleanTests.Simulation.Utilities.People;
 using TryAtSoftware.Extensions.Reflection;
 using Xunit.Abstractions;
@@ -29,6 +30,30 @@ public class StandardTest : CleanTest
         Assert.NotNull(person);
 
         this.OutputUtilityInfo(person);
+    }
+    
+    [CleanFact]
+    [WithRequirements(Categories.Creations)]
+    public void TestUtilityDistributionWithInternalDependencies()
+    {
+        var creation = this.GetService<ICreation>();
+        Assert.NotNull(creation);
+
+        this.OutputUtilityInfo(creation);
+    }
+    
+    [CleanFact]
+    [WithRequirements(Categories.People, Categories.Creations)]
+    public void TestComplexUtilityDistribution()
+    {
+        var person = this.GetService<IPerson>();
+        Assert.NotNull(person);
+        
+        var creation = this.GetService<ICreation>();
+        Assert.NotNull(creation);
+
+        this.OutputUtilityInfo(person);
+        this.OutputUtilityInfo(creation);
     }
 
     [CleanFact]

@@ -3,4 +3,5 @@
 public class Categories
 {
     public const string People = "people";
+    public const string Creations = "creations";
 }
