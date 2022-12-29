@@ -3,9 +3,9 @@
 using System;
 
 [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
-public class GlobalDemandsAttribute : DemandsAttribute
+public class InternalDemandsAttribute : BaseDemandsAttribute
 {
-    public GlobalDemandsAttribute(string category, params string[] demands)
+    public InternalDemandsAttribute(string category, params string[] demands)
         : base(category, demands)
     {
     }

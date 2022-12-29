@@ -17,12 +17,12 @@ using Xunit.Sdk;
 
 public class CleanTestFrameworkDiscoverer : TestFrameworkDiscoverer
 {
-    private readonly ICleanTestInitializationCollection<IInitializationUtility> _initializationUtilitiesCollection;
+    private readonly ICleanTestInitializationCollection<ICleanUtilityDescriptor> _initializationUtilitiesCollection;
     private readonly ServiceCollection _globalUtilitiesCollection;
     private readonly CleanTestAssemblyData _cleanTestAssemblyData;
     private readonly IXunitTestCollectionFactory _testCollectionFactory;
 
-    public CleanTestFrameworkDiscoverer(IAssemblyInfo assemblyInfo, ISourceInformationProvider sourceProvider, IMessageSink diagnosticMessageSink, ICleanTestInitializationCollection<IInitializationUtility> initializationUtilitiesCollection, ServiceCollection globalUtilitiesCollection)
+    public CleanTestFrameworkDiscoverer(IAssemblyInfo assemblyInfo, ISourceInformationProvider sourceProvider, IMessageSink diagnosticMessageSink, ICleanTestInitializationCollection<ICleanUtilityDescriptor> initializationUtilitiesCollection, ServiceCollection globalUtilitiesCollection)
         : base(assemblyInfo, sourceProvider, diagnosticMessageSink)
     {
         this._initializationUtilitiesCollection = initializationUtilitiesCollection ?? throw new ArgumentNullException(nameof(initializationUtilitiesCollection));
@@ -104,15 +104,15 @@ public class CleanTestFrameworkDiscoverer : TestFrameworkDiscoverer
             this.ReportDiscoveredTestCase(testCase, includeSourceInformation, messageBus);
     }
 
-    private CleanTestInitializationCollection<IInitializationUtility> GetInitializationUtilities(DecoratedMethod? method, HashSet<string> globalRequirements)
+    private CleanTestInitializationCollection<ICleanUtilityDescriptor> GetInitializationUtilities(DecoratedMethod? method, HashSet<string> globalRequirements)
     {
-        var customInitializationUtilitiesCollection = new CleanTestInitializationCollection<IInitializationUtility>();
+        var customInitializationUtilitiesCollection = new CleanTestInitializationCollection<ICleanUtilityDescriptor>();
         if (method is null) return customInitializationUtilitiesCollection;
 
         var initializationRequirements = ExtractInitializationRequirements(method);
 
         var demands = new Dictionary<string, HashSet<string>>();
-        var demandsAttributeType = typeof(DemandsAttribute);
+        var demandsAttributeType = typeof(TestDemandsAttribute);
         foreach (var attribute in method.GetCustomAttributes(demandsAttributeType).OrEmptyIfNull().IgnoreNullValues())
         {
             var currentDemandsCategory = attribute.GetNamedArgument<string>("Category");

@@ -15,18 +15,18 @@ using Xunit.Sdk;
 
 public class CleanTestFramework : XunitTestFramework
 {
-    private readonly ICleanTestInitializationCollection<IInitializationUtility> _initializationUtilitiesCollection;
+    private readonly ICleanTestInitializationCollection<ICleanUtilityDescriptor> _initializationUtilitiesCollection;
     private readonly ServiceCollection _globalUtilitiesCollection;
 
     public CleanTestFramework(IMessageSink messageSink) : base(messageSink)
     {
-        this._initializationUtilitiesCollection = new CleanTestInitializationCollection<IInitializationUtility>();
+        this._initializationUtilitiesCollection = new CleanTestInitializationCollection<ICleanUtilityDescriptor>();
         foreach (var type in Assembly.GetExecutingAssembly().GetTypes().OrEmptyIfNull().IgnoreNullValues())
         {
             if (!type.IsClass || type.IsAbstract) continue;
 
-            var localDemands = ExtractDemands<DemandsAttribute>(type);
-            var globalDemands = ExtractDemands<GlobalDemandsAttribute>(type);
+            var internalDemands = ExtractDemands<InternalDemandsAttribute>(type);
+            var externalDemands = ExtractDemands<ExternalDemandsAttribute>(type);
 
             var requirementAttributes = type.GetCustomAttributes<WithInitializationRequirementsAttribute>();
             var requirements = new HashSet<string>();
@@ -38,9 +38,9 @@ public class CleanTestFramework : XunitTestFramework
             var initializationUtilityAttributes = type.GetCustomAttributes<InitializationUtilityAttribute>();
             foreach (var initializationUtilityAttribute in initializationUtilityAttributes.OrEmptyIfNull().IgnoreNullValues())
             {
-                var initializationUtility = new InitializationUtility(initializationUtilityAttribute.Category, Guid.NewGuid(), type, initializationUtilityAttribute.Name, initializationUtilityAttribute.IsGlobal, initializationUtilityAttribute.Characteristics, requirements);
-                localDemands.CopyTo(initializationUtility.LocalDemands);
-                globalDemands.CopyTo(initializationUtility.GlobalDemands);
+                var initializationUtility = new CleanUtilityDescriptor(initializationUtilityAttribute.Category, Guid.NewGuid(), type, initializationUtilityAttribute.Name, initializationUtilityAttribute.IsGlobal, initializationUtilityAttribute.Characteristics, requirements);
+                internalDemands.CopyTo(initializationUtility.InternalDemands);
+                externalDemands.CopyTo(initializationUtility.ExternalDemands);
                     
                 this._initializationUtilitiesCollection.Register(initializationUtilityAttribute.Category, initializationUtility);
             }
@@ -54,7 +54,7 @@ public class CleanTestFramework : XunitTestFramework
     protected override ITestFrameworkDiscoverer CreateDiscoverer(IAssemblyInfo assemblyInfo) => new CleanTestFrameworkDiscoverer(assemblyInfo, this.SourceInformationProvider, this.DiagnosticMessageSink, this._initializationUtilitiesCollection, this._globalUtilitiesCollection);
 
     private static ICleanTestInitializationCollection<string> ExtractDemands<TAttribute>(MemberInfo type)
-        where TAttribute : DemandsAttribute
+        where TAttribute : BaseDemandsAttribute
     {
         var demandAttributes = type.GetCustomAttributes<TAttribute>();
         var demands = new CleanTestInitializationCollection<string>();

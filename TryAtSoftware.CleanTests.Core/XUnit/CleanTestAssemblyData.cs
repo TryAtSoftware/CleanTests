@@ -7,10 +7,10 @@ using TryAtSoftware.Extensions.Collections;
 
 public class CleanTestAssemblyData
 {
-    public ICleanTestInitializationCollection<IInitializationUtility> InitializationUtilities { get; } = new CleanTestInitializationCollection<IInitializationUtility>();
-    public IDictionary<Guid, IInitializationUtility> InitializationUtilitiesById { get; } = new Dictionary<Guid, IInitializationUtility>();
+    public ICleanTestInitializationCollection<ICleanUtilityDescriptor> InitializationUtilities { get; } = new CleanTestInitializationCollection<ICleanUtilityDescriptor>();
+    public IDictionary<Guid, ICleanUtilityDescriptor> InitializationUtilitiesById { get; } = new Dictionary<Guid, ICleanUtilityDescriptor>();
 
-    public CleanTestAssemblyData(IEnumerable<IInitializationUtility> initializationUtilities)
+    public CleanTestAssemblyData(IEnumerable<ICleanUtilityDescriptor> initializationUtilities)
     {
         foreach (var initializationUtility in initializationUtilities.OrEmptyIfNull().IgnoreNullValues())
         {

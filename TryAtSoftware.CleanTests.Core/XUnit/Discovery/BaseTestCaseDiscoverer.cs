@@ -16,11 +16,11 @@ public abstract class BaseTestCaseDiscoverer : IXunitTestCaseDiscoverer
 {
     private readonly IMessageSink _diagnosticMessageSink;
     private readonly TestCaseDiscoveryOptions _testCaseDiscoveryOptions;
-    private readonly ICleanTestInitializationCollection<IInitializationUtility> _initializationUtilitiesCollection;
+    private readonly ICleanTestInitializationCollection<ICleanUtilityDescriptor> _initializationUtilitiesCollection;
     private readonly CleanTestAssemblyData _cleanTestAssemblyData;
     private readonly ServiceCollection _globalUtilitiesCollection;
 
-    protected BaseTestCaseDiscoverer(IMessageSink diagnosticMessageSink, TestCaseDiscoveryOptions testCaseDiscoveryOptions, ICleanTestInitializationCollection<IInitializationUtility> initializationUtilitiesCollection, CleanTestAssemblyData cleanTestAssemblyData, ServiceCollection globalUtilitiesCollection)
+    protected BaseTestCaseDiscoverer(IMessageSink diagnosticMessageSink, TestCaseDiscoveryOptions testCaseDiscoveryOptions, ICleanTestInitializationCollection<ICleanUtilityDescriptor> initializationUtilitiesCollection, CleanTestAssemblyData cleanTestAssemblyData, ServiceCollection globalUtilitiesCollection)
     {
         this._diagnosticMessageSink = diagnosticMessageSink ?? throw new ArgumentNullException(nameof(diagnosticMessageSink));
         this._testCaseDiscoveryOptions = testCaseDiscoveryOptions ?? throw new ArgumentNullException(nameof(testCaseDiscoveryOptions));
@@ -71,12 +71,12 @@ public abstract class BaseTestCaseDiscoverer : IXunitTestCaseDiscoverer
 
     protected abstract IEnumerable<object[]> GetTestMethodArguments(IMessageSink diagnosticMessageSink, ITestMethod testMethod);
 
-    private static bool AllDemandsAreFulfilled(IDictionary<string, Guid> variation, IDictionary<Guid, IInitializationUtility> allInitializationUtilities)
+    private static bool AllDemandsAreFulfilled(IDictionary<string, Guid> variation, IDictionary<Guid, ICleanUtilityDescriptor> allInitializationUtilities)
     {
         foreach (var (_, initializationUtilityId) in variation)
         {
             if (!allInitializationUtilities.TryGetValue(initializationUtilityId, out var initializationUtility)) return false;
-            foreach (var (demandCategory, demands) in initializationUtility.GlobalDemands)
+            foreach (var (demandCategory, demands) in initializationUtility.ExternalDemands)
                 if (!variation.TryGetValue(demandCategory, out var demandUtilityId) || !allInitializationUtilities.TryGetValue(demandUtilityId, out var demandUtility) || !demands.Any(d => demandUtility.ContainsCharacteristic(d)))
                     return false;
         }
@@ -100,19 +100,19 @@ public abstract class BaseTestCaseDiscoverer : IXunitTestCaseDiscoverer
         return (IsSuccessful: true, DependencyNodes: Merge(individualRepresentationsOfConstructionGraphs));
     }
 
-    private static (bool IsSuccessful, FullInitializationUtilityConstructionGraph? ConstructionGraph) BuildConstructionGraph(IInitializationUtility? utility, CleanTestAssemblyData? assemblyData, HashSet<Guid> visited)
+    private static (bool IsSuccessful, FullInitializationUtilityConstructionGraph? ConstructionGraph) BuildConstructionGraph(ICleanUtilityDescriptor? utility, CleanTestAssemblyData? assemblyData, HashSet<Guid> visited)
     {
         if (utility is null || assemblyData is null) return (IsSuccessful: false, ConstructionGraph: null);
         if (visited.Contains(utility.Id)) return (IsSuccessful: true, ConstructionGraph: null);
 
         var graph = new FullInitializationUtilityConstructionGraph(utility.Id);
-        if (utility.Requirements.Count == 0) return (IsSuccessful: true, ConstructionGraph: graph);
+        if (utility.InternalRequirements.Count == 0) return (IsSuccessful: true, ConstructionGraph: graph);
 
         visited.Add(utility.Id);
 
         var dependencyIdsByCategory = new Dictionary<string, IReadOnlyCollection<Guid>>();
         var dependencyGraphsById = new Dictionary<Guid, FullInitializationUtilityConstructionGraph>();
-        foreach (var requirement in utility.Requirements)
+        foreach (var requirement in utility.InternalRequirements)
         {
             var currentDependencies = ExtractDependencies(utility, requirement, dependencyGraphsById, assemblyData, visited);
             if (currentDependencies.Count == 0) return (IsSuccessful: false, ConstructionGraph: null);
@@ -134,13 +134,13 @@ public abstract class BaseTestCaseDiscoverer : IXunitTestCaseDiscoverer
         return (IsSuccessful: true, ConstructionGraph: graph);
     }
 
-    private static List<Guid> ExtractDependencies(IInitializationUtility utility, string requirement, IDictionary<Guid, FullInitializationUtilityConstructionGraph> dependencyGraphsById, CleanTestAssemblyData assemblyData, HashSet<Guid> visited)
+    private static List<Guid> ExtractDependencies(ICleanUtilityDescriptor utilityDescriptor, string requirement, IDictionary<Guid, FullInitializationUtilityConstructionGraph> dependencyGraphsById, CleanTestAssemblyData assemblyData, HashSet<Guid> visited)
     {
-        var localDemands = utility.LocalDemands.Get(requirement);
+        var localDemands = utilityDescriptor.InternalDemands.Get(requirement);
         var currentDependencies = new List<Guid>();
             
         // NOTE: Global utilities can depend on other global utilities only. In future we may want to support local utilities to depend on global utilities as well. However, this is not a priority right now.
-        foreach (var dependentUtility in assemblyData.InitializationUtilities.Get(requirement, localDemands).Where(iu => iu.IsGlobal == utility.IsGlobal))
+        foreach (var dependentUtility in assemblyData.InitializationUtilities.Get(requirement, localDemands).Where(iu => iu.IsGlobal == utilityDescriptor.IsGlobal))
         {
             var (isSuccessful, dependentUtilityConstructionGraph) = BuildConstructionGraph(dependentUtility, assemblyData, visited);
             if (isSuccessful && dependentUtilityConstructionGraph is not null)

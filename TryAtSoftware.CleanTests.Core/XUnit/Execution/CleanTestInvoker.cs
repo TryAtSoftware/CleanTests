@@ -53,7 +53,7 @@ public class CleanTestInvoker : TestInvoker<ICleanTestCase>
         return ActivatorUtilities.CreateInstance(serviceProvider, implementationType, dependencies.ToArray());
     }
 
-    private (IInitializationUtility InitializationUtility, Type ImplementationType) Materialize(IndividualInitializationUtilityDependencyNode dependencyNode)
+    private (ICleanUtilityDescriptor InitializationUtility, Type ImplementationType) Materialize(IndividualInitializationUtilityDependencyNode dependencyNode)
     {
         var initializationUtility = this.TestCase.CleanTestAssemblyData.InitializationUtilitiesById[dependencyNode.Id];
 

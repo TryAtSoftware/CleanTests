@@ -9,9 +9,9 @@ using Xunit.Abstractions;
 
 public class SerializableInitializationUtility : IXunitSerializable
 {
-    private IInitializationUtility? _initializationUtility;
+    private ICleanUtilityDescriptor? _initializationUtility;
 
-    public IInitializationUtility InitializationUtility
+    public ICleanUtilityDescriptor CleanUtilityDescriptor
     {
         get
         {
@@ -25,9 +25,9 @@ public class SerializableInitializationUtility : IXunitSerializable
     {
     }
 
-    public SerializableInitializationUtility(IInitializationUtility initializationUtility)
+    public SerializableInitializationUtility(ICleanUtilityDescriptor cleanUtilityDescriptor)
     {
-        this.InitializationUtility = initializationUtility ?? throw new ArgumentNullException(nameof(initializationUtility));
+        this.CleanUtilityDescriptor = cleanUtilityDescriptor ?? throw new ArgumentNullException(nameof(cleanUtilityDescriptor));
     }
 
     /// <inheritdoc />
@@ -52,9 +52,9 @@ public class SerializableInitializationUtility : IXunitSerializable
         var requirements = new HashSet<string>();
         foreach (var requirement in deserializedRequirements) requirements.Add(requirement);
 
-        this.InitializationUtility = new InitializationUtility(initializationCategory, id, deserializedUtilityType, utilityName, isGlobal, characteristics, requirements);
-        DeserializeDemands(deserializedGlobalDemands, this.InitializationUtility.GlobalDemands);
-        DeserializeDemands(deserializedLocalDemands, this.InitializationUtility.LocalDemands);
+        this.CleanUtilityDescriptor = new CleanUtilityDescriptor(initializationCategory, id, deserializedUtilityType, utilityName, isGlobal, characteristics, requirements);
+        DeserializeDemands(deserializedGlobalDemands, this.CleanUtilityDescriptor.ExternalDemands);
+        DeserializeDemands(deserializedLocalDemands, this.CleanUtilityDescriptor.InternalDemands);
     }
 
     /// <inheritdoc />
@@ -62,19 +62,19 @@ public class SerializableInitializationUtility : IXunitSerializable
     {
         if (info is null) throw new ArgumentNullException(nameof(info));
 
-        info.AddValue("c", this.InitializationUtility.Category);
-        info.AddValue("id", this.InitializationUtility.Id.ToString());
-        info.AddValue("ut", this.InitializationUtility.Type);
-        info.AddValue("un", this.InitializationUtility.DisplayName);
-        info.AddValue("ig", this.InitializationUtility.IsGlobal);
+        info.AddValue("c", this.CleanUtilityDescriptor.Category);
+        info.AddValue("id", this.CleanUtilityDescriptor.Id.ToString());
+        info.AddValue("ut", this.CleanUtilityDescriptor.Type);
+        info.AddValue("un", this.CleanUtilityDescriptor.DisplayName);
+        info.AddValue("ig", this.CleanUtilityDescriptor.IsGlobal);
 
-        info.AddValue("gd", Serialize(this.InitializationUtility.GlobalDemands));
-        info.AddValue("ld", Serialize(this.InitializationUtility.LocalDemands));
+        info.AddValue("gd", Serialize(this.CleanUtilityDescriptor.ExternalDemands));
+        info.AddValue("ld", Serialize(this.CleanUtilityDescriptor.InternalDemands));
 
-        var characteristics = this.InitializationUtility.Characteristics.ToArray();
+        var characteristics = this.CleanUtilityDescriptor.Characteristics.ToArray();
         info.AddValue("ch", characteristics);
 
-        var requirements = this.InitializationUtility.Requirements.ToArray();
+        var requirements = this.CleanUtilityDescriptor.InternalRequirements.ToArray();
         info.AddValue("r", requirements);
     }
 

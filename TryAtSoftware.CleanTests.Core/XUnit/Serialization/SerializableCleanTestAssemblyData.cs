@@ -36,7 +36,7 @@ public class SerializableCleanTestAssemblyData : IXunitSerializable
 
         var deserializedInitializationUtilities = info.GetValue<SerializableInitializationUtility[]>("iu");
 
-        var initializationUtilities = deserializedInitializationUtilities.OrEmptyIfNull().Select(x => x?.InitializationUtility).IgnoreNullValues();
+        var initializationUtilities = deserializedInitializationUtilities.OrEmptyIfNull().Select(x => x?.CleanUtilityDescriptor).IgnoreNullValues();
         this.CleanTestData = new CleanTestAssemblyData(initializationUtilities);
     }
 

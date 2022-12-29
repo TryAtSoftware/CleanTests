@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using TryAtSoftware.CleanTests.Core.Interfaces;
 using TryAtSoftware.Extensions.Collections;
 
-public class InitializationUtility : IInitializationUtility
+public class CleanUtilityDescriptor : ICleanUtilityDescriptor
 {
     private readonly HashSet<string> _characteristics = new();
 
@@ -28,15 +28,15 @@ public class InitializationUtility : IInitializationUtility
     public IReadOnlyCollection<string> Characteristics => this._characteristics.AsReadOnlyCollection();
 
     /// <inheritdoc />
-    public ICleanTestInitializationCollection<string> GlobalDemands { get; } = new CleanTestInitializationCollection<string>();
+    public ICleanTestInitializationCollection<string> ExternalDemands { get; } = new CleanTestInitializationCollection<string>();
 
     /// <inheritdoc />
-    public ICleanTestInitializationCollection<string> LocalDemands { get; } = new CleanTestInitializationCollection<string>();
+    public ICleanTestInitializationCollection<string> InternalDemands { get; } = new CleanTestInitializationCollection<string>();
 
     /// <inheritdoc />
-    public HashSet<string> Requirements { get; } = new ();
+    public HashSet<string> InternalRequirements { get; } = new ();
 
-    public InitializationUtility(string initializationCategory, Guid id, Type type, string displayName, bool isGlobal, IEnumerable<string>? characteristics, IEnumerable<string>? requirements)
+    public CleanUtilityDescriptor(string initializationCategory, Guid id, Type type, string displayName, bool isGlobal, IEnumerable<string>? characteristics, IEnumerable<string>? requirements)
     {
         this.Category = initializationCategory;
         this.Id = id;
@@ -44,7 +44,7 @@ public class InitializationUtility : IInitializationUtility
         this.DisplayName = displayName ?? throw new ArgumentNullException(nameof(displayName));
         this.IsGlobal = isGlobal;
         foreach (var characteristic in characteristics.OrEmptyIfNull().IgnoreNullOrWhitespaceValues()) this._characteristics.Add(characteristic);
-        foreach (var requirement in requirements.OrEmptyIfNull().IgnoreNullOrWhitespaceValues()) this.Requirements.Add(requirement);
+        foreach (var requirement in requirements.OrEmptyIfNull().IgnoreNullOrWhitespaceValues()) this.InternalRequirements.Add(requirement);
     }
 
     public bool ContainsCharacteristic(string characteristic)
