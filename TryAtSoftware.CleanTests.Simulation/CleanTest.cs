@@ -3,9 +3,11 @@
 using Microsoft.Extensions.DependencyInjection;
 using TryAtSoftware.CleanTests.Core.Attributes;
 using TryAtSoftware.CleanTests.Core.Interfaces;
+using TryAtSoftware.CleanTests.Simulation.Attributes;
 using Xunit.Abstractions;
 
 [TestSuite]
+[TestSuiteGenericTypeMapping(typeof(NumericAttribute), typeof(int))]
 public class CleanTest : ICleanTest, IDisposable, IAsyncLifetime
 {
     private ServiceProvider? _localDependenciesProvider;
