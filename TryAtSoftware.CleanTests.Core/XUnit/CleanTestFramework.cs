@@ -28,6 +28,21 @@ public class CleanTestFramework : XunitTestFramework
     protected override ITestFrameworkDiscoverer CreateDiscoverer(IAssemblyInfo assemblyInfo)
     {
         var utilitiesCollection = new CleanTestInitializationCollection<ICleanUtilityDescriptor>();
+        
+        RegisterUtilitiesFromAssembly(assemblyInfo, utilitiesCollection);
+        var sharedUtilitiesAttributes = assemblyInfo.GetCustomAttributes(typeof(SharesUtilitiesWithAttribute));
+        foreach (var sharedUtilitiesAttribute in sharedUtilitiesAttributes)
+        {
+            var assemblyNameArgument = sharedUtilitiesAttribute.GetNamedArgument<string>(nameof(SharesUtilitiesWithAttribute.AssemblyName));
+            var loadedAssembly = Assembly.Load(assemblyNameArgument);
+            RegisterUtilitiesFromAssembly(Reflector.Wrap(loadedAssembly), utilitiesCollection);
+        }
+        
+        return new CleanTestFrameworkDiscoverer(assemblyInfo, this.SourceInformationProvider, this.DiagnosticMessageSink, utilitiesCollection, this._globalUtilitiesCollection);
+    }
+
+    private static void RegisterUtilitiesFromAssembly(IAssemblyInfo assemblyInfo, ICleanTestInitializationCollection<ICleanUtilityDescriptor> utilitiesCollection)
+    {
         foreach (var type in assemblyInfo.GetTypes(includePrivateTypes: false).OrEmptyIfNull().IgnoreNullValues())
         {
             if (type.IsAbstract) continue;
@@ -51,8 +66,6 @@ public class CleanTestFramework : XunitTestFramework
                 utilitiesCollection.Register(categoryArgument, initializationUtility);
             }
         }
-
-        return new CleanTestFrameworkDiscoverer(assemblyInfo, this.SourceInformationProvider, this.DiagnosticMessageSink, utilitiesCollection, this._globalUtilitiesCollection);
     }
 
     private static ICleanTestInitializationCollection<string> ExtractDemands<TAttribute>(ITypeInfo type)

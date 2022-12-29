@@ -17,18 +17,18 @@ using Xunit.Sdk;
 
 public class CleanTestFrameworkDiscoverer : TestFrameworkDiscoverer
 {
-    private readonly ICleanTestInitializationCollection<ICleanUtilityDescriptor> _initializationUtilitiesCollection;
-    private readonly ServiceCollection _globalUtilitiesCollection;
+    private readonly ICleanTestInitializationCollection<ICleanUtilityDescriptor> _utilitiesCollection;
+    private readonly ServiceCollection _globalUtilitiesServiceCollection;
     private readonly CleanTestAssemblyData _cleanTestAssemblyData;
     private readonly IXunitTestCollectionFactory _testCollectionFactory;
 
-    public CleanTestFrameworkDiscoverer(IAssemblyInfo assemblyInfo, ISourceInformationProvider sourceProvider, IMessageSink diagnosticMessageSink, ICleanTestInitializationCollection<ICleanUtilityDescriptor> initializationUtilitiesCollection, ServiceCollection globalUtilitiesCollection)
+    public CleanTestFrameworkDiscoverer(IAssemblyInfo assemblyInfo, ISourceInformationProvider sourceProvider, IMessageSink diagnosticMessageSink, ICleanTestInitializationCollection<ICleanUtilityDescriptor> utilitiesCollection, ServiceCollection globalUtilitiesCollection)
         : base(assemblyInfo, sourceProvider, diagnosticMessageSink)
     {
-        this._initializationUtilitiesCollection = initializationUtilitiesCollection ?? throw new ArgumentNullException(nameof(initializationUtilitiesCollection));
-        this._globalUtilitiesCollection = globalUtilitiesCollection ?? throw new ArgumentNullException(nameof(globalUtilitiesCollection));
+        this._utilitiesCollection = utilitiesCollection ?? throw new ArgumentNullException(nameof(utilitiesCollection));
+        this._globalUtilitiesServiceCollection = globalUtilitiesCollection ?? throw new ArgumentNullException(nameof(globalUtilitiesCollection));
 
-        this._cleanTestAssemblyData = new CleanTestAssemblyData(this._initializationUtilitiesCollection.GetAllValues());
+        this._cleanTestAssemblyData = new CleanTestAssemblyData(this._utilitiesCollection.GetAllValues());
         var testAssembly = new TestAssembly(this.AssemblyInfo);
         var collectionBehaviorAttribute = assemblyInfo.GetCustomAttributes(typeof(CollectionBehaviorAttribute)).SingleOrDefault();
 
@@ -95,7 +95,7 @@ public class CleanTestFrameworkDiscoverer : TestFrameworkDiscoverer
         if (testCaseDiscovererType is null) return;
 
         var customInitializationUtilitiesCollection = this.GetInitializationUtilities(methodAttributeContainer, globalRequirements);
-        var testCaseDiscoverer = Activator.CreateInstance(testCaseDiscovererType, this.DiagnosticMessageSink, testCaseDiscoveryOptions, customInitializationUtilitiesCollection, this._cleanTestAssemblyData, this._globalUtilitiesCollection) as IXunitTestCaseDiscoverer;
+        var testCaseDiscoverer = Activator.CreateInstance(testCaseDiscovererType, this.DiagnosticMessageSink, testCaseDiscoveryOptions, customInitializationUtilitiesCollection, this._cleanTestAssemblyData, this._globalUtilitiesServiceCollection) as IXunitTestCaseDiscoverer;
         if (testCaseDiscoverer is null) return;
 
         var testMethod = new TestMethod(testClass, methodInfo);
@@ -126,7 +126,7 @@ public class CleanTestFrameworkDiscoverer : TestFrameworkDiscoverer
         foreach (var category in allRequirementSources.SetIntersection())
         {
             var categoryDemands = demands.GetValueOrDefault(category) ?? new HashSet<string>();
-            foreach (var initializationUtility in this._initializationUtilitiesCollection.Get(category, categoryDemands)) customInitializationUtilitiesCollection.Register(category, initializationUtility);
+            foreach (var initializationUtility in this._utilitiesCollection.Get(category, categoryDemands)) customInitializationUtilitiesCollection.Register(category, initializationUtility);
         }
 
         return customInitializationUtilitiesCollection;
