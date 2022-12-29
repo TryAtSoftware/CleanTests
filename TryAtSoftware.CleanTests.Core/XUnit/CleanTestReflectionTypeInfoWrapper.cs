@@ -46,7 +46,7 @@ public class CleanTestReflectionTypeInfoWrapper : IReflectionTypeInfo
     public bool IsValueType => this._wrapped.IsValueType;
 
     /// <inheritdoc/>
-    public string Name => TypeNames.Get(this.Type);
+    public string Name => $"{this.Type.Namespace}.{TypeNames.Get(this.Type)}";
 
     /// <inheritdoc/>
     public Type Type => this._wrapped.Type;

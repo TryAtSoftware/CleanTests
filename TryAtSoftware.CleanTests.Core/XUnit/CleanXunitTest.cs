@@ -11,6 +11,6 @@ public class CleanXunitTest : ITest
     public CleanXunitTest(ITestCase testCase)
     {
         this.TestCase = testCase ?? throw new ArgumentNullException(nameof(testCase));
-        this.DisplayName = testCase.DisplayName ?? throw new ArgumentNullException(nameof(testCase.DisplayName));
+        this.DisplayName = testCase.DisplayName;
     }
 }

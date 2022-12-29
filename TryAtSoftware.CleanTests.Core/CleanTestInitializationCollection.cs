@@ -18,13 +18,12 @@ public class CleanTestInitializationCollection<TValue> : ICleanTestInitializatio
     }
 
     /// <inheritdoc />
-    public void Register(string category, TValue initializationUtility)
+    public void Register(string category, TValue value)
     {
-        if (initializationUtility is null)
-            return;
+        if (value is null) return;
 
         var utilities = this._data.EnsureValue(category);
-        utilities.Add(initializationUtility);
+        utilities.Add(value);
     }
 
     /// <inheritdoc />

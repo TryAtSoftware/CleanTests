@@ -85,10 +85,10 @@ public class CleanTestFrameworkDiscoverer : TestFrameworkDiscoverer
     private void DiscoverTestCasesForMethod(ITestClass testClass, bool includeSourceInformation, IMessageBus messageBus, ITestFrameworkDiscoveryOptions discoveryOptions, IMethodInfo methodInfo, TestCaseDiscoveryOptions testCaseDiscoveryOptions, HashSet<string> globalRequirements)
     {
         var methodAttributeContainer = new DecoratedMethod(methodInfo);
-        if (methodAttributeContainer.TryGetSingleAttribute(typeof(FactAttribute), out var factAttribute) == false) return;
+        if (!methodAttributeContainer.TryGetSingleAttribute(typeof(FactAttribute), out var factAttribute)) return;
 
         var factAttributeAttributeContainer = new DecoratedAttribute(factAttribute);
-        if (factAttributeAttributeContainer.TryGetSingleAttribute(typeof(CleanTestCaseDiscovererAttribute), out var cleanTestCaseDiscovererAttribute) == false) return;
+        if (!factAttributeAttributeContainer.TryGetSingleAttribute(typeof(CleanTestCaseDiscovererAttribute), out var cleanTestCaseDiscovererAttribute)) return;
 
         var testCaseDiscovererType = cleanTestCaseDiscovererAttribute.GetNamedArgument<Type>("DiscovererType");
         if (testCaseDiscovererType is null) return;

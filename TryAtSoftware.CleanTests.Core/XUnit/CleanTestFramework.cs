@@ -21,7 +21,7 @@ public class CleanTestFramework : XunitTestFramework
         this._initializationUtilitiesCollection = new CleanTestInitializationCollection<IInitializationUtility>();
         foreach (var type in Assembly.GetExecutingAssembly().GetTypes().OrEmptyIfNull().IgnoreNullValues())
         {
-            if (type.IsClass == false || type.IsAbstract) continue;
+            if (!type.IsClass || type.IsAbstract) continue;
 
             var localDemands = ExtractDemands<DemandsAttribute>(type);
             var globalDemands = ExtractDemands<GlobalDemandsAttribute>(type);

@@ -6,6 +6,6 @@ using Xunit;
 
 [CleanTestCaseDiscoverer(typeof(CleanFactTestCaseDiscoverer))]
 [AttributeUsage(AttributeTargets.Method)]
-public class CleanFact : FactAttribute
+public class CleanFactAttribute : FactAttribute
 {
 }

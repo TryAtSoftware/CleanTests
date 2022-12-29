@@ -6,6 +6,6 @@ using Xunit;
 
 [CleanTestCaseDiscoverer(typeof(CleanTheoryTestCaseDiscoverer))]
 [AttributeUsage(AttributeTargets.Method)]
-public class CleanTheory : TheoryAttribute
+public class CleanTheoryAttribute : TheoryAttribute
 {
 }

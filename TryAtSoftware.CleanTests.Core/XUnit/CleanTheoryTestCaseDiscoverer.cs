@@ -20,7 +20,7 @@ public class CleanTheoryTestCaseDiscoverer : BaseTestCaseDiscoverer
         foreach (var dataAttribute in dataAttributes)
         {
             var decoratedDataAttribute = new DecoratedAttribute(dataAttribute);
-            if (decoratedDataAttribute.TryGetSingleAttribute(typeof(DataDiscovererAttribute), out var dataDiscovererAttribute) == false) continue;
+            if (!decoratedDataAttribute.TryGetSingleAttribute(typeof(DataDiscovererAttribute), out var dataDiscovererAttribute)) continue;
 
             var dataDiscoverer = ExtensibilityPointFactory.GetDataDiscoverer(diagnosticMessageSink, dataDiscovererAttribute);
             var dataCollection = dataDiscoverer.GetData(dataAttribute, testMethod.Method);

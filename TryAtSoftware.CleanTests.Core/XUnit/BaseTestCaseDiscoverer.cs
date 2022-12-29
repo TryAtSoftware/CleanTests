@@ -45,7 +45,7 @@ public abstract class BaseTestCaseDiscoverer : IXunitTestCaseDiscoverer
         foreach (var variation in variations)
         {
             // NOTE: This is not the most optimal solution but it works correctly. When we have a lot of spare time, we may think of optimizing this algorithm.
-            if (AllDemandsAreFulfilled(variation, this._cleanTestAssemblyData.InitializationUtilitiesById) == false) continue;
+            if (!AllDemandsAreFulfilled(variation, this._cleanTestAssemblyData.InitializationUtilitiesById)) continue;
 
             var (isSuccessful, dependenciesSet) = GetDependencies(variation.Values, this._cleanTestAssemblyData);
             if (!isSuccessful) continue;
@@ -75,9 +75,9 @@ public abstract class BaseTestCaseDiscoverer : IXunitTestCaseDiscoverer
     {
         foreach (var (_, initializationUtilityId) in variation)
         {
-            if (allInitializationUtilities.TryGetValue(initializationUtilityId, out var initializationUtility) == false) return false;
+            if (!allInitializationUtilities.TryGetValue(initializationUtilityId, out var initializationUtility)) return false;
             foreach (var (demandCategory, demands) in initializationUtility.GlobalDemands)
-                if (variation.TryGetValue(demandCategory, out var demandUtilityId) == false || allInitializationUtilities.TryGetValue(demandUtilityId, out var demandUtility) == false || demands.Any(d => demandUtility.ContainsCharacteristic(d) == false))
+                if (!variation.TryGetValue(demandCategory, out var demandUtilityId) || !allInitializationUtilities.TryGetValue(demandUtilityId, out var demandUtility) || !demands.Any(d => demandUtility.ContainsCharacteristic(d)))
                     return false;
         }
 
