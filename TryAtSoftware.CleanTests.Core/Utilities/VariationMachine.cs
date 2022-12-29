@@ -1,10 +1,11 @@
-﻿namespace TryAtSoftware.CleanTests.Core.XUnit;
+﻿namespace TryAtSoftware.CleanTests.Core.Utilities;
 
 using System.Collections.Generic;
 using System.Linq;
 using TryAtSoftware.Extensions.Collections;
 
 public class VariationMachine<TKey, TValue>
+    where TKey : notnull
 {
     private readonly IDictionary<TKey, IReadOnlyCollection<TValue>> _options;
 

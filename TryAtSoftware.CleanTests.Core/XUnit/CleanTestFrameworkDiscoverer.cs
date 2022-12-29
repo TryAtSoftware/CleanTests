@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
 using TryAtSoftware.CleanTests.Core.Attributes;
+using TryAtSoftware.CleanTests.Core.Extensions;
+using TryAtSoftware.CleanTests.Core.Interfaces;
 using TryAtSoftware.CleanTests.Core.XUnit.Data;
 using TryAtSoftware.CleanTests.Core.XUnit.Extensions;
 using TryAtSoftware.CleanTests.Core.XUnit.Interfaces;

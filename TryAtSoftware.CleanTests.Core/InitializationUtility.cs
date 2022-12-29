@@ -2,7 +2,7 @@
 
 using System;
 using System.Collections.Generic;
-using TryAtSoftware.CleanTests.Core.XUnit.Interfaces;
+using TryAtSoftware.CleanTests.Core.Interfaces;
 using TryAtSoftware.Extensions.Collections;
 
 public class InitializationUtility : IInitializationUtility
@@ -35,7 +35,6 @@ public class InitializationUtility : IInitializationUtility
 
     /// <inheritdoc />
     public HashSet<string> Requirements { get; } = new ();
-    
 
     public InitializationUtility(string initializationCategory, Guid id, Type type, string displayName, bool isGlobal, IEnumerable<string>? characteristics, IEnumerable<string>? requirements)
     {

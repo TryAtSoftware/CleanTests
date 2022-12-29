@@ -1,4 +1,4 @@
-namespace TryAtSoftware.CleanTests.Core.XUnit.Interfaces;
+namespace TryAtSoftware.CleanTests.Core.Interfaces;
 
 using Microsoft.Extensions.DependencyInjection;
 

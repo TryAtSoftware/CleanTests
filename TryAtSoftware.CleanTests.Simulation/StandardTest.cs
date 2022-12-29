@@ -5,8 +5,5 @@ using TryAtSoftware.CleanTests.Core.Attributes;
 public class StandardTest : CleanTest
 {
     [CleanFact]
-    public void StandardTestCase()
-    {
-        Assert.Equal(2 + 2, 4);
-    }
+    public void StandardTestCase() => Assert.Equal(4, 2 + 2);
 }

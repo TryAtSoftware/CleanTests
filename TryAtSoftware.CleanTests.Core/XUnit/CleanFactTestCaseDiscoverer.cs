@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.Extensions.DependencyInjection;
+using TryAtSoftware.CleanTests.Core.Interfaces;
 using TryAtSoftware.CleanTests.Core.XUnit.Data;
 using TryAtSoftware.CleanTests.Core.XUnit.Interfaces;
 using Xunit.Abstractions;

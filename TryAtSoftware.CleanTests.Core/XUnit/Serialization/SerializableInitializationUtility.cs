@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using TryAtSoftware.CleanTests.Core.Interfaces;
 using TryAtSoftware.CleanTests.Core.XUnit.Interfaces;
 using Xunit.Abstractions;
 

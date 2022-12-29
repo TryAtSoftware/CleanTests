@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
-using TryAtSoftware.CleanTests.Core.XUnit.Extensions;
+using TryAtSoftware.CleanTests.Core.Extensions;
 using Xunit;
 using Xunit.Abstractions;
 using Xunit.Sdk;

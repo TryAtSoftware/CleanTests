@@ -2,6 +2,7 @@
 
 using Microsoft.Extensions.DependencyInjection;
 using TryAtSoftware.CleanTests.Core.Attributes;
+using TryAtSoftware.CleanTests.Core.Interfaces;
 using TryAtSoftware.CleanTests.Core.XUnit.Interfaces;
 
 [TestSuite]

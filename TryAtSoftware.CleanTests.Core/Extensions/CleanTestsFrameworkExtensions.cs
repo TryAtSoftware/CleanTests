@@ -1,9 +1,10 @@
-﻿namespace TryAtSoftware.CleanTests.Core.XUnit.Extensions;
+﻿namespace TryAtSoftware.CleanTests.Core.Extensions;
 
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using TryAtSoftware.CleanTests.Core.Interfaces;
 using TryAtSoftware.CleanTests.Core.XUnit.Interfaces;
 using TryAtSoftware.Extensions.Collections;
 

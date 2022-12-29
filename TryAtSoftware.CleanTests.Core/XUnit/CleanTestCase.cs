@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using TryAtSoftware.CleanTests.Core.Interfaces;
 using TryAtSoftware.CleanTests.Core.XUnit.Data;
 using TryAtSoftware.CleanTests.Core.XUnit.Interfaces;
 using TryAtSoftware.CleanTests.Core.XUnit.Serialization;
@@ -51,24 +52,24 @@ public class CleanTestCase : XunitTestCase, ICleanTestCase
         }
     }
 
-    public override void Serialize(IXunitSerializationInfo info)
+    public override void Serialize(IXunitSerializationInfo data)
     {
-        base.Serialize(info);
+        base.Serialize(data);
         
         var testCaseDataSerializer = new SerializableCleanTestCaseData(this.CleanTestCaseData);
-        info.AddValue("ctd", testCaseDataSerializer);
+        data.AddValue("ctd", testCaseDataSerializer);
 
         var assemblyDataSerializer = new SerializableCleanTestAssemblyData(this.CleanTestAssemblyData);
-        info.AddValue("ad", assemblyDataSerializer);
+        data.AddValue("ad", assemblyDataSerializer);
     }
 
-    public override void Deserialize(IXunitSerializationInfo info)
+    public override void Deserialize(IXunitSerializationInfo data)
     {
-        base.Deserialize(info);
-        var deserializedCleanTestData = info.GetValue<SerializableCleanTestCaseData>("ctd");
+        base.Deserialize(data);
+        var deserializedCleanTestData = data.GetValue<SerializableCleanTestCaseData>("ctd");
         this.CleanTestCaseData = deserializedCleanTestData.CleanTestData;
         
-        var deserializedAssemblyData = info.GetValue<SerializableCleanTestAssemblyData>("ad");
+        var deserializedAssemblyData = data.GetValue<SerializableCleanTestAssemblyData>("ad");
         this.CleanTestAssemblyData = deserializedAssemblyData.CleanTestData;
     }
 

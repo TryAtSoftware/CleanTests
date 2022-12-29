@@ -4,9 +4,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
+using TryAtSoftware.CleanTests.Core.Extensions;
+using TryAtSoftware.CleanTests.Core.Interfaces;
+using TryAtSoftware.CleanTests.Core.Utilities;
 using TryAtSoftware.CleanTests.Core.XUnit.Data;
-using TryAtSoftware.CleanTests.Core.XUnit.Extensions;
-using TryAtSoftware.CleanTests.Core.XUnit.Interfaces;
 using TryAtSoftware.Extensions.Collections;
 using TryAtSoftware.Extensions.Reflection;
 using Xunit.Abstractions;
@@ -110,25 +111,11 @@ public abstract class BaseTestCaseDiscoverer : IXunitTestCaseDiscoverer
 
         visited.Add(utility.Id);
 
-        // TODO: Validate that global initialization utilities do not depend on local ones.
         var dependencyIdsByCategory = new Dictionary<string, IReadOnlyCollection<Guid>>();
         var dependencyGraphsById = new Dictionary<Guid, FullInitializationUtilityConstructionGraph>();
         foreach (var requirement in utility.Requirements)
         {
-            var localDemands = utility.LocalDemands.Get(requirement);
-            var currentDependencies = new List<Guid>();
-            
-            // NOTE: Global utilities can depend on other global utilities only. In future we may want to support local utilities to depend on global utilities as well. However, this is not a priority right now.
-            foreach (var dependentUtility in assemblyData.InitializationUtilities.Get(requirement, localDemands).Where(iu => iu.IsGlobal == utility.IsGlobal))
-            {
-                var (isSuccessful, dependentUtilityConstructionGraph) = BuildConstructionGraph(dependentUtility, assemblyData, visited);
-                if (isSuccessful && dependentUtilityConstructionGraph is not null)
-                {
-                    currentDependencies.Add(dependentUtilityConstructionGraph.Id);
-                    dependencyGraphsById[dependentUtilityConstructionGraph.Id] = dependentUtilityConstructionGraph;
-                }
-            }
-
+            var currentDependencies = ExtractDependencies(utility, requirement, dependencyGraphsById, assemblyData, visited);
             if (currentDependencies.Count == 0) return (IsSuccessful: false, ConstructionGraph: null);
             dependencyIdsByCategory[requirement] = currentDependencies.AsReadOnly();
         }
@@ -146,6 +133,25 @@ public abstract class BaseTestCaseDiscoverer : IXunitTestCaseDiscoverer
         }
 
         return (IsSuccessful: true, ConstructionGraph: graph);
+    }
+
+    private static List<Guid> ExtractDependencies(IInitializationUtility utility, string requirement, IDictionary<Guid, FullInitializationUtilityConstructionGraph> dependencyGraphsById, CleanTestAssemblyData assemblyData, HashSet<Guid> visited)
+    {
+        var localDemands = utility.LocalDemands.Get(requirement);
+        var currentDependencies = new List<Guid>();
+            
+        // NOTE: Global utilities can depend on other global utilities only. In future we may want to support local utilities to depend on global utilities as well. However, this is not a priority right now.
+        foreach (var dependentUtility in assemblyData.InitializationUtilities.Get(requirement, localDemands).Where(iu => iu.IsGlobal == utility.IsGlobal))
+        {
+            var (isSuccessful, dependentUtilityConstructionGraph) = BuildConstructionGraph(dependentUtility, assemblyData, visited);
+            if (isSuccessful && dependentUtilityConstructionGraph is not null)
+            {
+                currentDependencies.Add(dependentUtilityConstructionGraph.Id);
+                dependencyGraphsById[dependentUtilityConstructionGraph.Id] = dependentUtilityConstructionGraph;
+            }
+        }
+
+        return currentDependencies;
     }
 
     /// <summary>
