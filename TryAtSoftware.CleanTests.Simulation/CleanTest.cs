@@ -3,6 +3,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using TryAtSoftware.CleanTests.Core.Attributes;
 using TryAtSoftware.CleanTests.Core.Interfaces;
+using Xunit.Abstractions;
 
 [TestSuite]
 public class CleanTest : ICleanTest, IDisposable, IAsyncLifetime
@@ -11,6 +12,13 @@ public class CleanTest : ICleanTest, IDisposable, IAsyncLifetime
     private IServiceScope? _scope;
     
     private ServiceProvider? _globalDependenciesProvider;
+
+    public CleanTest(ITestOutputHelper testOutputHelper)
+    {
+        this.TestOutputHelper = testOutputHelper ?? throw new ArgumentNullException(nameof(testOutputHelper));
+    }
+
+    protected ITestOutputHelper TestOutputHelper { get; }
     
     public IServiceCollection LocalDependenciesCollection { get; } = new ServiceCollection();
     public IServiceCollection GlobalDependenciesCollection { get; } = new ServiceCollection();
