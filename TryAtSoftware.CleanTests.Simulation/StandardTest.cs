@@ -16,4 +16,13 @@ public class StandardTest : CleanTest
         var person = this.GetService<IPerson>();
         Assert.NotNull(person);
     }
+    
+    [CleanFact]
+    [WithRequirements(Categories.People)]
+    [TestDemands(Categories.People, Characteristics.KnownPerson)]
+    public void TestUtilityDistributionWithDemands()
+    {
+        var person = this.GetService<IPerson>();
+        Assert.NotNull(person);
+    }
 }

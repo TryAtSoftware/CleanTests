@@ -2,7 +2,7 @@
 
 using TryAtSoftware.CleanTests.Core.Attributes;
 
-[CleanUtility(Categories.People, "Standard person")]
+[CleanUtility(Categories.People, "Standard person", Characteristics.KnownPerson)]
 public class LibraryAuthor : IPerson
 {
     public string FirstName => "Tony";
