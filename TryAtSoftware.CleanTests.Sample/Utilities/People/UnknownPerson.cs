@@ -1,4 +1,4 @@
-﻿namespace TryAtSoftware.CleanTests.Simulation.Utilities.People;
+﻿namespace TryAtSoftware.CleanTests.Sample.Utilities.People;
 
 using TryAtSoftware.CleanTests.Core.Attributes;
 

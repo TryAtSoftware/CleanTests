@@ -27,6 +27,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\TryAtSoftware.CleanTests.Core\TryAtSoftware.CleanTests.Core.csproj" />
+        <ProjectReference Include="..\TryAtSoftware.CleanTests.Sample.Mathematics\TryAtSoftware.CleanTests.Sample.Mathematics.csproj" />
     </ItemGroup>
 
 </Project>

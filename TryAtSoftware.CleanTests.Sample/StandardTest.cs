@@ -1,9 +1,10 @@
-﻿namespace TryAtSoftware.CleanTests.Simulation;
+﻿namespace TryAtSoftware.CleanTests.Sample;
 
 using TryAtSoftware.CleanTests.Core.Attributes;
-using TryAtSoftware.CleanTests.Simulation.Utilities;
-using TryAtSoftware.CleanTests.Simulation.Utilities.Creations;
-using TryAtSoftware.CleanTests.Simulation.Utilities.People;
+using TryAtSoftware.CleanTests.Sample.Mathematics;
+using TryAtSoftware.CleanTests.Sample.Utilities;
+using TryAtSoftware.CleanTests.Sample.Utilities.Creations;
+using TryAtSoftware.CleanTests.Sample.Utilities.People;
 using TryAtSoftware.Extensions.Reflection;
 using Xunit.Abstractions;
 
@@ -65,6 +66,16 @@ public class StandardTest : CleanTest
         Assert.NotNull(person);
 
         this.OutputUtilityInfo(person);
+    }
+
+    [CleanFact]
+    [WithRequirements(MathConstants.Category)]
+    public void TestSharedUtilityDistribution()
+    {
+        var mathFunction = this.GetService<IMathFunction>();
+        Assert.NotNull(mathFunction);
+        
+        this.OutputUtilityInfo(mathFunction);
     }
 
     private void OutputUtilityInfo<T>(T utility)

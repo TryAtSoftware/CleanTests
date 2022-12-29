@@ -1,7 +1,7 @@
-﻿namespace TryAtSoftware.CleanTests.Simulation;
+﻿namespace TryAtSoftware.CleanTests.Sample;
 
 using TryAtSoftware.CleanTests.Core.Attributes;
-using TryAtSoftware.CleanTests.Simulation.Attributes;
+using TryAtSoftware.CleanTests.Sample.Attributes;
 using Xunit.Abstractions;
 
 public class GenericTest<[Numeric] T> : CleanTest

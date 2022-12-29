@@ -1,4 +1,4 @@
-﻿namespace TryAtSoftware.CleanTests.Simulation.Utilities.Creations;
+﻿namespace TryAtSoftware.CleanTests.Sample.Utilities.Creations;
 
 public interface ICreation
 {

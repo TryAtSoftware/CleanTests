@@ -1,4 +1,4 @@
-﻿namespace TryAtSoftware.CleanTests.Simulation.Utilities;
+﻿namespace TryAtSoftware.CleanTests.Sample.Utilities;
 
 public class Characteristics
 {

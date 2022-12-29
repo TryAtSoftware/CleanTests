@@ -1,7 +1,7 @@
-﻿namespace TryAtSoftware.CleanTests.Simulation.Utilities.Creations;
+﻿namespace TryAtSoftware.CleanTests.Sample.Utilities.Creations;
 
 using TryAtSoftware.CleanTests.Core.Attributes;
-using TryAtSoftware.CleanTests.Simulation.Utilities.People;
+using TryAtSoftware.CleanTests.Sample.Utilities.People;
 
 [CleanUtility(Categories.Creations, "Book")]
 [WithRequirements(Categories.People)]

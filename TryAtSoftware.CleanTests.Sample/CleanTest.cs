@@ -1,9 +1,9 @@
-﻿namespace TryAtSoftware.CleanTests.Simulation;
+﻿namespace TryAtSoftware.CleanTests.Sample;
 
 using Microsoft.Extensions.DependencyInjection;
 using TryAtSoftware.CleanTests.Core.Attributes;
 using TryAtSoftware.CleanTests.Core.Interfaces;
-using TryAtSoftware.CleanTests.Simulation.Attributes;
+using TryAtSoftware.CleanTests.Sample.Attributes;
 using Xunit.Abstractions;
 
 [TestSuite]
