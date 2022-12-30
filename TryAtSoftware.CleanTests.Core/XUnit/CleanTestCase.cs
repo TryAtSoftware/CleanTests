@@ -1,4 +1,4 @@
-﻿namespace TryAtSoftware.CleanTests.Core.XUnit;
+namespace TryAtSoftware.CleanTests.Core.XUnit;
 
 using System;
 using System.Linq;
@@ -88,12 +88,13 @@ public class CleanTestCase : XunitTestCase, ICleanTestCase
 
     public override void Deserialize(IXunitSerializationInfo data)
     {
-        base.Deserialize(data);
         var deserializedCleanTestData = data.GetValue<SerializableCleanTestCaseData>("ctd");
         this.CleanTestCaseData = deserializedCleanTestData.CleanTestData;
         
         var deserializedAssemblyData = data.GetValue<SerializableCleanTestAssemblyData>("ad");
         this.CleanTestAssemblyData = deserializedAssemblyData.CleanTestData;
+
+        base.Deserialize(data);
     }
 
     protected override string GetUniqueID()
