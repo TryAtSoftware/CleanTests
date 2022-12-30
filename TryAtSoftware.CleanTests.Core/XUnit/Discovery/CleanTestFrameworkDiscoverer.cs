@@ -3,13 +3,13 @@ namespace TryAtSoftware.CleanTests.Core.XUnit.Discovery;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using Microsoft.Extensions.DependencyInjection;
 using TryAtSoftware.CleanTests.Core.Attributes;
 using TryAtSoftware.CleanTests.Core.Extensions;
 using TryAtSoftware.CleanTests.Core.Interfaces;
 using TryAtSoftware.CleanTests.Core.XUnit.Extensions;
 using TryAtSoftware.CleanTests.Core.XUnit.Interfaces;
+using TryAtSoftware.CleanTests.Core.XUnit.Wrappers;
 using TryAtSoftware.Extensions.Collections;
 using TryAtSoftware.Extensions.Reflection;
 using Xunit;
@@ -31,7 +31,9 @@ public class CleanTestFrameworkDiscoverer : TestFrameworkDiscoverer
         this._globalUtilitiesServiceCollection = globalUtilitiesCollection ?? throw new ArgumentNullException(nameof(globalUtilitiesCollection));
 
         this._cleanTestAssemblyData = new CleanTestAssemblyData(this._utilitiesCollection.GetAllValues());
+        
         this._fallbackTestFrameworkDiscoverer = new FallbackTestFrameworkDiscoverer(assemblyInfo, sourceProvider, diagnosticMessageSink);
+        this.DisposalTracker.Add(this._fallbackTestFrameworkDiscoverer);
     }
 
     /// <inheritdoc />
@@ -52,16 +54,7 @@ public class CleanTestFrameworkDiscoverer : TestFrameworkDiscoverer
         // After: MetadataColoringCleanTests<Int64>
         var wrappedXUnitTypeInfo = new CleanTestReflectionTypeInfoWrapper(xUnitTypeInfo);
 
-        return new TestClass(collection, wrappedXUnitTypeInfo);
-    }
-
-    protected override bool IsValidTestClass(ITypeInfo type)
-    {
-        if (!base.IsValidTestClass(type)) return false;
-
-        var decoratedClass = new DecoratedType(type);
-        var testSuiteAttribute = decoratedClass.GetCustomAttributes(typeof(TestSuiteAttribute)).IgnoreNullValues().SingleOrDefault();
-        return testSuiteAttribute is not null;
+        return new CleanTestClassWrapper(collection, wrappedXUnitTypeInfo, xUnitTypeInfo.Name);
     }
 
     /// <inheritdoc />
@@ -77,35 +70,40 @@ public class CleanTestFrameworkDiscoverer : TestFrameworkDiscoverer
         var testCaseDiscoveryOptions = new TestCaseDiscoveryOptions(genericTypesMap);
 
         var decoratedClass = new DecoratedType(testClass.Class);
+        var isCleanTestClass = testClass.Class.Interfaces.Any(i => i.ToRuntimeType() == typeof(ICleanTest));
         var globalRequirements = ExtractRequirements(decoratedClass);
+
+        var options = (includeSourceInformation, messageBus, discoveryOptions, testCaseDiscoveryOptions, isCleanTestClass, globalRequirements);
         foreach (var methodInfo in testClass.Class.GetMethods(includePrivateMethods: false).OrEmptyIfNull().IgnoreNullValues())
-            this.DiscoverTestCasesForMethod(testClass, includeSourceInformation, messageBus, discoveryOptions, methodInfo, testCaseDiscoveryOptions, globalRequirements);
+        {
+            var testMethod = new TestMethod(testClass, methodInfo);
+            this.DiscoverTestCasesForMethod(testMethod, options);
+        }
     }
 
-    private void DiscoverTestCasesForMethod(ITestClass testClass, bool includeSourceInformation, IMessageBus messageBus, ITestFrameworkDiscoveryOptions discoveryOptions, IMethodInfo methodInfo, TestCaseDiscoveryOptions testCaseDiscoveryOptions, HashSet<string> globalRequirements)
+    private void DiscoverTestCasesForMethod(ITestMethod testMethod, (bool IncludeSourceInformation, IMessageBus messageBus, ITestFrameworkDiscoveryOptions TestFrameworkDiscoveryOptions, TestCaseDiscoveryOptions TestCaseDiscoveryOptions, bool IsCleanTestClass, HashSet<string> GlobalRequirements) options)
     {
-        var methodAttributeContainer = new DecoratedMethod(methodInfo);
+        var methodAttributeContainer = new DecoratedMethod(testMethod.Method);
         if (!methodAttributeContainer.TryGetSingleAttribute(typeof(FactAttribute), out var factAttribute)) return;
 
-        var testMethod = new TestMethod(testClass, methodInfo);
         var factAttributeAttributeContainer = new DecoratedAttribute(factAttribute);
-        if (!factAttributeAttributeContainer.TryGetSingleAttribute(typeof(CleanTestCaseDiscovererAttribute), out var cleanTestCaseDiscovererAttribute))
+        if (!options.IsCleanTestClass || !factAttributeAttributeContainer.TryGetSingleAttribute(typeof(CleanTestCaseDiscovererAttribute), out var cleanTestCaseDiscovererAttribute))
         {
-            this._fallbackTestFrameworkDiscoverer.DiscoverFallbackTests(testMethod, includeSourceInformation, messageBus, discoveryOptions);
+            this._fallbackTestFrameworkDiscoverer.DiscoverFallbackTests(testMethod, options.IncludeSourceInformation, options.messageBus, options.TestFrameworkDiscoveryOptions);
             return;
         }
 
         var testCaseDiscovererType = cleanTestCaseDiscovererAttribute.GetNamedArgument<Type>(nameof(CleanTestCaseDiscovererAttribute.DiscovererType));
         if (testCaseDiscovererType is null) return;
 
-        var customInitializationUtilitiesCollection = this.GetInitializationUtilities(methodAttributeContainer, globalRequirements);
-        var testCaseDiscoverer = Activator.CreateInstance(testCaseDiscovererType, this.DiagnosticMessageSink, testCaseDiscoveryOptions, customInitializationUtilitiesCollection, this._cleanTestAssemblyData, this._globalUtilitiesServiceCollection) as IXunitTestCaseDiscoverer;
+        var customInitializationUtilitiesCollection = this.GetInitializationUtilities(methodAttributeContainer, options.GlobalRequirements);
+        var testCaseDiscoverer = Activator.CreateInstance(testCaseDiscovererType, this.DiagnosticMessageSink, options.TestCaseDiscoveryOptions, customInitializationUtilitiesCollection, this._cleanTestAssemblyData, this._globalUtilitiesServiceCollection) as IXunitTestCaseDiscoverer;
 
         if (testCaseDiscoverer is null) return;
 
-        var testCases = testCaseDiscoverer.Discover(discoveryOptions, testMethod, factAttribute);
+        var testCases = testCaseDiscoverer.Discover(options.TestFrameworkDiscoveryOptions, testMethod, factAttribute);
         foreach (var testCase in testCases.OrEmptyIfNull().IgnoreNullValues())
-            this.ReportDiscoveredTestCase(testCase, includeSourceInformation, messageBus);
+            this.ReportDiscoveredTestCase(testCase, options.IncludeSourceInformation, options.messageBus);
     }
 
     private CleanTestInitializationCollection<ICleanUtilityDescriptor> GetInitializationUtilities(DecoratedMethod? method, HashSet<string> globalRequirements)
@@ -115,21 +113,12 @@ public class CleanTestFrameworkDiscoverer : TestFrameworkDiscoverer
 
         var initializationRequirements = ExtractRequirements(method);
 
-        var demands = new Dictionary<string, HashSet<string>>();
-        var demandsAttributeType = typeof(TestDemandsAttribute);
-        foreach (var attribute in method.GetCustomAttributes(demandsAttributeType).OrEmptyIfNull().IgnoreNullValues())
-        {
-            var currentDemandsCategory = attribute.GetNamedArgument<string>("Category");
-            var currentDemands = attribute.GetNamedArgument<IEnumerable<string>>("Demands");
-
-            var categorizedDemands = demands.EnsureValue(currentDemandsCategory);
-            foreach (var currentDemand in currentDemands.OrEmptyIfNull().IgnoreNullOrWhitespaceValues()) categorizedDemands.Add(currentDemand);
-        }
+        var demands = method.ExtractDemands<TestDemandsAttribute>();
 
         var allRequirementSources = new[] { initializationRequirements, globalRequirements };
         foreach (var category in allRequirementSources.SetIntersection())
         {
-            var categoryDemands = demands.GetValueOrDefault(category) ?? new HashSet<string>();
+            var categoryDemands = demands.Get(category);
             foreach (var initializationUtility in this._utilitiesCollection.Get(category, categoryDemands)) customInitializationUtilitiesCollection.Register(category, initializationUtility);
         }
 

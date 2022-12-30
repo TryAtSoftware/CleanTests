@@ -51,8 +51,9 @@ public class CleanTestFramework : XunitTestFramework
             var initializationUtilityAttributes = type.GetCustomAttributes(typeof(CleanUtilityAttribute)).ToArray();
             if (initializationUtilityAttributes.Length == 0) continue;
 
-            var internalDemands = ExtractDemands<InternalDemandsAttribute>(type);
-            var externalDemands = ExtractDemands<ExternalDemandsAttribute>(type);
+            var decoratedType = new DecoratedType(type);
+            var internalDemands = decoratedType.ExtractDemands<InternalDemandsAttribute>();
+            var externalDemands = decoratedType.ExtractDemands<ExternalDemandsAttribute>();
             var requirements = ExtractRequirements(type);
 
             foreach (var utilityAttribute in initializationUtilityAttributes.OrEmptyIfNull().IgnoreNullValues())
@@ -69,20 +70,6 @@ public class CleanTestFramework : XunitTestFramework
                 utilitiesCollection.Register(categoryArgument, initializationUtility);
             }
         }
-    }
-
-    private static ICleanTestInitializationCollection<string> ExtractDemands<TAttribute>(ITypeInfo type)
-        where TAttribute : BaseDemandsAttribute
-    {
-        var demands = new CleanTestInitializationCollection<string>();
-        foreach (var attribute in type.GetCustomAttributes(typeof(TAttribute)))
-        {
-            var demandsArgument = attribute.GetNamedArgument<IEnumerable<string>>(nameof(BaseDemandsAttribute.Demands));
-            var categoryArgument = attribute.GetNamedArgument<string>(nameof(BaseDemandsAttribute.Category));
-            foreach (var demand in demandsArgument) demands.Register(categoryArgument, demand);
-        }
-
-        return demands;
     }
 
     private static HashSet<string> ExtractRequirements(ITypeInfo type)

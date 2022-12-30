@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
+using TryAtSoftware.CleanTests.Core.Attributes;
 using TryAtSoftware.CleanTests.Core.Interfaces;
 using TryAtSoftware.CleanTests.Core.XUnit.Interfaces;
 using TryAtSoftware.Extensions.Collections;
@@ -30,6 +31,20 @@ public static class CleanTestsFrameworkExtensions
         if (demands is null) throw new ArgumentNullException(nameof(demands));
 
         return utilitiesCollection.Get(category).OrEmptyIfNull().IgnoreNullValues().Where(iu => demands.All(iu.ContainsCharacteristic)).ToArray();
+    }
+
+    internal static ICleanTestInitializationCollection<string> ExtractDemands<TAttribute>(this IDecoratedComponent decoratedComponent)
+        where TAttribute : BaseDemandsAttribute
+    {
+        var demands = new CleanTestInitializationCollection<string>();
+        foreach (var attribute in decoratedComponent.GetCustomAttributes(typeof(TAttribute)))
+        {
+            var demandsArgument = attribute.GetNamedArgument<IEnumerable<string>>(nameof(BaseDemandsAttribute.Demands));
+            var categoryArgument = attribute.GetNamedArgument<string>(nameof(BaseDemandsAttribute.Category));
+            foreach (var demand in demandsArgument) demands.Register(categoryArgument, demand);
+        }
+
+        return demands;
     }
 
     internal static (List<ICleanTestCase> CleanTestCases, List<IXunitTestCase> OtherTestCases) ExtractCleanTestCases(this IEnumerable<IXunitTestCase>? testCases)
