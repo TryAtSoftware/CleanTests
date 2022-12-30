@@ -9,6 +9,7 @@ using TryAtSoftware.CleanTests.Core.Extensions;
 using TryAtSoftware.CleanTests.Core.Interfaces;
 using TryAtSoftware.CleanTests.Core.XUnit.Extensions;
 using TryAtSoftware.CleanTests.Core.XUnit.Interfaces;
+using TryAtSoftware.CleanTests.Core.XUnit.Wrappers;
 using TryAtSoftware.Extensions.Collections;
 using TryAtSoftware.Extensions.Reflection;
 using Xunit;
@@ -53,7 +54,7 @@ public class CleanTestFrameworkDiscoverer : TestFrameworkDiscoverer
         // After: MetadataColoringCleanTests<Int64>
         var wrappedXUnitTypeInfo = new CleanTestReflectionTypeInfoWrapper(xUnitTypeInfo);
 
-        return new TestClass(collection, wrappedXUnitTypeInfo);
+        return new CleanTestClassWrapper(collection, wrappedXUnitTypeInfo, xUnitTypeInfo.Name);
     }
 
     /// <inheritdoc />
