@@ -108,21 +108,12 @@ public class CleanTestFrameworkDiscoverer : TestFrameworkDiscoverer
 
         var initializationRequirements = ExtractRequirements(method);
 
-        var demands = new Dictionary<string, HashSet<string>>();
-        var demandsAttributeType = typeof(TestDemandsAttribute);
-        foreach (var attribute in method.GetCustomAttributes(demandsAttributeType).OrEmptyIfNull().IgnoreNullValues())
-        {
-            var currentDemandsCategory = attribute.GetNamedArgument<string>("Category");
-            var currentDemands = attribute.GetNamedArgument<IEnumerable<string>>("Demands");
-
-            var categorizedDemands = demands.EnsureValue(currentDemandsCategory);
-            foreach (var currentDemand in currentDemands.OrEmptyIfNull().IgnoreNullOrWhitespaceValues()) categorizedDemands.Add(currentDemand);
-        }
+        var demands = method.ExtractDemands<TestDemandsAttribute>();
 
         var allRequirementSources = new[] { initializationRequirements, globalRequirements };
         foreach (var category in allRequirementSources.SetIntersection())
         {
-            var categoryDemands = demands.GetValueOrDefault(category) ?? new HashSet<string>();
+            var categoryDemands = demands.Get(category);
             foreach (var initializationUtility in this._utilitiesCollection.Get(category, categoryDemands)) customInitializationUtilitiesCollection.Register(category, initializationUtility);
         }
 
