@@ -70,36 +70,40 @@ public class CleanTestFrameworkDiscoverer : TestFrameworkDiscoverer
         var testCaseDiscoveryOptions = new TestCaseDiscoveryOptions(genericTypesMap);
 
         var decoratedClass = new DecoratedType(testClass.Class);
-        var globalRequirements = ExtractRequirements(decoratedClass);
         var isCleanTestClass = testClass.Class.Interfaces.Any(i => i.ToRuntimeType() == typeof(ICleanTest));
+        var globalRequirements = ExtractRequirements(decoratedClass);
+
+        var options = (includeSourceInformation, messageBus, discoveryOptions, testCaseDiscoveryOptions, isCleanTestClass, globalRequirements);
         foreach (var methodInfo in testClass.Class.GetMethods(includePrivateMethods: false).OrEmptyIfNull().IgnoreNullValues())
-            this.DiscoverTestCasesForMethod(testClass, includeSourceInformation, messageBus, discoveryOptions, methodInfo, testCaseDiscoveryOptions, isCleanTestClass, globalRequirements);
+        {
+            var testMethod = new TestMethod(testClass, methodInfo);
+            this.DiscoverTestCasesForMethod(testMethod, options);
+        }
     }
 
-    private void DiscoverTestCasesForMethod(ITestClass testClass, bool includeSourceInformation, IMessageBus messageBus, ITestFrameworkDiscoveryOptions discoveryOptions, IMethodInfo methodInfo, TestCaseDiscoveryOptions testCaseDiscoveryOptions, bool isCleanTestClass, HashSet<string> globalRequirements)
+    private void DiscoverTestCasesForMethod(ITestMethod testMethod, (bool IncludeSourceInformation, IMessageBus messageBus, ITestFrameworkDiscoveryOptions TestFrameworkDiscoveryOptions, TestCaseDiscoveryOptions TestCaseDiscoveryOptions, bool IsCleanTestClass, HashSet<string> GlobalRequirements) options)
     {
-        var methodAttributeContainer = new DecoratedMethod(methodInfo);
+        var methodAttributeContainer = new DecoratedMethod(testMethod.Method);
         if (!methodAttributeContainer.TryGetSingleAttribute(typeof(FactAttribute), out var factAttribute)) return;
 
-        var testMethod = new TestMethod(testClass, methodInfo);
         var factAttributeAttributeContainer = new DecoratedAttribute(factAttribute);
-        if (!isCleanTestClass || !factAttributeAttributeContainer.TryGetSingleAttribute(typeof(CleanTestCaseDiscovererAttribute), out var cleanTestCaseDiscovererAttribute))
+        if (!options.IsCleanTestClass || !factAttributeAttributeContainer.TryGetSingleAttribute(typeof(CleanTestCaseDiscovererAttribute), out var cleanTestCaseDiscovererAttribute))
         {
-            this._fallbackTestFrameworkDiscoverer.DiscoverFallbackTests(testMethod, includeSourceInformation, messageBus, discoveryOptions);
+            this._fallbackTestFrameworkDiscoverer.DiscoverFallbackTests(testMethod, options.IncludeSourceInformation, options.messageBus, options.TestFrameworkDiscoveryOptions);
             return;
         }
 
         var testCaseDiscovererType = cleanTestCaseDiscovererAttribute.GetNamedArgument<Type>(nameof(CleanTestCaseDiscovererAttribute.DiscovererType));
         if (testCaseDiscovererType is null) return;
 
-        var customInitializationUtilitiesCollection = this.GetInitializationUtilities(methodAttributeContainer, globalRequirements);
-        var testCaseDiscoverer = Activator.CreateInstance(testCaseDiscovererType, this.DiagnosticMessageSink, testCaseDiscoveryOptions, customInitializationUtilitiesCollection, this._cleanTestAssemblyData, this._globalUtilitiesServiceCollection) as IXunitTestCaseDiscoverer;
+        var customInitializationUtilitiesCollection = this.GetInitializationUtilities(methodAttributeContainer, options.GlobalRequirements);
+        var testCaseDiscoverer = Activator.CreateInstance(testCaseDiscovererType, this.DiagnosticMessageSink, options.TestCaseDiscoveryOptions, customInitializationUtilitiesCollection, this._cleanTestAssemblyData, this._globalUtilitiesServiceCollection) as IXunitTestCaseDiscoverer;
 
         if (testCaseDiscoverer is null) return;
 
-        var testCases = testCaseDiscoverer.Discover(discoveryOptions, testMethod, factAttribute);
+        var testCases = testCaseDiscoverer.Discover(options.TestFrameworkDiscoveryOptions, testMethod, factAttribute);
         foreach (var testCase in testCases.OrEmptyIfNull().IgnoreNullValues())
-            this.ReportDiscoveredTestCase(testCase, includeSourceInformation, messageBus);
+            this.ReportDiscoveredTestCase(testCase, options.IncludeSourceInformation, options.messageBus);
     }
 
     private CleanTestInitializationCollection<ICleanUtilityDescriptor> GetInitializationUtilities(DecoratedMethod? method, HashSet<string> globalRequirements)

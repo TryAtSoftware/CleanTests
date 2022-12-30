@@ -53,7 +53,7 @@ public abstract class CleanTest : ICleanTest, IDisposable, IAsyncLifetime
 
     protected virtual void Dispose(bool disposing)
     {
-        if (disposing == false) return;
+        if (!disposing) return;
 
         this._scope?.Dispose();
         this._localDependenciesProvider?.Dispose();
