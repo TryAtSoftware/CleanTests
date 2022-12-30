@@ -3,7 +3,6 @@ namespace TryAtSoftware.CleanTests.Core.XUnit.Discovery;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using Microsoft.Extensions.DependencyInjection;
 using TryAtSoftware.CleanTests.Core.Attributes;
 using TryAtSoftware.CleanTests.Core.Extensions;
@@ -31,7 +30,9 @@ public class CleanTestFrameworkDiscoverer : TestFrameworkDiscoverer
         this._globalUtilitiesServiceCollection = globalUtilitiesCollection ?? throw new ArgumentNullException(nameof(globalUtilitiesCollection));
 
         this._cleanTestAssemblyData = new CleanTestAssemblyData(this._utilitiesCollection.GetAllValues());
+        
         this._fallbackTestFrameworkDiscoverer = new FallbackTestFrameworkDiscoverer(assemblyInfo, sourceProvider, diagnosticMessageSink);
+        this.DisposalTracker.Add(this._fallbackTestFrameworkDiscoverer);
     }
 
     /// <inheritdoc />
@@ -55,15 +56,6 @@ public class CleanTestFrameworkDiscoverer : TestFrameworkDiscoverer
         return new TestClass(collection, wrappedXUnitTypeInfo);
     }
 
-    protected override bool IsValidTestClass(ITypeInfo type)
-    {
-        if (!base.IsValidTestClass(type)) return false;
-
-        var decoratedClass = new DecoratedType(type);
-        var testSuiteAttribute = decoratedClass.GetCustomAttributes(typeof(TestSuiteAttribute)).IgnoreNullValues().SingleOrDefault();
-        return testSuiteAttribute is not null;
-    }
-
     /// <inheritdoc />
     protected override bool FindTestsForType(ITestClass testClass, bool includeSourceInformation, IMessageBus messageBus, ITestFrameworkDiscoveryOptions discoveryOptions)
     {
@@ -78,18 +70,19 @@ public class CleanTestFrameworkDiscoverer : TestFrameworkDiscoverer
 
         var decoratedClass = new DecoratedType(testClass.Class);
         var globalRequirements = ExtractRequirements(decoratedClass);
+        var isCleanTestClass = testClass.Class.Interfaces.Any(i => i.ToRuntimeType() == typeof(ICleanTest));
         foreach (var methodInfo in testClass.Class.GetMethods(includePrivateMethods: false).OrEmptyIfNull().IgnoreNullValues())
-            this.DiscoverTestCasesForMethod(testClass, includeSourceInformation, messageBus, discoveryOptions, methodInfo, testCaseDiscoveryOptions, globalRequirements);
+            this.DiscoverTestCasesForMethod(testClass, includeSourceInformation, messageBus, discoveryOptions, methodInfo, testCaseDiscoveryOptions, isCleanTestClass, globalRequirements);
     }
 
-    private void DiscoverTestCasesForMethod(ITestClass testClass, bool includeSourceInformation, IMessageBus messageBus, ITestFrameworkDiscoveryOptions discoveryOptions, IMethodInfo methodInfo, TestCaseDiscoveryOptions testCaseDiscoveryOptions, HashSet<string> globalRequirements)
+    private void DiscoverTestCasesForMethod(ITestClass testClass, bool includeSourceInformation, IMessageBus messageBus, ITestFrameworkDiscoveryOptions discoveryOptions, IMethodInfo methodInfo, TestCaseDiscoveryOptions testCaseDiscoveryOptions, bool isCleanTestClass, HashSet<string> globalRequirements)
     {
         var methodAttributeContainer = new DecoratedMethod(methodInfo);
         if (!methodAttributeContainer.TryGetSingleAttribute(typeof(FactAttribute), out var factAttribute)) return;
 
         var testMethod = new TestMethod(testClass, methodInfo);
         var factAttributeAttributeContainer = new DecoratedAttribute(factAttribute);
-        if (!factAttributeAttributeContainer.TryGetSingleAttribute(typeof(CleanTestCaseDiscovererAttribute), out var cleanTestCaseDiscovererAttribute))
+        if (!isCleanTestClass || !factAttributeAttributeContainer.TryGetSingleAttribute(typeof(CleanTestCaseDiscovererAttribute), out var cleanTestCaseDiscovererAttribute))
         {
             this._fallbackTestFrameworkDiscoverer.DiscoverFallbackTests(testMethod, includeSourceInformation, messageBus, discoveryOptions);
             return;

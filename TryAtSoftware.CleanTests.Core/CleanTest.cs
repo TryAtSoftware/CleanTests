@@ -1,27 +1,26 @@
-﻿namespace TryAtSoftware.CleanTests.Sample;
+namespace TryAtSoftware.CleanTests.Core;
 
+using System;
+using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
-using TryAtSoftware.CleanTests.Core.Attributes;
 using TryAtSoftware.CleanTests.Core.Interfaces;
-using TryAtSoftware.CleanTests.Sample.Attributes;
+using Xunit;
 using Xunit.Abstractions;
 
-[TestSuite]
-[TestSuiteGenericTypeMapping(typeof(NumericAttribute), typeof(int))]
-public class CleanTest : ICleanTest, IDisposable, IAsyncLifetime
+public abstract class CleanTest : ICleanTest, IDisposable, IAsyncLifetime
 {
     private ServiceProvider? _localDependenciesProvider;
     private IServiceScope? _scope;
-    
+
     private ServiceProvider? _globalDependenciesProvider;
 
-    public CleanTest(ITestOutputHelper testOutputHelper)
+    protected CleanTest(ITestOutputHelper testOutputHelper)
     {
         this.TestOutputHelper = testOutputHelper ?? throw new ArgumentNullException(nameof(testOutputHelper));
     }
 
     protected ITestOutputHelper TestOutputHelper { get; }
-    
+
     public IServiceCollection LocalDependenciesCollection { get; } = new ServiceCollection();
     public IServiceCollection GlobalDependenciesCollection { get; } = new ServiceCollection();
 
@@ -29,13 +28,13 @@ public class CleanTest : ICleanTest, IDisposable, IAsyncLifetime
     {
         var serviceProviderOptions = new ServiceProviderOptions { ValidateScopes = true, ValidateOnBuild = true };
         this._globalDependenciesProvider = this.GlobalDependenciesCollection.BuildServiceProvider(serviceProviderOptions);
-        
+
         this._localDependenciesProvider = this.LocalDependenciesCollection.BuildServiceProvider(serviceProviderOptions);
         this._scope = this._localDependenciesProvider.CreateScope();
 
         return Task.CompletedTask;
     }
-    
+
     protected TService GetGlobalService<TService>()
         where TService : notnull
     {
