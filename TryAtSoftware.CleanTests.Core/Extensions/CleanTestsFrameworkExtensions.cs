@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Reflection;
 using TryAtSoftware.CleanTests.Core.Interfaces;
 using TryAtSoftware.Extensions.Collections;
 
@@ -27,6 +28,18 @@ public static class CleanTestsFrameworkExtensions
         if (demands is null) throw new ArgumentNullException(nameof(demands));
 
         return utilitiesCollection.Get(category).OrEmptyIfNull().IgnoreNullValues().Where(iu => demands.All(iu.ContainsCharacteristic)).ToArray();
+    }
+
+    internal static Assembly? LoadAssemblySafely(string assemblyName)
+    {
+        try
+        {
+            return Assembly.Load(assemblyName);
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     internal static void ValidateInstantiated<TValue>([NotNull] this TValue? value, string valueName)
