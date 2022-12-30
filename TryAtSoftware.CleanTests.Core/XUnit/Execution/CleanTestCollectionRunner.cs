@@ -21,12 +21,22 @@ public class CleanTestCollectionRunner : XunitTestCollectionRunner
         this._globalUtilitiesCollection = globalUtilitiesCollection ?? throw new ArgumentNullException(nameof(globalUtilitiesCollection));
     }
 
-    protected override Task<RunSummary> RunTestClassAsync(ITestClass testClass, IReflectionTypeInfo @class, IEnumerable<IXunitTestCase> testCases)
+    protected override async Task<RunSummary> RunTestClassAsync(ITestClass testClass, IReflectionTypeInfo @class, IEnumerable<IXunitTestCase> testCases)
     {
         this._globalUtilitiesProvider.ValidateInstantiated("global utilities provider");
 
-        var testClassRunner = new CleanTestClassRunner(testClass, @class, testCases, this.DiagnosticMessageSink, this.MessageBus, this.TestCaseOrderer, new ExceptionAggregator(this.Aggregator), this.CancellationTokenSource, this.CollectionFixtureMappings, this._globalUtilitiesProvider);
-        return testClassRunner.RunAsync();
+        var (cleanTestCases, otherTestCases) = testCases.ExtractCleanTestCases();
+
+        var runSummary = new RunSummary();
+        var cleanTestClassRunner = new CleanTestClassRunner(testClass, @class, cleanTestCases, this.DiagnosticMessageSink, this.MessageBus, this.TestCaseOrderer, new ExceptionAggregator(this.Aggregator), this.CancellationTokenSource, this.CollectionFixtureMappings, this._globalUtilitiesProvider);
+        var cleanTestsRunSummary = await cleanTestClassRunner.RunAsync();
+        runSummary.Aggregate(cleanTestsRunSummary);
+
+        var fallbackTestClassRunner = new XunitTestClassRunner(testClass, @class, otherTestCases, this.DiagnosticMessageSink, this.MessageBus, this.TestCaseOrderer, new ExceptionAggregator(this.Aggregator), this.CancellationTokenSource, this.CollectionFixtureMappings);
+        var fallbackTestsRunSummary = await fallbackTestClassRunner.RunAsync();
+        runSummary.Aggregate(fallbackTestsRunSummary);
+
+        return runSummary;
     }
 
     protected override async Task AfterTestCollectionStartingAsync()

@@ -6,7 +6,9 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using TryAtSoftware.CleanTests.Core.Interfaces;
+using TryAtSoftware.CleanTests.Core.XUnit.Interfaces;
 using TryAtSoftware.Extensions.Collections;
+using Xunit.Sdk;
 
 public static class CleanTestsFrameworkExtensions
 {
@@ -28,6 +30,19 @@ public static class CleanTestsFrameworkExtensions
         if (demands is null) throw new ArgumentNullException(nameof(demands));
 
         return utilitiesCollection.Get(category).OrEmptyIfNull().IgnoreNullValues().Where(iu => demands.All(iu.ContainsCharacteristic)).ToArray();
+    }
+
+    internal static (List<ICleanTestCase> CleanTestCases, List<IXunitTestCase> OtherTestCases) ExtractCleanTestCases(this IEnumerable<IXunitTestCase>? testCases)
+    {
+        var cleanTestCases = new List<ICleanTestCase>();
+        var otherTestCases = new List<IXunitTestCase>();
+        foreach (var testCase in testCases.OrEmptyIfNull().IgnoreNullValues())
+        {
+            if (testCase is ICleanTestCase ctc) cleanTestCases.Add(ctc);
+            else otherTestCases.Add(testCase);
+        }
+
+        return (cleanTestCases, otherTestCases);
     }
 
     internal static Assembly? LoadAssemblySafely(string assemblyName)
