@@ -6,6 +6,16 @@
         <Nullable>enable</Nullable>
         <IsTestProject>false</IsTestProject>
         <SonarQubeTestProject>false</SonarQubeTestProject>
+
+        <PackageId>TryAtSoftware.CleanTests</PackageId>
+        <Version>1.0.0-alpha.1</Version>
+        <Authors>Tony Troeff</Authors>
+        <RepositoryUrl>https://github.com/TryAtSoftware/CleanTests</RepositoryUrl>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+        <Description>This package should be used to generate multiple variations for a test case (according to the applied setup) and thus make the process of writing tests cleaner and easier than ever before.</Description>
+        <Copyright>Copyright (c) Tony Troeff</Copyright>
+        <PackageTags>tryatsoftware testing combinatorics</PackageTags>
     </PropertyGroup>
 
     <ItemGroup>
