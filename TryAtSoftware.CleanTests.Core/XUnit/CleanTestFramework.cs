@@ -35,8 +35,8 @@ public class CleanTestFramework : XunitTestFramework
         foreach (var sharedUtilitiesAttribute in sharedUtilitiesAttributes)
         {
             var assemblyNameArgument = sharedUtilitiesAttribute.GetNamedArgument<string>(nameof(SharesUtilitiesWithAttribute.AssemblyName));
-            var loadedAssembly = Assembly.Load(assemblyNameArgument);
-            RegisterUtilitiesFromAssembly(Reflector.Wrap(loadedAssembly), utilitiesCollection);
+            var loadedAssembly = CleanTestsFrameworkExtensions.LoadAssemblySafely(assemblyNameArgument);
+            if (loadedAssembly is not null) RegisterUtilitiesFromAssembly(Reflector.Wrap(loadedAssembly), utilitiesCollection);
         }
         
         return new CleanTestFrameworkDiscoverer(assemblyInfo, this.SourceInformationProvider, this.DiagnosticMessageSink, utilitiesCollection, this._globalUtilitiesCollection);
