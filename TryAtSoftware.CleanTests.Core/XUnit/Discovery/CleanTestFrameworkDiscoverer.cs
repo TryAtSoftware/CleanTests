@@ -3,6 +3,7 @@ namespace TryAtSoftware.CleanTests.Core.XUnit.Discovery;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Microsoft.Extensions.DependencyInjection;
 using TryAtSoftware.CleanTests.Core.Attributes;
 using TryAtSoftware.CleanTests.Core.Extensions;
@@ -17,10 +18,11 @@ using Xunit.Sdk;
 
 public class CleanTestFrameworkDiscoverer : TestFrameworkDiscoverer
 {
+    private readonly FallbackTestFrameworkDiscoverer _fallbackTestFrameworkDiscoverer;
+
     private readonly ICleanTestInitializationCollection<ICleanUtilityDescriptor> _utilitiesCollection;
     private readonly ServiceCollection _globalUtilitiesServiceCollection;
     private readonly CleanTestAssemblyData _cleanTestAssemblyData;
-    private readonly IXunitTestCollectionFactory _testCollectionFactory;
 
     public CleanTestFrameworkDiscoverer(IAssemblyInfo assemblyInfo, ISourceInformationProvider sourceProvider, IMessageSink diagnosticMessageSink, ICleanTestInitializationCollection<ICleanUtilityDescriptor> utilitiesCollection, ServiceCollection globalUtilitiesCollection)
         : base(assemblyInfo, sourceProvider, diagnosticMessageSink)
@@ -29,37 +31,34 @@ public class CleanTestFrameworkDiscoverer : TestFrameworkDiscoverer
         this._globalUtilitiesServiceCollection = globalUtilitiesCollection ?? throw new ArgumentNullException(nameof(globalUtilitiesCollection));
 
         this._cleanTestAssemblyData = new CleanTestAssemblyData(this._utilitiesCollection.GetAllValues());
-        var testAssembly = new TestAssembly(this.AssemblyInfo);
-        var collectionBehaviorAttribute = assemblyInfo.GetCustomAttributes(typeof(CollectionBehaviorAttribute)).SingleOrDefault();
-
-        this._testCollectionFactory = ExtensibilityPointFactory.GetXunitTestCollectionFactory(diagnosticMessageSink, collectionBehaviorAttribute, testAssembly);
+        this._fallbackTestFrameworkDiscoverer = new FallbackTestFrameworkDiscoverer(assemblyInfo, sourceProvider, diagnosticMessageSink);
     }
-        
+
     /// <inheritdoc />
     protected override ITestClass CreateTestClass(ITypeInfo @class)
     {
-        var collection = this._testCollectionFactory.Get(@class);
-        
+        var collection = this._fallbackTestFrameworkDiscoverer.TestCollectionFactory.Get(@class);
+
         // 1. We need to resolve the generic parameters. In future we will be able to generate additional test classes according to a variation in the generic parameters.
         var genericTypesMap = ExtractGenericTypesMap(@class);
         var runtimeClass = @class.ToRuntimeType();
-        
+
         var genericTypesSetup = runtimeClass.ExtractGenericParametersSetup(genericTypesMap);
         var genericRuntimeClass = runtimeClass.MakeGenericType(genericTypesSetup);
         var xUnitTypeInfo = Reflector.Wrap(genericRuntimeClass);
-        
+
         // 2. We can beautify the name of the test class.
         // Before: MetadataColoringCleanTests`1[[System.Int64, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]
         // After: MetadataColoringCleanTests<Int64>
         var wrappedXUnitTypeInfo = new CleanTestReflectionTypeInfoWrapper(xUnitTypeInfo);
-        
+
         return new TestClass(collection, wrappedXUnitTypeInfo);
     }
 
     protected override bool IsValidTestClass(ITypeInfo type)
     {
         if (!base.IsValidTestClass(type)) return false;
-        
+
         var decoratedClass = new DecoratedType(type);
         var testSuiteAttribute = decoratedClass.GetCustomAttributes(typeof(TestSuiteAttribute)).IgnoreNullValues().SingleOrDefault();
         return testSuiteAttribute is not null;
@@ -88,17 +87,22 @@ public class CleanTestFrameworkDiscoverer : TestFrameworkDiscoverer
         var methodAttributeContainer = new DecoratedMethod(methodInfo);
         if (!methodAttributeContainer.TryGetSingleAttribute(typeof(FactAttribute), out var factAttribute)) return;
 
+        var testMethod = new TestMethod(testClass, methodInfo);
         var factAttributeAttributeContainer = new DecoratedAttribute(factAttribute);
-        if (!factAttributeAttributeContainer.TryGetSingleAttribute(typeof(CleanTestCaseDiscovererAttribute), out var cleanTestCaseDiscovererAttribute)) return;
+        if (!factAttributeAttributeContainer.TryGetSingleAttribute(typeof(CleanTestCaseDiscovererAttribute), out var cleanTestCaseDiscovererAttribute))
+        {
+            this._fallbackTestFrameworkDiscoverer.DiscoverFallbackTests(testMethod, includeSourceInformation, messageBus, discoveryOptions);
+            return;
+        }
 
-        var testCaseDiscovererType = cleanTestCaseDiscovererAttribute.GetNamedArgument<Type>("DiscovererType");
+        var testCaseDiscovererType = cleanTestCaseDiscovererAttribute.GetNamedArgument<Type>(nameof(CleanTestCaseDiscovererAttribute.DiscovererType));
         if (testCaseDiscovererType is null) return;
 
         var customInitializationUtilitiesCollection = this.GetInitializationUtilities(methodAttributeContainer, globalRequirements);
         var testCaseDiscoverer = Activator.CreateInstance(testCaseDiscovererType, this.DiagnosticMessageSink, testCaseDiscoveryOptions, customInitializationUtilitiesCollection, this._cleanTestAssemblyData, this._globalUtilitiesServiceCollection) as IXunitTestCaseDiscoverer;
+
         if (testCaseDiscoverer is null) return;
 
-        var testMethod = new TestMethod(testClass, methodInfo);
         var testCases = testCaseDiscoverer.Discover(discoveryOptions, testMethod, factAttribute);
         foreach (var testCase in testCases.OrEmptyIfNull().IgnoreNullValues())
             this.ReportDiscoveredTestCase(testCase, includeSourceInformation, messageBus);
@@ -135,7 +139,7 @@ public class CleanTestFrameworkDiscoverer : TestFrameworkDiscoverer
     private static IDictionary<Type, Type> ExtractGenericTypesMap(ITypeInfo typeInfo)
     {
         if (typeInfo is null) throw new ArgumentNullException(nameof(typeInfo));
-        
+
         var decoratedClass = new DecoratedType(typeInfo);
         var genericTypeMappingAttributes = decoratedClass.GetCustomAttributes(typeof(TestSuiteGenericTypeMappingAttribute));
         return genericTypeMappingAttributes.MapSafely(a => a.GetNamedArgument<Type>(nameof(TestSuiteGenericTypeMappingAttribute.AttributeType)), a => a.GetNamedArgument<Type>(nameof(TestSuiteGenericTypeMappingAttribute.ParameterType)));
@@ -145,7 +149,7 @@ public class CleanTestFrameworkDiscoverer : TestFrameworkDiscoverer
     {
         var requirements = new HashSet<string>();
         if (component is null) return requirements;
-            
+
         var requirementsAttributeType = typeof(WithRequirementsAttribute);
         foreach (var attribute in component.GetCustomAttributes(requirementsAttributeType).OrEmptyIfNull().IgnoreNullValues())
         {
