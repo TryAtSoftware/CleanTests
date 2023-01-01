@@ -102,6 +102,47 @@ public class FakeWriter : IWriter
 }
 ```
 
+### External demands
+
+Every `clean utility` can define `external demands` throughout the `ExternalDemands` attribute. With its help for each `category` a set of demanded `characteristics` can be defined.
+These demanded characteristics will alter the way variations of `clean utilities` are generated - all external demands should be satisfied for all utilities participating in the variation.
+
+Example:
+```C#
+[CleanUtility(Categories.Readers, "Console reader")]
+[ExternalDemands(Categories.Writers, Characteristics.UsesConsole)]
+public class ConsoleReader : IReader
+{
+    public string Read() => Console.ReadLine();
+}
+```
+
+### Internal requirements and demands
+
+Every `clean utility` can depend on other `clean utiliites`. This relationship can be modelled throughout the `WithRequirements` attribute.
+When such `clean utility` participates in a variation, that same variation will be reused as many times as the number of possible instantiation procedures there are (according to the registered `clean utilities` of the required categories). 
+
+Moreover, internal `demands` can be applied (throughout the `InternalDemands` attribute) to filter out the dependent `clean utilities` according to a predefined set of characteristics. 
+
+Example:
+```C#
+[CleanUtility(Categories.Engines, "Default engine")]
+[WithRequirements(Categories.Readers, Categories.Writers)]
+[InternalDemands(Categories.Writers, Characteristics.ActiveWriter)]
+public class Engine : IEngine
+{
+    private readonly IReader _reader;
+    private readonly IWriter _writer;
+    
+    public Engine(IReader reader, IWriter writer)
+    {
+        this._reader = reader ?? throw new ArgumentNullException(nameof(reader));
+        this._writer = writer ?? throw new ArgumentNullException(nameof(writer));
+    }
+    
+    /* further implementation of the `IEngine` interface... */
+}
+```
 ## How to use clean tests?
 
 This library is built atop [XUnit](https://xunit.net/) so if you are familiar with the way this framework operates, you are most likely ready to use `clean tests`.
@@ -115,7 +156,7 @@ Clean tests can define `requirements` representing the set of `categories` for w
 The `WithRequirements` attribute can be used in order to achieve that.
 
 Clean tests can also define `demands` to filter out only a specific subset of the `clean utilities` that can be used for the generation of test cases.
-The `TestDemands` attribute can be used in order to achieve that - for each `category` a set of demanded `characteristics` can be used.
+The `TestDemands` attribute can be used in order to achieve that - for each `category` a set of demanded `characteristics` can be defined.
 
 Example:
 ```C#
