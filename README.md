@@ -90,7 +90,7 @@ public class ConsoleWriter : IWriter
 }
 
 [CleanUtility(Categories.Writers, "File writer", Characteristics.UsesFile, Characteristics.ActiveWriter)]
-public class ConsoleWriter : IWriter
+public class FileWriter : IWriter
 {
     public void Write(string text) => File.WriteAllText("C:/path_to_document", text);
 }
