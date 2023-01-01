@@ -77,3 +77,17 @@ We use `demands` to make sure that the capabilities our test needs are present f
 
 In order to use a type as a `clean utility`, it should be marked with the `CleanUtility` attribute that accepts `category`, `name` and `characteristics`.
 
+Example:
+```C#
+[CleanUtility(Categories.Writers, "Console writer", Characteristics.UsesConsole)]
+public class ConsoleWriter : IWriter
+{
+    public void Write(string text) => Console.WriteLine(text);
+}
+
+[CleanUtility(Categories.Writers, "Fake writer")]
+public class FakeWriter : IWriter
+{
+    public void Write(string text) { / * Do nothing */ }
+}
+```
