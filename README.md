@@ -64,3 +64,16 @@ Using the `NuGet package manager` console within Visual Studio, you can install 
 Or using the `dotnet CLI` from a terminal window:
 
 > dotnet add package TryAtSoftware.CleanTests
+
+## What are the `clean utilities`?
+
+The `clean utility` is a key component for our library. Every `clean utility` has a `category` and a `name` that are required.
+One test may require many `clean utilities` and whenever there are two or more utilities from the same category that can be used for its execution, then a test case will be generated for each possible variation of utilities.
+
+Moreover, every `clean utility` can optionally define its own characteristics.
+These characteristics can be used to filter out on some basis the utilities that we want to use when generating the cases for a given test.
+They do often correspond to essential segments of the requested component's behavior.
+We use `demands` to make sure that the capabilities our test needs are present for the resolved utilities used to execute the test.
+
+In order to use a type as a `clean utility`, it should be marked with the `CleanUtility` attribute that accepts `category`, `name` and `characteristics`.
+
