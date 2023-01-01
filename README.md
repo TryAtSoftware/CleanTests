@@ -70,24 +70,61 @@ Or using the `dotnet CLI` from a terminal window:
 The `clean utility` is a key component for our library. Every `clean utility` has a `category` and a `name` that are required.
 One test may require many `clean utilities` and whenever there are two or more utilities from the same category that can be used for its execution, then a test case will be generated for each possible variation of utilities.
 
+Every `clean utility` can me marked as `local` or `global`.
+`Local clean utilities` will be instantiated at least once for every test case requiring their participation.
+`Global clean utilities` will be instantiated only once for all test cases sharing a common context. 
+
 Moreover, every `clean utility` can optionally define its own characteristics.
 These characteristics can be used to filter out on some basis the utilities that we want to use when generating the cases for a given test.
 They do often correspond to essential segments of the requested component's behavior.
 We use `demands` to make sure that the capabilities our test needs are present for the resolved utilities used to execute the test.
 
-In order to use a type as a `clean utility`, it should be marked with the `CleanUtility` attribute that accepts `category`, `name` and `characteristics`.
+In order to use a type as a `clean utility`, it should be marked with the `CleanUtility` attribute that accepts `category`, `name` and `characteristics`. You can also explicitly set a value to the `IsGlobal` flag.
 
 Example:
 ```C#
-[CleanUtility(Categories.Writers, "Console writer", Characteristics.UsesConsole)]
+[CleanUtility(Categories.Writers, "Console writer", Characteristics.UsesConsole, Characteristics.ActiveWriter)]
 public class ConsoleWriter : IWriter
 {
     public void Write(string text) => Console.WriteLine(text);
 }
 
+[CleanUtility(Categories.Writers, "File writer", Characteristics.UsesFile, Characteristics.ActiveWriter)]
+public class ConsoleWriter : IWriter
+{
+    public void Write(string text) => File.WriteAllText("C:/path_to_document", text);
+}
+
 [CleanUtility(Categories.Writers, "Fake writer")]
 public class FakeWriter : IWriter
 {
-    public void Write(string text) { / * Do nothing */ }
+    public void Write(string text) { /* Do nothing */ }
+}
+```
+
+## How to use clean tests?
+
+This library is built atop [XUnit](https://xunit.net/) so if you are familiar with the way this framework operates, you are most likely ready to use `clean tests`.
+There are only two requirements for this:
+- The test should be marked with either `CleanFact` (instead of `Fact`) or `CleanTheory` (instead of `Theory`).
+> You can still use tests that are marked with other attributes, however, they will be executed as standard tests and will have none of the behavior clean tests can benefit from.
+
+- The type containing the requested test should implement the `ICleanTest` interface. We suggest reusing the abstract `CleanTest` that we have exposed as it will make accessing instances of the registered `clean utilites` easier and you will not have to think about various internal processes that should be handled.
+
+Clean tests can define `requirements` representing the set of `categories` for which `clean utilities` should be provided.
+The `WithRequirements` attribute can be used in order to achieve that.
+
+Clean tests can also define `demands` to filter out only a specific subset of the `clean utilities` that can be used for the generation of test cases.
+The `TestDemands` attribute can be used in order to achieve that - for each `category` a set of demanded `characteristics` can be used.
+
+Example:
+```C#
+[CleanFact]
+[WithRequirements(Categories.Writers)]
+[TestDemands(Categories.Writers, Characteristics.ActiveWriter)]
+public void WriteShouldSucceed()
+{
+    IWriter writer = this.GetService<IWriter>();
+    writer.Write("Some text");
 }
 ```
