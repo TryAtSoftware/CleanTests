@@ -116,7 +116,7 @@ public class CleanTestFrameworkDiscoverer : TestFrameworkDiscoverer
         var demands = method.ExtractDemands<TestDemandsAttribute>();
 
         var allRequirementSources = new[] { initializationRequirements, globalRequirements };
-        foreach (var category in allRequirementSources.SetIntersection())
+        foreach (var category in allRequirementSources.Union())
         {
             var categoryDemands = demands.Get(category);
             foreach (var initializationUtility in this._utilitiesCollection.Get(category, categoryDemands)) customInitializationUtilitiesCollection.Register(category, initializationUtility);

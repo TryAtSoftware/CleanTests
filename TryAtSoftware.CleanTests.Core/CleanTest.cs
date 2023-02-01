@@ -1,6 +1,7 @@
 namespace TryAtSoftware.CleanTests.Core;
 
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using TryAtSoftware.CleanTests.Core.Interfaces;
@@ -26,13 +27,31 @@ public abstract class CleanTest : ICleanTest, IDisposable, IAsyncLifetime
 
     public virtual Task InitializeAsync()
     {
-        var serviceProviderOptions = new ServiceProviderOptions { ValidateScopes = true, ValidateOnBuild = true };
-        this._globalDependenciesProvider = this.GlobalDependenciesCollection.BuildServiceProvider(serviceProviderOptions);
-
-        this._localDependenciesProvider = this.LocalDependenciesCollection.BuildServiceProvider(serviceProviderOptions);
-        this._scope = this._localDependenciesProvider.CreateScope();
+        this.InitializeGlobalDependenciesProvider();
+        this.InitializeLocalDependenciesProvider();
 
         return Task.CompletedTask;
+    }
+
+    public virtual Task DisposeAsync() => Task.CompletedTask;
+
+    public void Dispose()
+    {
+        this.Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected void InitializeGlobalDependenciesProvider()
+    {
+        var serviceProviderOptions = ConstructServiceProviderOptions();
+        this._globalDependenciesProvider = this.GlobalDependenciesCollection.BuildServiceProvider(serviceProviderOptions);
+    }
+
+    protected void InitializeLocalDependenciesProvider()
+    {
+        var serviceProviderOptions = ConstructServiceProviderOptions();
+        this._localDependenciesProvider = this.LocalDependenciesCollection.BuildServiceProvider(serviceProviderOptions);
+        this._scope = this._localDependenciesProvider.CreateScope();
     }
 
     protected TService GetGlobalService<TService>()
@@ -42,14 +61,18 @@ public abstract class CleanTest : ICleanTest, IDisposable, IAsyncLifetime
         return this._globalDependenciesProvider.GetRequiredService<TService>();
     }
 
+    protected IEnumerable<TService> GetServices<TService>()
+    {
+        Assert.NotNull(this._scope);
+        return this._scope.ServiceProvider.GetServices<TService>();
+    }
+
     protected TService GetService<TService>()
         where TService : notnull
     {
         Assert.NotNull(this._scope);
         return this._scope.ServiceProvider.GetRequiredService<TService>();
     }
-
-    public virtual Task DisposeAsync() => Task.CompletedTask;
 
     protected virtual void Dispose(bool disposing)
     {
@@ -60,10 +83,7 @@ public abstract class CleanTest : ICleanTest, IDisposable, IAsyncLifetime
         // The global dependencies provider should not be disposed as that would cause the disposal of all dependent utilities and that may be problematic.
         // Its disposal is handled on a different level.
     }
+    
+    private static ServiceProviderOptions ConstructServiceProviderOptions() => new() { ValidateScopes = true, ValidateOnBuild = true };
 
-    public void Dispose()
-    {
-        this.Dispose(true);
-        GC.SuppressFinalize(this);
-    }
 }
