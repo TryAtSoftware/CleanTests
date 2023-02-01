@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Microsoft.Extensions.DependencyInjection;
 using TryAtSoftware.CleanTests.Core.Attributes;
 using TryAtSoftware.CleanTests.Core.Extensions;
 using TryAtSoftware.CleanTests.Core.Interfaces;
@@ -16,15 +15,12 @@ using Xunit.Sdk;
 
 public class CleanTestFramework : XunitTestFramework
 {
-    private readonly ServiceCollection _globalUtilitiesCollection;
-
     public CleanTestFramework(IMessageSink messageSink)
         : base(messageSink)
     {
-        this._globalUtilitiesCollection = new ServiceCollection();
     }
 
-    protected override ITestFrameworkExecutor CreateExecutor(AssemblyName assemblyName) => new CleanTestFrameworkExecutor(assemblyName, this.SourceInformationProvider, this.DiagnosticMessageSink, this.CreateDiscoverer, this._globalUtilitiesCollection);
+    protected override ITestFrameworkExecutor CreateExecutor(AssemblyName assemblyName) => new CleanTestFrameworkExecutor(assemblyName, this.SourceInformationProvider, this.DiagnosticMessageSink, this.CreateDiscoverer);
 
     protected override ITestFrameworkDiscoverer CreateDiscoverer(IAssemblyInfo assemblyInfo)
     {
@@ -39,7 +35,7 @@ public class CleanTestFramework : XunitTestFramework
             if (loadedAssembly is not null) RegisterUtilitiesFromAssembly(Reflector.Wrap(loadedAssembly), utilitiesCollection);
         }
         
-        return new CleanTestFrameworkDiscoverer(assemblyInfo, this.SourceInformationProvider, this.DiagnosticMessageSink, utilitiesCollection, this._globalUtilitiesCollection);
+        return new CleanTestFrameworkDiscoverer(assemblyInfo, this.SourceInformationProvider, this.DiagnosticMessageSink, utilitiesCollection);
     }
 
     private static void RegisterUtilitiesFromAssembly(IAssemblyInfo assemblyInfo, ICleanTestInitializationCollection<ICleanUtilityDescriptor> utilitiesCollection)

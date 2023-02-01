@@ -3,12 +3,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.Extensions.DependencyInjection;
 using TryAtSoftware.CleanTests.Core.Extensions;
 using TryAtSoftware.CleanTests.Core.Interfaces;
 using TryAtSoftware.CleanTests.Core.Utilities;
 using TryAtSoftware.Extensions.Collections;
-using TryAtSoftware.Extensions.Reflection;
 using Xunit.Abstractions;
 using Xunit.Sdk;
 
@@ -18,15 +16,13 @@ public abstract class BaseTestCaseDiscoverer : IXunitTestCaseDiscoverer
     private readonly TestCaseDiscoveryOptions _testCaseDiscoveryOptions;
     private readonly ICleanTestInitializationCollection<ICleanUtilityDescriptor> _initializationUtilitiesCollection;
     private readonly CleanTestAssemblyData _cleanTestAssemblyData;
-    private readonly ServiceCollection _globalUtilitiesCollection;
 
-    protected BaseTestCaseDiscoverer(IMessageSink diagnosticMessageSink, TestCaseDiscoveryOptions testCaseDiscoveryOptions, ICleanTestInitializationCollection<ICleanUtilityDescriptor> initializationUtilitiesCollection, CleanTestAssemblyData cleanTestAssemblyData, ServiceCollection globalUtilitiesCollection)
+    protected BaseTestCaseDiscoverer(IMessageSink diagnosticMessageSink, TestCaseDiscoveryOptions testCaseDiscoveryOptions, ICleanTestInitializationCollection<ICleanUtilityDescriptor> initializationUtilitiesCollection, CleanTestAssemblyData cleanTestAssemblyData)
     {
         this._diagnosticMessageSink = diagnosticMessageSink ?? throw new ArgumentNullException(nameof(diagnosticMessageSink));
         this._testCaseDiscoveryOptions = testCaseDiscoveryOptions ?? throw new ArgumentNullException(nameof(testCaseDiscoveryOptions));
         this._initializationUtilitiesCollection = initializationUtilitiesCollection ?? throw new ArgumentNullException(nameof(initializationUtilitiesCollection));
         this._cleanTestAssemblyData = cleanTestAssemblyData ?? throw new ArgumentNullException(nameof(cleanTestAssemblyData));
-        this._globalUtilitiesCollection = globalUtilitiesCollection ?? throw new ArgumentNullException(nameof(globalUtilitiesCollection));
     }
 
     /// <inheritdoc />
@@ -55,8 +51,6 @@ public abstract class BaseTestCaseDiscoverer : IXunitTestCaseDiscoverer
                 var testData = new CleanTestCaseData(this._testCaseDiscoveryOptions.GenericTypes, dependencies);
                 var methodDisplay = discoveryOptions.MethodDisplayOrDefault();
                 var methodDisplayOptions = discoveryOptions.MethodDisplayOptionsOrDefault();
-
-                this.RegisterGlobalUtilities(dependencies);
 
                 foreach (var testCaseArguments in argumentsCollection)
                 {
@@ -295,22 +289,6 @@ public abstract class BaseTestCaseDiscoverer : IXunitTestCaseDiscoverer
                 sequence[position] = nodes[position][i];
                 Generate(position + 1);
             }
-        }
-    }
-
-    private void RegisterGlobalUtilities(IEnumerable<IndividualInitializationUtilityDependencyNode> dependencyNodes)
-    {
-        foreach (var dependencyNode in dependencyNodes)
-        {
-            var initializationUtility = this._cleanTestAssemblyData.InitializationUtilitiesById[dependencyNode.Id];
-            if (!initializationUtility.IsGlobal) continue;
-
-            var genericTypesSetup = initializationUtility.Type.ExtractGenericParametersSetup(this._testCaseDiscoveryOptions.GenericTypes);
-            var implementationType = initializationUtility.Type.MakeGenericType(genericTypesSetup);
-            
-            foreach (var implementedInterface in implementationType.GetInterfaces()) this._globalUtilitiesCollection.AddSingleton(implementedInterface, sp => sp.GetService(implementationType));
-            this._globalUtilitiesCollection.AddSingleton(implementationType);
-            this.RegisterGlobalUtilities(dependencyNode.Dependencies);
         }
     }
 }

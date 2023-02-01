@@ -3,8 +3,10 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using TryAtSoftware.CleanTests.Core.Interfaces;
 using TryAtSoftware.CleanTests.Core.XUnit.Interfaces;
 using TryAtSoftware.Extensions.Collections;
+using TryAtSoftware.Extensions.Reflection;
 using Xunit.Abstractions;
 
 public static class XUnitFrameworkExtensions
@@ -21,5 +23,15 @@ public static class XUnitFrameworkExtensions
 
         attribute = retrievedSingleAttribute;
         return true;
+    }
+    
+    public static (ICleanUtilityDescriptor InitializationUtility, Type ImplementationType) Materialize(this IndividualInitializationUtilityDependencyNode dependencyNode, CleanTestAssemblyData assemblyData, CleanTestCaseData caseData)
+    {
+        var initializationUtility = assemblyData.InitializationUtilitiesById[dependencyNode.Id];
+
+        var genericTypesSetup = initializationUtility.Type.ExtractGenericParametersSetup(caseData.GenericTypesMap);
+        var implementationType = initializationUtility.Type.MakeGenericType(genericTypesSetup);
+
+        return (initializationUtility, implementationType);
     }
 }

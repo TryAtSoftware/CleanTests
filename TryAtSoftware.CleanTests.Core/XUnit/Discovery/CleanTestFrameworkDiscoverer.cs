@@ -3,7 +3,6 @@ namespace TryAtSoftware.CleanTests.Core.XUnit.Discovery;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.Extensions.DependencyInjection;
 using TryAtSoftware.CleanTests.Core.Attributes;
 using TryAtSoftware.CleanTests.Core.Extensions;
 using TryAtSoftware.CleanTests.Core.Interfaces;
@@ -21,14 +20,12 @@ public class CleanTestFrameworkDiscoverer : TestFrameworkDiscoverer
     private readonly FallbackTestFrameworkDiscoverer _fallbackTestFrameworkDiscoverer;
 
     private readonly ICleanTestInitializationCollection<ICleanUtilityDescriptor> _utilitiesCollection;
-    private readonly ServiceCollection _globalUtilitiesServiceCollection;
     private readonly CleanTestAssemblyData _cleanTestAssemblyData;
 
-    public CleanTestFrameworkDiscoverer(IAssemblyInfo assemblyInfo, ISourceInformationProvider sourceProvider, IMessageSink diagnosticMessageSink, ICleanTestInitializationCollection<ICleanUtilityDescriptor> utilitiesCollection, ServiceCollection globalUtilitiesCollection)
+    public CleanTestFrameworkDiscoverer(IAssemblyInfo assemblyInfo, ISourceInformationProvider sourceProvider, IMessageSink diagnosticMessageSink, ICleanTestInitializationCollection<ICleanUtilityDescriptor> utilitiesCollection)
         : base(assemblyInfo, sourceProvider, diagnosticMessageSink)
     {
         this._utilitiesCollection = utilitiesCollection ?? throw new ArgumentNullException(nameof(utilitiesCollection));
-        this._globalUtilitiesServiceCollection = globalUtilitiesCollection ?? throw new ArgumentNullException(nameof(globalUtilitiesCollection));
 
         this._cleanTestAssemblyData = new CleanTestAssemblyData(this._utilitiesCollection.GetAllValues());
         
@@ -97,7 +94,7 @@ public class CleanTestFrameworkDiscoverer : TestFrameworkDiscoverer
         if (testCaseDiscovererType is null) return;
 
         var customInitializationUtilitiesCollection = this.GetInitializationUtilities(methodAttributeContainer, options.GlobalRequirements);
-        var testCaseDiscoverer = Activator.CreateInstance(testCaseDiscovererType, this.DiagnosticMessageSink, options.TestCaseDiscoveryOptions, customInitializationUtilitiesCollection, this._cleanTestAssemblyData, this._globalUtilitiesServiceCollection) as IXunitTestCaseDiscoverer;
+        var testCaseDiscoverer = Activator.CreateInstance(testCaseDiscovererType, this.DiagnosticMessageSink, options.TestCaseDiscoveryOptions, customInitializationUtilitiesCollection, this._cleanTestAssemblyData) as IXunitTestCaseDiscoverer;
 
         if (testCaseDiscoverer is null) return;
 

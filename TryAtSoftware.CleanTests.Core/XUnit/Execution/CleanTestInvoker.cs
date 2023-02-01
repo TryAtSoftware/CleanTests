@@ -6,6 +6,8 @@ using System.Reflection;
 using System.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using TryAtSoftware.CleanTests.Core.Interfaces;
+using TryAtSoftware.CleanTests.Core.Utilities;
+using TryAtSoftware.CleanTests.Core.XUnit.Extensions;
 using TryAtSoftware.CleanTests.Core.XUnit.Interfaces;
 using TryAtSoftware.Extensions.Collections;
 using TryAtSoftware.Extensions.Reflection;
@@ -21,7 +23,7 @@ public class CleanTestInvoker : TestInvoker<ICleanTestCase>
 
     protected override object CreateTestClass()
     {
-        if (this.ConstructorArguments[0] is not IServiceProvider globalUtilitiesProvider) throw new InvalidOperationException("The first constructor argument should be the service provider for global utilities.");
+        if (this.ConstructorArguments[0] is not GlobalUtilitiesProvider globalUtilitiesProvider) throw new InvalidOperationException("The first constructor argument should be the service provider for global utilities.");
         
         var sanitizedConstructorArguments = new object[this.ConstructorArguments.Length - 1];
         Array.Copy(this.ConstructorArguments, 1, sanitizedConstructorArguments, 0, sanitizedConstructorArguments.Length);
@@ -31,12 +33,13 @@ public class CleanTestInvoker : TestInvoker<ICleanTestCase>
 
         foreach (var dependencyNode in this.TestCase.CleanTestCaseData.InitializationUtilities.OrEmptyIfNull())
         {
-            var (initializationUtility, implementationType) = this.Materialize(dependencyNode);
+            var (initializationUtility, implementationType) = dependencyNode.Materialize(this.TestCase.CleanTestAssemblyData, this.TestCase.CleanTestCaseData);
             var implementedInterfaceTypes = implementationType.GetInterfaces();
 
             if (initializationUtility.IsGlobal)
             {
-                var globalUtility = globalUtilitiesProvider.GetRequiredService(implementationType);
+                var globalUtility = globalUtilitiesProvider.GetUtility(dependencyNode.GetUniqueId(), implementationType);
+                if (globalUtility is null) throw new InvalidOperationException($"Global utility of type {TypeNames.Get(implementationType)} could not be constructed successfully.");
                 foreach (var implementedInterfaceType in implementedInterfaceTypes) cleanTest.GlobalDependenciesCollection.AddSingleton(implementedInterfaceType, globalUtility);
             }
             else
@@ -48,18 +51,8 @@ public class CleanTestInvoker : TestInvoker<ICleanTestCase>
 
     private object ConstructInitializationUtility(IndividualInitializationUtilityDependencyNode dependencyNode, IServiceProvider serviceProvider)
     {
-        var (_, implementationType) = this.Materialize(dependencyNode);
+        var (_, implementationType) = dependencyNode.Materialize(this.TestCase.CleanTestAssemblyData, this.TestCase.CleanTestCaseData);
         var dependencies = dependencyNode.Dependencies.Select(dependentUtility => this.ConstructInitializationUtility(dependentUtility, serviceProvider));
         return ActivatorUtilities.CreateInstance(serviceProvider, implementationType, dependencies.ToArray());
-    }
-
-    private (ICleanUtilityDescriptor InitializationUtility, Type ImplementationType) Materialize(IndividualInitializationUtilityDependencyNode dependencyNode)
-    {
-        var initializationUtility = this.TestCase.CleanTestAssemblyData.InitializationUtilitiesById[dependencyNode.Id];
-
-        var genericTypesSetup = initializationUtility.Type.ExtractGenericParametersSetup(this.TestCase.CleanTestCaseData.GenericTypesMap);
-        var implementationType = initializationUtility.Type.MakeGenericType(genericTypesSetup);
-
-        return (initializationUtility, implementationType);
     }
 }
