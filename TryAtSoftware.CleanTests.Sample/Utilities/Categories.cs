@@ -1,8 +1,9 @@
-namespace TryAtSoftware.CleanTests.Sample.Utilities;
+﻿namespace TryAtSoftware.CleanTests.Sample.Utilities;
 
 public class Categories
 {
     public const string People = "people";
     public const string Creations = "creations";
-    public const string Engines = "engines";
+    public const string Zoos = "zoos";
+    public const string Animals = "animals";
 }

@@ -1,4 +1,4 @@
-﻿namespace TryAtSoftware.CleanTests.Core.XUnit.Execution;
+namespace TryAtSoftware.CleanTests.Core.XUnit.Execution;
 
 using System;
 using System.Collections.Generic;
@@ -49,8 +49,6 @@ public class CleanTestCollectionRunner : XunitTestCollectionRunner
 
     protected override async Task BeforeTestCollectionFinishedAsync()
     {
-        this._globalUtilitiesProvider.ValidateInstantiated("global utilities provider");
-
         foreach (var globalInitializationUtility in this._globalUtilitiesProvider.GetUtilities<IAsyncLifetime>()) await globalInitializationUtility.DisposeAsync();
         foreach (var globalInitializationUtility in this._globalUtilitiesProvider.GetUtilities<IDisposable>()) this.Aggregator.Run(globalInitializationUtility.Dispose);
 
