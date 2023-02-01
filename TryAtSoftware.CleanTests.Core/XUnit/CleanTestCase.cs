@@ -108,7 +108,7 @@ public class CleanTestCase : XunitTestCase, ICleanTestCase
         return defaultId + cleanIdBuilder;
     }
 
-    private ICleanUtilityDescriptor GetInitializationUtilityById(Guid id) => this.CleanTestAssemblyData.InitializationUtilitiesById[id];
+    private ICleanUtilityDescriptor GetInitializationUtilityById(Guid id) => this.CleanTestAssemblyData.CleanUtilitiesById[id];
 
     private string IterateDependencyNode(IndividualInitializationUtilityDependencyNode node, Func<ICleanUtilityDescriptor, string> propertySelector)
     {

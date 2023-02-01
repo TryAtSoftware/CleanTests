@@ -7,15 +7,15 @@ using TryAtSoftware.Extensions.Collections;
 
 public class CleanTestAssemblyData
 {
-    public ICleanTestInitializationCollection<ICleanUtilityDescriptor> InitializationUtilities { get; } = new CleanTestInitializationCollection<ICleanUtilityDescriptor>();
-    public IDictionary<Guid, ICleanUtilityDescriptor> InitializationUtilitiesById { get; } = new Dictionary<Guid, ICleanUtilityDescriptor>();
+    public ICleanTestInitializationCollection<ICleanUtilityDescriptor> CleanUtilities { get; } = new CleanTestInitializationCollection<ICleanUtilityDescriptor>();
+    public IDictionary<Guid, ICleanUtilityDescriptor> CleanUtilitiesById { get; } = new Dictionary<Guid, ICleanUtilityDescriptor>();
 
     public CleanTestAssemblyData(IEnumerable<ICleanUtilityDescriptor> initializationUtilities)
     {
         foreach (var initializationUtility in initializationUtilities.OrEmptyIfNull().IgnoreNullValues())
         {
-            this.InitializationUtilities.Register(initializationUtility.Category, initializationUtility);
-            this.InitializationUtilitiesById[initializationUtility.Id] = initializationUtility;
+            this.CleanUtilities.Register(initializationUtility.Category, initializationUtility);
+            this.CleanUtilitiesById[initializationUtility.Id] = initializationUtility;
         }
     }
 }

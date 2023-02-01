@@ -41,7 +41,7 @@ public abstract class BaseTestCaseDiscoverer : IXunitTestCaseDiscoverer
         foreach (var variation in variations)
         {
             // NOTE: This is not the most optimal solution but it works correctly. When we have a lot of spare time, we may think of optimizing this algorithm.
-            if (!AllDemandsAreFulfilled(variation, this._cleanTestAssemblyData.InitializationUtilitiesById)) continue;
+            if (!AllDemandsAreFulfilled(variation, this._cleanTestAssemblyData.CleanUtilitiesById)) continue;
 
             var (isSuccessful, dependenciesSet) = GetDependencies(variation.Values, this._cleanTestAssemblyData);
             if (!isSuccessful) continue;
@@ -83,7 +83,7 @@ public abstract class BaseTestCaseDiscoverer : IXunitTestCaseDiscoverer
         var dependenciesConstructionGraphs = new List<FullInitializationUtilityConstructionGraph>();
         foreach (var utilityId in utilities)
         {
-            var utility = assemblyData.InitializationUtilitiesById[utilityId];
+            var utility = assemblyData.CleanUtilitiesById[utilityId];
             var (isSuccessful, constructionGraph) = BuildConstructionGraph(utility, assemblyData, new HashSet<Guid>());
             if (!isSuccessful) return (IsSuccessful: false, DependencyNodes: Array.Empty<IndividualInitializationUtilityDependencyNode[]>());
 
@@ -119,7 +119,7 @@ public abstract class BaseTestCaseDiscoverer : IXunitTestCaseDiscoverer
         var dependenciesVariations = variationMachine.GetVariations();
         foreach (var variation in dependenciesVariations)
         {
-            if (!AllDemandsAreFulfilled(variation, assemblyData.InitializationUtilitiesById)) continue;
+            if (!AllDemandsAreFulfilled(variation, assemblyData.CleanUtilitiesById)) continue;
 
             var variationDependenciesConstructionGraphs = variation.Values.Select(x => dependencyGraphsById[x]).ToList(); 
             graph.ConstructionDescriptors.Add(variationDependenciesConstructionGraphs);
@@ -134,7 +134,7 @@ public abstract class BaseTestCaseDiscoverer : IXunitTestCaseDiscoverer
         var currentDependencies = new List<Guid>();
             
         // NOTE: Global utilities can depend on other global utilities only. In future we may want to support local utilities to depend on global utilities as well. However, this is not a priority right now.
-        foreach (var dependentUtility in assemblyData.InitializationUtilities.Get(requirement, localDemands).Where(iu => iu.IsGlobal == utilityDescriptor.IsGlobal))
+        foreach (var dependentUtility in assemblyData.CleanUtilities.Get(requirement, localDemands).Where(iu => iu.IsGlobal == utilityDescriptor.IsGlobal))
         {
             var (isSuccessful, dependentUtilityConstructionGraph) = BuildConstructionGraph(dependentUtility, assemblyData, visited);
             if (isSuccessful && dependentUtilityConstructionGraph is not null)

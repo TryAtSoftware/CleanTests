@@ -5,29 +5,25 @@ using System.Collections.Generic;
 
 public class GlobalUtilitiesProvider
 {
-    private readonly Dictionary<string, Dictionary<Type, object>> _utilities = new ();
+    private readonly Dictionary<string, object> _utilities = new ();
 
-    public bool AddUtility(string uniqueId, Type type, object instance)
+    public bool AddUtility(string uniqueId, object instance)
     {
         if (!this._utilities.ContainsKey(uniqueId)) this._utilities[uniqueId] = new Dictionary<Type, object>();
-        if (this._utilities[uniqueId].ContainsKey(type)) return false;
 
-        this._utilities[uniqueId][type] = instance;
+        this._utilities[uniqueId] = instance;
         return true;
     }
 
-    public object? GetUtility(string uniqueId, Type type)
+    public object? GetUtility(string uniqueId)
     {
-        if (!this._utilities.ContainsKey(uniqueId) || !this._utilities[uniqueId].ContainsKey(type)) return null;
-        return this._utilities[uniqueId][type];
+        if (!this._utilities.ContainsKey(uniqueId)) return null;
+        return this._utilities[uniqueId];
     }
 
     public IEnumerable<T> GetUtilities<T>()
     {
-        foreach (var (_, ubt) in this._utilities)
-        {
-            foreach (var (_, utility) in ubt)
-                if (utility is T t) yield return t;
-        }
+        foreach (var (_, utility) in this._utilities)
+            if (utility is T t) yield return t;
     }
 }

@@ -33,12 +33,13 @@ public class CleanTestInvoker : TestInvoker<ICleanTestCase>
 
         foreach (var dependencyNode in this.TestCase.CleanTestCaseData.InitializationUtilities.OrEmptyIfNull())
         {
-            var (initializationUtility, implementationType) = dependencyNode.Materialize(this.TestCase.CleanTestAssemblyData, this.TestCase.CleanTestCaseData);
+            var (initializationUtility, implementationType) = dependencyNode.Materialize(this.TestCase.CleanTestAssemblyData.CleanUtilitiesById, this.TestCase.CleanTestCaseData.GenericTypesMap);
             var implementedInterfaceTypes = implementationType.GetInterfaces();
 
             if (initializationUtility.IsGlobal)
             {
-                var globalUtility = globalUtilitiesProvider.GetUtility(dependencyNode.GetUniqueId(), implementationType);
+                var uniqueId = dependencyNode.GetUniqueId(this.TestCase.CleanTestAssemblyData.CleanUtilitiesById, this.TestCase.CleanTestCaseData.GenericTypesMap);
+                var globalUtility = globalUtilitiesProvider.GetUtility(uniqueId);
                 if (globalUtility is null) throw new InvalidOperationException($"Global utility of type {TypeNames.Get(implementationType)} could not be constructed successfully.");
                 foreach (var implementedInterfaceType in implementedInterfaceTypes) cleanTest.GlobalDependenciesCollection.AddSingleton(implementedInterfaceType, globalUtility);
             }
@@ -51,7 +52,7 @@ public class CleanTestInvoker : TestInvoker<ICleanTestCase>
 
     private object ConstructInitializationUtility(IndividualInitializationUtilityDependencyNode dependencyNode, IServiceProvider serviceProvider)
     {
-        var (_, implementationType) = dependencyNode.Materialize(this.TestCase.CleanTestAssemblyData, this.TestCase.CleanTestCaseData);
+        var (_, implementationType) = dependencyNode.Materialize(this.TestCase.CleanTestAssemblyData.CleanUtilitiesById, this.TestCase.CleanTestCaseData.GenericTypesMap);
         var dependencies = dependencyNode.Dependencies.Select(dependentUtility => this.ConstructInitializationUtility(dependentUtility, serviceProvider));
         return ActivatorUtilities.CreateInstance(serviceProvider, implementationType, dependencies.ToArray());
     }

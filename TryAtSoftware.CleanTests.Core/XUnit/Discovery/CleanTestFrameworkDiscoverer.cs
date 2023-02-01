@@ -111,7 +111,7 @@ public class CleanTestFrameworkDiscoverer : TestFrameworkDiscoverer
         foreach (var category in allRequirementSources.Union())
         {
             var categoryDemands = demands.Get(category);
-            foreach (var initializationUtility in this._cleanTestAssemblyData.InitializationUtilities.Get(category, categoryDemands)) customInitializationUtilitiesCollection.Register(category, initializationUtility);
+            foreach (var initializationUtility in this._cleanTestAssemblyData.CleanUtilities.Get(category, categoryDemands)) customInitializationUtilitiesCollection.Register(category, initializationUtility);
         }
 
         return customInitializationUtilitiesCollection;
