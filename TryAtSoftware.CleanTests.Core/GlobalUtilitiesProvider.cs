@@ -1,9 +1,10 @@
-﻿namespace TryAtSoftware.CleanTests.Core.Utilities;
+﻿namespace TryAtSoftware.CleanTests.Core;
 
 using System;
 using System.Collections.Generic;
+using TryAtSoftware.CleanTests.Core.Interfaces;
 
-public class GlobalUtilitiesProvider
+public class GlobalUtilitiesProvider : IGlobalUtilitiesProvider
 {
     private readonly Dictionary<string, object> _utilities = new ();
 

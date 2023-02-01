@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using TryAtSoftware.CleanTests.Core.Extensions;
-using TryAtSoftware.CleanTests.Core.Utilities;
+using TryAtSoftware.CleanTests.Core.Interfaces;
 using TryAtSoftware.CleanTests.Core.XUnit.Extensions;
 using TryAtSoftware.CleanTests.Core.XUnit.Interfaces;
 using Xunit;
@@ -14,7 +14,7 @@ using Xunit.Sdk;
 
 public class CleanTestCollectionRunner : XunitTestCollectionRunner
 {
-    private readonly GlobalUtilitiesProvider _globalUtilitiesProvider = new ();
+    private readonly IGlobalUtilitiesProvider _globalUtilitiesProvider = new GlobalUtilitiesProvider();
 
     public CleanTestCollectionRunner(ITestCollection testCollection, IEnumerable<IXunitTestCase> testCases, IMessageSink diagnosticMessageSink, IMessageBus messageBus, ITestCaseOrderer testCaseOrderer, ExceptionAggregator aggregator, CancellationTokenSource cancellationTokenSource)
         : base(testCollection, testCases, diagnosticMessageSink, messageBus, testCaseOrderer, aggregator, cancellationTokenSource)

@@ -5,15 +5,15 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using TryAtSoftware.CleanTests.Core.Utilities;
+using TryAtSoftware.CleanTests.Core.Interfaces;
 using Xunit.Abstractions;
 using Xunit.Sdk;
 
 public class CleanTestClassRunner : XunitTestClassRunner
 {
-    private readonly GlobalUtilitiesProvider _globalUtilitiesProvider;
+    private readonly IGlobalUtilitiesProvider _globalUtilitiesProvider;
         
-    public CleanTestClassRunner(ITestClass testClass, IReflectionTypeInfo @class, IEnumerable<IXunitTestCase> testCases, IMessageSink diagnosticMessageSink, IMessageBus messageBus, ITestCaseOrderer testCaseOrderer, ExceptionAggregator aggregator, CancellationTokenSource cancellationTokenSource, IDictionary<Type, object> collectionFixtureMappings, GlobalUtilitiesProvider globalUtilitiesProvider)
+    public CleanTestClassRunner(ITestClass testClass, IReflectionTypeInfo @class, IEnumerable<IXunitTestCase> testCases, IMessageSink diagnosticMessageSink, IMessageBus messageBus, ITestCaseOrderer testCaseOrderer, ExceptionAggregator aggregator, CancellationTokenSource cancellationTokenSource, IDictionary<Type, object> collectionFixtureMappings, IGlobalUtilitiesProvider globalUtilitiesProvider)
         : base(testClass, @class, testCases, diagnosticMessageSink, messageBus, testCaseOrderer, aggregator, cancellationTokenSource, collectionFixtureMappings)
     {
         this._globalUtilitiesProvider = globalUtilitiesProvider ?? throw new ArgumentNullException(nameof(globalUtilitiesProvider));

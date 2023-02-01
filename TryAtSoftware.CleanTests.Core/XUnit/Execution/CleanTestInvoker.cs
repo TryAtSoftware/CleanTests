@@ -6,7 +6,6 @@ using System.Reflection;
 using System.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using TryAtSoftware.CleanTests.Core.Interfaces;
-using TryAtSoftware.CleanTests.Core.Utilities;
 using TryAtSoftware.CleanTests.Core.XUnit.Extensions;
 using TryAtSoftware.CleanTests.Core.XUnit.Interfaces;
 using TryAtSoftware.Extensions.Collections;
@@ -23,7 +22,7 @@ public class CleanTestInvoker : TestInvoker<ICleanTestCase>
 
     protected override object CreateTestClass()
     {
-        if (this.ConstructorArguments[0] is not GlobalUtilitiesProvider globalUtilitiesProvider) throw new InvalidOperationException("The first constructor argument should be the service provider for global utilities.");
+        if (this.ConstructorArguments[0] is not IGlobalUtilitiesProvider globalUtilitiesProvider) throw new InvalidOperationException("The first constructor argument should be the provider for global utilities.");
         
         var sanitizedConstructorArguments = new object[this.ConstructorArguments.Length - 1];
         Array.Copy(this.ConstructorArguments, 1, sanitizedConstructorArguments, 0, sanitizedConstructorArguments.Length);
