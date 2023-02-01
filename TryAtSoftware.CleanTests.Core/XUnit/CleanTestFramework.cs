@@ -24,7 +24,7 @@ public class CleanTestFramework : XunitTestFramework
 
     protected override ITestFrameworkDiscoverer CreateDiscoverer(IAssemblyInfo assemblyInfo)
     {
-        var utilitiesCollection = new CleanTestInitializationCollection<ICleanUtilityDescriptor>();
+        var utilitiesCollection = new List<ICleanUtilityDescriptor>();
         
         RegisterUtilitiesFromAssembly(assemblyInfo, utilitiesCollection);
         var sharedUtilitiesAttributes = assemblyInfo.GetCustomAttributes(typeof(SharesUtilitiesWithAttribute));
@@ -34,11 +34,12 @@ public class CleanTestFramework : XunitTestFramework
             var loadedAssembly = CleanTestsFrameworkExtensions.LoadAssemblySafely(assemblyNameArgument);
             if (loadedAssembly is not null) RegisterUtilitiesFromAssembly(Reflector.Wrap(loadedAssembly), utilitiesCollection);
         }
-        
-        return new CleanTestFrameworkDiscoverer(assemblyInfo, this.SourceInformationProvider, this.DiagnosticMessageSink, utilitiesCollection);
+
+        var assemblyData = new CleanTestAssemblyData(utilitiesCollection);
+        return new CleanTestFrameworkDiscoverer(assemblyInfo, this.SourceInformationProvider, this.DiagnosticMessageSink, assemblyData);
     }
 
-    private static void RegisterUtilitiesFromAssembly(IAssemblyInfo assemblyInfo, ICleanTestInitializationCollection<ICleanUtilityDescriptor> utilitiesCollection)
+    private static void RegisterUtilitiesFromAssembly(IAssemblyInfo assemblyInfo, ICollection<ICleanUtilityDescriptor> utilitiesCollection)
     {
         foreach (var type in assemblyInfo.GetTypes(includePrivateTypes: false).OrEmptyIfNull().IgnoreNullValues())
         {
@@ -63,7 +64,7 @@ public class CleanTestFramework : XunitTestFramework
                 internalDemands.CopyTo(initializationUtility.InternalDemands);
                 externalDemands.CopyTo(initializationUtility.ExternalDemands);
 
-                utilitiesCollection.Register(categoryArgument, initializationUtility);
+                utilitiesCollection.Add(initializationUtility);
             }
         }
     }

@@ -18,17 +18,12 @@ using Xunit.Sdk;
 public class CleanTestFrameworkDiscoverer : TestFrameworkDiscoverer
 {
     private readonly FallbackTestFrameworkDiscoverer _fallbackTestFrameworkDiscoverer;
-
-    private readonly ICleanTestInitializationCollection<ICleanUtilityDescriptor> _utilitiesCollection;
     private readonly CleanTestAssemblyData _cleanTestAssemblyData;
 
-    public CleanTestFrameworkDiscoverer(IAssemblyInfo assemblyInfo, ISourceInformationProvider sourceProvider, IMessageSink diagnosticMessageSink, ICleanTestInitializationCollection<ICleanUtilityDescriptor> utilitiesCollection)
+    public CleanTestFrameworkDiscoverer(IAssemblyInfo assemblyInfo, ISourceInformationProvider sourceProvider, IMessageSink diagnosticMessageSink, CleanTestAssemblyData assemblyData)
         : base(assemblyInfo, sourceProvider, diagnosticMessageSink)
     {
-        this._utilitiesCollection = utilitiesCollection ?? throw new ArgumentNullException(nameof(utilitiesCollection));
-
-        this._cleanTestAssemblyData = new CleanTestAssemblyData(this._utilitiesCollection.GetAllValues());
-        
+        this._cleanTestAssemblyData = assemblyData ?? throw new ArgumentNullException(nameof(assemblyData));
         this._fallbackTestFrameworkDiscoverer = new FallbackTestFrameworkDiscoverer(assemblyInfo, sourceProvider, diagnosticMessageSink);
         this.DisposalTracker.Add(this._fallbackTestFrameworkDiscoverer);
     }
@@ -116,7 +111,7 @@ public class CleanTestFrameworkDiscoverer : TestFrameworkDiscoverer
         foreach (var category in allRequirementSources.Union())
         {
             var categoryDemands = demands.Get(category);
-            foreach (var initializationUtility in this._utilitiesCollection.Get(category, categoryDemands)) customInitializationUtilitiesCollection.Register(category, initializationUtility);
+            foreach (var initializationUtility in this._cleanTestAssemblyData.InitializationUtilities.Get(category, categoryDemands)) customInitializationUtilitiesCollection.Register(category, initializationUtility);
         }
 
         return customInitializationUtilitiesCollection;

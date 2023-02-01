@@ -1,10 +1,8 @@
 ﻿namespace TryAtSoftware.CleanTests.Core.XUnit.Execution;
 
-using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
 using Xunit.Abstractions;
 using Xunit.Sdk;
 
