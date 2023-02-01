@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Text;
 
 /// <summary>
 /// A record representing a multi-level graph-like data structure representing all combinations of the dependencies required to construct a given initialization utility.
@@ -33,4 +34,25 @@ public record IndividualInitializationUtilityDependencyNode(Guid Id)
 {
     public Guid Id { get; } = Id;
     public List<IndividualInitializationUtilityDependencyNode> Dependencies { get; } = new ();
+
+    public string GetUniqueId()
+    {
+        StringBuilder sb = new ();
+        Iterate(this);
+
+        return sb.ToString();
+
+        void Iterate(IndividualInitializationUtilityDependencyNode node, string? id = null)
+        {
+            var isRoot = id is null;
+            if (isRoot) sb.Append(node.Id);
+            else sb.Append($"{id}: {node.Id}");
+
+            for (var i = 0; i < node.Dependencies.Count; i++)
+            {
+                var dependencyId = isRoot ? $"{i + 1}" : $"{id}.{i + 1}";
+                Iterate(node.Dependencies[i], dependencyId);
+            }
+        }
+    }
 }

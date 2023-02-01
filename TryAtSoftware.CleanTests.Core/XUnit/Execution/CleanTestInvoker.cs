@@ -40,7 +40,7 @@ public class CleanTestInvoker : TestInvoker<ICleanTestCase>
                 foreach (var implementedInterfaceType in implementedInterfaceTypes) cleanTest.GlobalDependenciesCollection.AddSingleton(implementedInterfaceType, globalUtility);
             }
             else
-                foreach (var implementedInterfaceType in implementationType.GetInterfaces()) cleanTest.LocalDependenciesCollection.AddScoped(implementedInterfaceType, sp => this.ConstructInitializationUtility(dependencyNode, sp));
+                foreach (var implementedInterfaceType in implementedInterfaceTypes) cleanTest.LocalDependenciesCollection.AddScoped(implementedInterfaceType, sp => this.ConstructInitializationUtility(dependencyNode, sp));
         }
 
         return instance;
