@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using TryAtSoftware.CleanTests.Core.Extensions;
 using TryAtSoftware.CleanTests.Core.XUnit.Execution;
+using TryAtSoftware.CleanTests.Core.XUnit.Extensions;
 using TryAtSoftware.CleanTests.Core.XUnit.Interfaces;
 using TryAtSoftware.CleanTests.Core.XUnit.Serialization;
 using Xunit.Abstractions;
@@ -81,16 +82,9 @@ public class CleanTestCase : XunitTestCase, ICleanTestCase
         var defaultId = base.GetUniqueID();
 
         var cleanIdBuilder = new StringBuilder();
-        foreach (var initializationUtility in this.CleanTestCaseData.InitializationUtilities)
-            cleanIdBuilder.Append(this.IterateDependencyNode(initializationUtility, x => x.Id));
+        foreach (var initializationUtility in this.CleanTestCaseData.CleanUtilities)
+            cleanIdBuilder.Append(initializationUtility.GetUniqueId());
 
         return defaultId + cleanIdBuilder;
-    }
-
-    private string IterateDependencyNode(IndividualInitializationUtilityDependencyNode node, Func<IndividualInitializationUtilityDependencyNode, string> propertySelector)
-    {
-        var value = propertySelector(node);
-        if (node.Dependencies.Count == 0) return value;
-        return $"{value} ({string.Join(", ", node.Dependencies.Select(x => this.IterateDependencyNode(x, propertySelector)))})";
     }
 }

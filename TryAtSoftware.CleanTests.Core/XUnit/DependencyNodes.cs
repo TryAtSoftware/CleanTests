@@ -9,10 +9,10 @@ using System.Collections.Generic;
 /// | Service 1A |   | Service 2A |   | Service 3A |         | Service 1A |   | Service 2B |   | Service 3A |
 /// </summary>
 /// <param name="Id">The value that should be set to the <see cref="Id"/> property.</param>
-public record FullInitializationUtilityConstructionGraph(string Id)
+public record FullCleanUtilityConstructionGraph(string Id)
 {
     public string Id { get; } = Id;
-    public List<List<FullInitializationUtilityConstructionGraph>> ConstructionDescriptors { get; } = new ();
+    public List<List<FullCleanUtilityConstructionGraph>> ConstructionDescriptors { get; } = new ();
 }
 
 
@@ -28,8 +28,8 @@ public record FullInitializationUtilityConstructionGraph(string Id)
 /// | Service 1A |   | Service 2B |   | Service 3A |
 /// </summary>
 /// <param name="Id">The value that should be set to the <see cref="Id"/> property.</param>
-public record IndividualInitializationUtilityDependencyNode(string Id)
+public record IndividualCleanUtilityDependencyNode(string Id)
 {
     public string Id { get; } = Id;
-    public List<IndividualInitializationUtilityDependencyNode> Dependencies { get; } = new ();
+    public List<IndividualCleanUtilityDependencyNode> Dependencies { get; } = new ();
 }

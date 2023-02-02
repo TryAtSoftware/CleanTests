@@ -59,13 +59,13 @@ public class CleanTestCollectionRunner : XunitTestCollectionRunner
 
     private void RegisterGlobalUtilities(ICleanTestCase cleanTestCase)
     {
-        foreach (var dependency in cleanTestCase.CleanTestCaseData.InitializationUtilities)
+        foreach (var dependency in cleanTestCase.CleanTestCaseData.CleanUtilities)
         {
             if (!this._assemblyData.CleanUtilitiesById.TryGetValue(dependency.Id, out var utilityDescriptor) || utilityDescriptor is not  {IsGlobal:true}) continue;
             RegisterGlobalUtility(dependency);
         }
 
-        object RegisterGlobalUtility(IndividualInitializationUtilityDependencyNode dependencyNode)
+        object RegisterGlobalUtility(IndividualCleanUtilityDependencyNode dependencyNode)
         {
             var dependencies = new List<object>(capacity: dependencyNode.Dependencies.Count);
             foreach (var subDependency in dependencyNode.Dependencies)
@@ -74,7 +74,7 @@ public class CleanTestCollectionRunner : XunitTestCollectionRunner
                 dependencies.Add(subDependencyInstance);
             }
             
-            var uniqueId = dependencyNode.GetUniqueId(this._assemblyData.CleanUtilitiesById, cleanTestCase.CleanTestCaseData.GenericTypesMap);
+            var uniqueId = dependencyNode.GetUniqueId();
             var registeredInstance = this._globalUtilitiesProvider.GetUtility(uniqueId);
             if (registeredInstance is not null) return registeredInstance;
 

@@ -8,9 +8,9 @@ using Xunit.Abstractions;
 
 public class SerializableIndividualDependencyNode : IXunitSerializable
 {
-    private IndividualInitializationUtilityDependencyNode? _dependencyNode;
+    private IndividualCleanUtilityDependencyNode? _dependencyNode;
 
-    public IndividualInitializationUtilityDependencyNode DependencyNode
+    public IndividualCleanUtilityDependencyNode DependencyNode
     {
         get
         {
@@ -24,7 +24,7 @@ public class SerializableIndividualDependencyNode : IXunitSerializable
     {
     }
 
-    public SerializableIndividualDependencyNode(IndividualInitializationUtilityDependencyNode dependencyNode)
+    public SerializableIndividualDependencyNode(IndividualCleanUtilityDependencyNode dependencyNode)
     {
         this.DependencyNode = dependencyNode ?? throw new ArgumentNullException(nameof(dependencyNode));
     }
@@ -35,7 +35,7 @@ public class SerializableIndividualDependencyNode : IXunitSerializable
         if (info is null) throw new ArgumentNullException(nameof(info));
 
         var id = info.GetValue<string>("id");
-        this.DependencyNode = new IndividualInitializationUtilityDependencyNode(id);
+        this.DependencyNode = new IndividualCleanUtilityDependencyNode(id);
 
         var deserializedDependencies = info.GetValue<SerializableIndividualDependencyNode[]>("d");
         foreach (var dependency in deserializedDependencies.OrEmptyIfNull().Select(x => x?.DependencyNode).IgnoreNullValues())

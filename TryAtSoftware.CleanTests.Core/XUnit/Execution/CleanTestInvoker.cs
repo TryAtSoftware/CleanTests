@@ -31,26 +31,31 @@ public class CleanTestInvoker : TestInvoker<ICleanTestCase>
         var instance = this.Test.CreateTestClass(this.TestClass, sanitizedConstructorArguments, this.MessageBus, this.Timer, this.CancellationTokenSource);
         if (instance is not ICleanTest cleanTest) return instance;
 
-        foreach (var dependencyNode in this.TestCase.CleanTestCaseData.InitializationUtilities.OrEmptyIfNull())
+        foreach (var dependencyNode in this.TestCase.CleanTestCaseData.CleanUtilities.OrEmptyIfNull())
         {
-            var (initializationUtility, implementationType) = dependencyNode.Materialize(assemblyData.CleanUtilitiesById, this.TestCase.CleanTestCaseData.GenericTypesMap);
-            var implementedInterfaceTypes = implementationType.GetInterfaces();
-
-            if (initializationUtility.IsGlobal)
-            {
-                var uniqueId = dependencyNode.GetUniqueId(assemblyData.CleanUtilitiesById, this.TestCase.CleanTestCaseData.GenericTypesMap);
-                var globalUtility = globalUtilitiesProvider.GetUtility(uniqueId);
-                if (globalUtility is null) throw new InvalidOperationException($"Global utility of type {TypeNames.Get(implementationType)} could not be constructed successfully.");
-                foreach (var implementedInterfaceType in implementedInterfaceTypes) cleanTest.GlobalDependenciesCollection.AddSingleton(implementedInterfaceType, globalUtility);
-            }
-            else
-                foreach (var implementedInterfaceType in implementedInterfaceTypes) cleanTest.LocalDependenciesCollection.AddScoped(implementedInterfaceType, sp => this.ConstructInitializationUtility(dependencyNode, assemblyData, sp));
+            this.RegisterDependency(dependencyNode, assemblyData, globalUtilitiesProvider, cleanTest);
         }
 
         return instance;
     }
 
-    private object ConstructInitializationUtility(IndividualInitializationUtilityDependencyNode dependencyNode, CleanTestAssemblyData assemblyData, IServiceProvider serviceProvider)
+    private void RegisterDependency(IndividualCleanUtilityDependencyNode dependencyNode, CleanTestAssemblyData assemblyData, IGlobalUtilitiesProvider globalUtilitiesProvider, ICleanTest cleanTest)
+    {
+        var (initializationUtility, implementationType) = dependencyNode.Materialize(assemblyData.CleanUtilitiesById, this.TestCase.CleanTestCaseData.GenericTypesMap);
+        var implementedInterfaceTypes = implementationType.GetInterfaces();
+
+        if (initializationUtility.IsGlobal)
+        {
+            var globalUtility = globalUtilitiesProvider.GetUtility(dependencyNode.GetUniqueId());
+            if (globalUtility is null) throw new InvalidOperationException($"Global utility of type {TypeNames.Get(implementationType)} could not be constructed successfully.");
+            foreach (var implementedInterfaceType in implementedInterfaceTypes) cleanTest.GlobalDependenciesCollection.AddSingleton(implementedInterfaceType, globalUtility);
+        }
+        else
+            foreach (var implementedInterfaceType in implementedInterfaceTypes)
+                cleanTest.LocalDependenciesCollection.AddScoped(implementedInterfaceType, sp => this.ConstructInitializationUtility(dependencyNode, assemblyData, sp));
+    }
+
+    private object ConstructInitializationUtility(IndividualCleanUtilityDependencyNode dependencyNode, CleanTestAssemblyData assemblyData, IServiceProvider serviceProvider)
     {
         var (_, implementationType) = dependencyNode.Materialize(assemblyData.CleanUtilitiesById, this.TestCase.CleanTestCaseData.GenericTypesMap);
         var dependencies = dependencyNode.Dependencies.Select(dependentUtility => this.ConstructInitializationUtility(dependentUtility, assemblyData, serviceProvider));

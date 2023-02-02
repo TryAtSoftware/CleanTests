@@ -26,8 +26,8 @@ public static class XUnitFrameworkExtensions
         attribute = retrievedSingleAttribute;
         return true;
     }
-    
-    public static (ICleanUtilityDescriptor InitializationUtility, Type ImplementationType) Materialize(this IndividualInitializationUtilityDependencyNode dependencyNode, IDictionary<string, ICleanUtilityDescriptor> cleanUtilitiesById, IDictionary<Type, Type> genericTypesMap)
+
+    public static (ICleanUtilityDescriptor InitializationUtility, Type ImplementationType) Materialize(this IndividualCleanUtilityDependencyNode dependencyNode, IDictionary<string, ICleanUtilityDescriptor> cleanUtilitiesById, IDictionary<Type, Type> genericTypesMap)
     {
         var initializationUtility = cleanUtilitiesById[dependencyNode.Id];
 
@@ -37,28 +37,10 @@ public static class XUnitFrameworkExtensions
         return (initializationUtility, implementationType);
     }
 
-    public static string GetUniqueId(this IndividualInitializationUtilityDependencyNode dependencyNode, IDictionary<string, ICleanUtilityDescriptor> cleanUtilitiesById, IDictionary<Type, Type> genericTypesMap)
+    public static string GetUniqueId(this IndividualCleanUtilityDependencyNode node)
     {
-        if (dependencyNode is null) throw new ArgumentNullException(nameof(dependencyNode));
-
-        StringBuilder sb = new();
-        Iterate(dependencyNode);
-        return sb.ToString();
-
-        void Iterate(IndividualInitializationUtilityDependencyNode node, string? id = null)
-        {
-            var isRoot = id is null;
-            if (isRoot) sb.Append(node.Id);
-            else sb.Append($"{id}:{node.Id}");
-
-            var (_, implementationType) = node.Materialize(cleanUtilitiesById, genericTypesMap);
-            sb.Append($",{TypeNames.Get(implementationType)}|");
-
-            for (var i = 0; i < node.Dependencies.Count; i++)
-            {
-                var dependencyId = isRoot ? $"{i + 1}" : $"{id}.{i + 1}";
-                Iterate(node.Dependencies[i], dependencyId);
-            }
-        }
+        var value = node.Id;
+        if (node.Dependencies.Count == 0) return value;
+        return $"{value} ({string.Join(", ", node.Dependencies.Select(x => x.GetUniqueId()))})";
     }
 }
