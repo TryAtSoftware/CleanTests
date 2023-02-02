@@ -15,7 +15,7 @@ using Xunit.Sdk;
 
 public class CleanTestFramework : XunitTestFramework
 {
-    private readonly Dictionary<string, IReadOnlyCollection<ICleanUtilityDescriptor>> _utilityDescriptorsByAssembly = new ();
+    private readonly Dictionary<string, CleanTestAssemblyData> _utilityDescriptorsByAssembly = new ();
 
     public CleanTestFramework(IMessageSink messageSink)
         : base(messageSink)
@@ -27,23 +27,19 @@ public class CleanTestFramework : XunitTestFramework
         var assembly = CleanTestsFrameworkExtensions.LoadAssemblySafely(assemblyName.FullName);
         var assemblyInfo = Reflector.Wrap(assembly);
 
-        var utilitiesCollection = this.ExtractUtilities(assemblyInfo);
-        var assemblyData = new CleanTestAssemblyData(utilitiesCollection);
-
+        var assemblyData = this.ExtractAssemblyData(assemblyInfo);
         return new CleanTestFrameworkExecutor(assemblyName, this.SourceInformationProvider, this.DiagnosticMessageSink, this.CreateDiscoverer, assemblyData);
     }
 
     protected override ITestFrameworkDiscoverer CreateDiscoverer(IAssemblyInfo assemblyInfo)
     {
-        var utilitiesCollection = this.ExtractUtilities(assemblyInfo);
-        var assemblyData = new CleanTestAssemblyData(utilitiesCollection);
-
+        var assemblyData = this.ExtractAssemblyData(assemblyInfo);
         return new CleanTestFrameworkDiscoverer(assemblyInfo, this.SourceInformationProvider, this.DiagnosticMessageSink, assemblyData);
     }
 
-    private IReadOnlyCollection<ICleanUtilityDescriptor> ExtractUtilities(IAssemblyInfo assemblyInfo)
+    private CleanTestAssemblyData ExtractAssemblyData(IAssemblyInfo assemblyInfo)
     {
-        if (this._utilityDescriptorsByAssembly.TryGetValue(assemblyInfo.Name, out var memoizedUtilityDescriptors)) return memoizedUtilityDescriptors;
+        if (this._utilityDescriptorsByAssembly.TryGetValue(assemblyInfo.Name, out var memoizedResult)) return memoizedResult;
         
         var utilitiesCollection = new List<ICleanUtilityDescriptor>();
         
@@ -56,9 +52,14 @@ public class CleanTestFramework : XunitTestFramework
             if (loadedAssembly is not null) RegisterUtilitiesFromAssembly(Reflector.Wrap(loadedAssembly), utilitiesCollection);
         }
 
-        var readonlyUtilitiesCollection = utilitiesCollection.AsReadOnly();
-        this._utilityDescriptorsByAssembly[assemblyInfo.Name] = readonlyUtilitiesCollection;
-        return readonlyUtilitiesCollection;
+        var assemblyData = new CleanTestAssemblyData(utilitiesCollection);
+        
+        var useCleanTestTraitsAttribute = assemblyInfo.GetCustomAttributes(typeof(ConfigureCleanTestsFrameworkAttribute)).FirstOrDefault();
+        if (useCleanTestTraitsAttribute is not null && useCleanTestTraitsAttribute.GetNamedArgument<bool>(nameof(ConfigureCleanTestsFrameworkAttribute.UseTraits)))
+            assemblyData.IncludeTraits = true;
+        
+        this._utilityDescriptorsByAssembly[assemblyInfo.Name] = assemblyData;
+        return assemblyData;
     } 
 
     private static void RegisterUtilitiesFromAssembly(IAssemblyInfo assemblyInfo, ICollection<ICleanUtilityDescriptor> utilitiesCollection)

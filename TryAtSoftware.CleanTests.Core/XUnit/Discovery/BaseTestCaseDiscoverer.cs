@@ -307,6 +307,8 @@ public abstract class BaseTestCaseDiscoverer : IXunitTestCaseDiscoverer
 
     private void SetTraits(ITestCase testCase, IEnumerable<IndividualCleanUtilityDependencyNode> dependencies)
     {
+        if (!this._cleanTestAssemblyData.IncludeTraits) return;
+
         foreach (var dependencyNode in dependencies)
         {
             var cleanUtility = this._cleanTestAssemblyData.CleanUtilitiesById[dependencyNode.Id];
