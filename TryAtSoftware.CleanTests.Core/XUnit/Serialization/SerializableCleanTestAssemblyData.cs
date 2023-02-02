@@ -45,6 +45,6 @@ public class SerializableCleanTestAssemblyData : IXunitSerializable
     {
         if (info is null) throw new ArgumentNullException(nameof(info));
 
-        info.AddValue("iu", this.CleanTestData.InitializationUtilities.GetAllValues().Select(x => new SerializableInitializationUtility(x)).ToArray());
+        info.AddValue("iu", this.CleanTestData.CleanUtilities.GetAllValues().Select(x => new SerializableInitializationUtility(x)).ToArray());
     }
 }

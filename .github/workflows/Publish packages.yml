@@ -14,21 +14,21 @@ jobs:
       NUGET_SOURCE: https://api.nuget.org/v3/index.json
 
     steps:
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v1
-      with:
-        dotnet-version: 7.x
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 7.x
 
-    - name: Restore dependencies
-      run: dotnet restore
+      - name: Restore dependencies
+        run: dotnet restore
 
-    - name: Build
-      run: dotnet build --no-restore --configuration "${{ env.CONFIGURATION }}"
+      - name: Build
+        run: dotnet build --no-restore --configuration "${{ env.CONFIGURATION }}"
 
-    - name: Pack 'Equalizer'
-      run: dotnet pack --no-build --configuration "${{ env.CONFIGURATION }}" ./TryAtSoftware.CleanTests.Core/TryAtSoftware.CleanTests.Core.csproj -o "${{ env.PACKAGES_DIRECTORY }}"
+      - name: Pack 'Clean tests'
+        run: dotnet pack --no-build --configuration "${{ env.CONFIGURATION }}" ./TryAtSoftware.CleanTests.Core/TryAtSoftware.CleanTests.Core.csproj -o "${{ env.PACKAGES_DIRECTORY }}"
 
-    - name: Publish all packages
-      run: dotnet nuget push "${{ env.PACKAGES_DIRECTORY }}/*.nupkg" --source "${{ env.NUGET_SOURCE }}" --api-key "${{ env.NUGET_KEY }}" --skip-duplicate
+      - name: Publish all packages
+        run: dotnet nuget push "${{ env.PACKAGES_DIRECTORY }}/*.nupkg" --source "${{ env.NUGET_SOURCE }}" --api-key "${{ env.NUGET_KEY }}" --skip-duplicate

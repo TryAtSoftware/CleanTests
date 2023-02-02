@@ -52,7 +52,7 @@ public class SerializableCleanTestCaseData : IXunitSerializable
         var genericTypes = this.CleanTestData.GenericTypesMap.Select(kvp => new[] { kvp.Key, kvp.Value }).ToArray();
         info.AddValue("gt", genericTypes);
 
-        var serializableDependencyNodes = this.CleanTestData.InitializationUtilities.Select(x => new SerializableIndividualDependencyNode(x)).ToArray();
+        var serializableDependencyNodes = this.CleanTestData.CleanUtilities.Select(x => new SerializableIndividualDependencyNode(x)).ToArray();
         info.AddValue("iu", serializableDependencyNodes);
     }
 }

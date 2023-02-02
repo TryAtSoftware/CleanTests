@@ -65,7 +65,7 @@ public class SerializableInitializationUtility : IXunitSerializable
         info.AddValue("c", this.CleanUtilityDescriptor.Category);
         info.AddValue("id", this.CleanUtilityDescriptor.Id.ToString());
         info.AddValue("ut", this.CleanUtilityDescriptor.Type);
-        info.AddValue("un", this.CleanUtilityDescriptor.DisplayName);
+        info.AddValue("un", this.CleanUtilityDescriptor.Name);
         info.AddValue("ig", this.CleanUtilityDescriptor.IsGlobal);
 
         info.AddValue("gd", Serialize(this.CleanUtilityDescriptor.ExternalDemands));

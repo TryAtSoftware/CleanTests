@@ -6,10 +6,10 @@ using System.Collections.Generic;
 public interface ICleanUtilityDescriptor
 {
     string Category { get; }
-    Guid Id { get; }
+    string Id => $"c:{this.Category}|n:{this.Name}";
         
     Type Type { get; }
-    string DisplayName { get; }
+    string Name { get; }
     bool IsGlobal { get; }
     
     IReadOnlyCollection<string> Characteristics { get; }

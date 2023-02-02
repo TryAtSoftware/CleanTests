@@ -19,7 +19,7 @@ public class CleanUtilityDescriptor : ICleanUtilityDescriptor
     public Type Type { get; }
 
     /// <inheritdoc />
-    public string DisplayName { get; }
+    public string Name { get; }
 
     /// <inheritdoc />
     public bool IsGlobal { get; }
@@ -41,7 +41,7 @@ public class CleanUtilityDescriptor : ICleanUtilityDescriptor
         this.Category = initializationCategory;
         this.Id = id;
         this.Type = type ?? throw new ArgumentNullException(nameof(type));
-        this.DisplayName = displayName ?? throw new ArgumentNullException(nameof(displayName));
+        this.Name = displayName ?? throw new ArgumentNullException(nameof(displayName));
         this.IsGlobal = isGlobal;
         foreach (var characteristic in characteristics.OrEmptyIfNull().IgnoreNullOrWhitespaceValues()) this._characteristics.Add(characteristic);
         foreach (var requirement in requirements.OrEmptyIfNull().IgnoreNullOrWhitespaceValues()) this.InternalRequirements.Add(requirement);
