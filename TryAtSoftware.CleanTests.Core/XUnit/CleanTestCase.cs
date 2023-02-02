@@ -46,21 +46,6 @@ public class CleanTestCase : XunitTestCase, ICleanTestCase
         return runner.RunAsync();
     }
 
-    protected override void Initialize()
-    {
-        base.Initialize();
-
-        /*foreach (var initializationUtilityDependencyNode in this.CleanTestCaseData.InitializationUtilities)
-        {
-            var category = initializationUtilityDependencyNode.Category;
-            var categories = this.Traits.EnsureValue("Category");
-            categories.Add(category);
-
-            var initializationUtilities = this.Traits.EnsureValue(category);
-            initializationUtilities.Add(initializationUtilityDependencyNode.DisplayName);
-        }*/
-    }
-
     public override void Serialize(IXunitSerializationInfo data)
     {
         base.Serialize(data);

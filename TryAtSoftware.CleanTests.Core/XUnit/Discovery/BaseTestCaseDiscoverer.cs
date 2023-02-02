@@ -48,15 +48,8 @@ public abstract class BaseTestCaseDiscoverer : IXunitTestCaseDiscoverer
 
             foreach (var dependencies in dependenciesSet)
             {
-                var testData = new CleanTestCaseData(this._testCaseDiscoveryOptions.GenericTypes, dependencies);
-                var methodDisplay = discoveryOptions.MethodDisplayOrDefault();
-                var methodDisplayOptions = discoveryOptions.MethodDisplayOptionsOrDefault();
-
-                foreach (var testCaseArguments in argumentsCollection)
-                {
-                    var testCase = new CleanTestCase(this._diagnosticMessageSink, methodDisplay, methodDisplayOptions, testMethod, testCaseArguments, this._cleanTestAssemblyData, testData);
-                    testCases.Add(testCase);
-                }
+                var extractedTestCases = this.ExtractTestCases(discoveryOptions, testMethod, dependencies, argumentsCollection);
+                testCases.AddRange(extractedTestCases);
             }
         }
 
@@ -78,14 +71,14 @@ public abstract class BaseTestCaseDiscoverer : IXunitTestCaseDiscoverer
         return true;
     }
 
-    private static (bool IsSuccessful, IndividualInitializationUtilityDependencyNode[][] DependencyNodes) GetDependencies(IEnumerable<string> utilities, CleanTestAssemblyData assemblyData)
+    private static (bool IsSuccessful, IndividualCleanUtilityDependencyNode[][] DependencyNodes) GetDependencies(IEnumerable<string> utilities, CleanTestAssemblyData assemblyData)
     {
-        var dependenciesConstructionGraphs = new List<FullInitializationUtilityConstructionGraph>();
+        var dependenciesConstructionGraphs = new List<FullCleanUtilityConstructionGraph>();
         foreach (var utilityId in utilities)
         {
             var utility = assemblyData.CleanUtilitiesById[utilityId];
             var (isSuccessful, constructionGraph) = BuildConstructionGraph(utility, assemblyData, new HashSet<string>());
-            if (!isSuccessful) return (IsSuccessful: false, DependencyNodes: Array.Empty<IndividualInitializationUtilityDependencyNode[]>());
+            if (!isSuccessful) return (IsSuccessful: false, DependencyNodes: Array.Empty<IndividualCleanUtilityDependencyNode[]>());
 
             if (constructionGraph is not null) dependenciesConstructionGraphs.Add(constructionGraph);
         }
@@ -94,18 +87,18 @@ public abstract class BaseTestCaseDiscoverer : IXunitTestCaseDiscoverer
         return (IsSuccessful: true, DependencyNodes: Merge(individualRepresentationsOfConstructionGraphs));
     }
 
-    private static (bool IsSuccessful, FullInitializationUtilityConstructionGraph? ConstructionGraph) BuildConstructionGraph(ICleanUtilityDescriptor? utility, CleanTestAssemblyData? assemblyData, HashSet<string> visited)
+    private static (bool IsSuccessful, FullCleanUtilityConstructionGraph? ConstructionGraph) BuildConstructionGraph(ICleanUtilityDescriptor? utility, CleanTestAssemblyData? assemblyData, HashSet<string> visited)
     {
         if (utility is null || assemblyData is null) return (IsSuccessful: false, ConstructionGraph: null);
         if (visited.Contains(utility.Id)) return (IsSuccessful: true, ConstructionGraph: null);
 
-        var graph = new FullInitializationUtilityConstructionGraph(utility.Id);
+        var graph = new FullCleanUtilityConstructionGraph(utility.Id);
         if (utility.InternalRequirements.Count == 0) return (IsSuccessful: true, ConstructionGraph: graph);
 
         visited.Add(utility.Id);
 
         var dependencyIdsByCategory = new Dictionary<string, IReadOnlyCollection<string>>();
-        var dependencyGraphsById = new Dictionary<string, FullInitializationUtilityConstructionGraph>();
+        var dependencyGraphsById = new Dictionary<string, FullCleanUtilityConstructionGraph>();
         foreach (var requirement in utility.InternalRequirements)
         {
             var currentDependencies = ExtractDependencies(utility, requirement, dependencyGraphsById, assemblyData, visited);
@@ -121,18 +114,18 @@ public abstract class BaseTestCaseDiscoverer : IXunitTestCaseDiscoverer
         {
             if (!AllDemandsAreFulfilled(variation, assemblyData.CleanUtilitiesById)) continue;
 
-            var variationDependenciesConstructionGraphs = variation.Values.Select(x => dependencyGraphsById[x]).ToList(); 
+            var variationDependenciesConstructionGraphs = variation.Values.Select(x => dependencyGraphsById[x]).ToList();
             graph.ConstructionDescriptors.Add(variationDependenciesConstructionGraphs);
         }
 
         return (IsSuccessful: true, ConstructionGraph: graph);
     }
 
-    private static List<string> ExtractDependencies(ICleanUtilityDescriptor utilityDescriptor, string requirement, IDictionary<string, FullInitializationUtilityConstructionGraph> dependencyGraphsById, CleanTestAssemblyData assemblyData, HashSet<string> visited)
+    private static List<string> ExtractDependencies(ICleanUtilityDescriptor utilityDescriptor, string requirement, IDictionary<string, FullCleanUtilityConstructionGraph> dependencyGraphsById, CleanTestAssemblyData assemblyData, HashSet<string> visited)
     {
         var localDemands = utilityDescriptor.InternalDemands.Get(requirement);
         var currentDependencies = new List<string>();
-            
+
         // NOTE: Global utilities can depend on other global utilities only. In future we may want to support local utilities to depend on global utilities as well. However, this is not a priority right now.
         foreach (var dependentUtility in assemblyData.CleanUtilities.Get(requirement, localDemands).Where(iu => iu.IsGlobal == utilityDescriptor.IsGlobal))
         {
@@ -148,10 +141,10 @@ public abstract class BaseTestCaseDiscoverer : IXunitTestCaseDiscoverer
     }
 
     /// <summary>
-    /// Use this method to transform a <see cref="FullInitializationUtilityConstructionGraph"/> to a collection of <see cref="IndividualInitializationUtilityDependencyNode"/> instances.
+    /// Use this method to transform a <see cref="FullCleanUtilityConstructionGraph"/> to a collection of <see cref="IndividualCleanUtilityDependencyNode"/> instances.
     /// </summary>
     /// <param name="constructionGraph">The construction graph that should be transformed.</param>
-    /// <returns>Returns the collection of subsequently built <see cref="IndividualInitializationUtilityDependencyNode"/> instances.</returns>
+    /// <returns>Returns the collection of subsequently built <see cref="IndividualCleanUtilityDependencyNode"/> instances.</returns>
     /// <remarks>
     /// Let's assume that we have the following construction graph:
     /// | Service X |
@@ -186,18 +179,18 @@ public abstract class BaseTestCaseDiscoverer : IXunitTestCaseDiscoverer
     ///         | Service 2.1B |
     ///     | Service 3A |
     /// </remarks>
-    private static IndividualInitializationUtilityDependencyNode[] FlattenConstructionGraph(FullInitializationUtilityConstructionGraph constructionGraph)
+    private static IndividualCleanUtilityDependencyNode[] FlattenConstructionGraph(FullCleanUtilityConstructionGraph constructionGraph)
     {
         if (constructionGraph.ConstructionDescriptors.Count == 0)
         {
-            var node = new IndividualInitializationUtilityDependencyNode(constructionGraph.Id);
+            var node = new IndividualCleanUtilityDependencyNode(constructionGraph.Id);
             return new[] { node };
         }
 
-        var ans = new List<IndividualInitializationUtilityDependencyNode[]>();
+        var ans = new List<IndividualCleanUtilityDependencyNode[]>();
         foreach (var constructionDescriptor in constructionGraph.ConstructionDescriptors)
         {
-            var current = new IndividualInitializationUtilityDependencyNode[constructionDescriptor.Count][];
+            var current = new IndividualCleanUtilityDependencyNode[constructionDescriptor.Count][];
             for (var i = 0; i < constructionDescriptor.Count; i++)
                 current[i] = FlattenConstructionGraph(constructionDescriptor[i]);
 
@@ -205,21 +198,22 @@ public abstract class BaseTestCaseDiscoverer : IXunitTestCaseDiscoverer
             ans.Add(union);
         }
 
-        var result = new IndividualInitializationUtilityDependencyNode[ans.Count];
+        var result = new IndividualCleanUtilityDependencyNode[ans.Count];
         for (var i = 0; i < ans.Count; i++)
         {
-            var node = new IndividualInitializationUtilityDependencyNode(constructionGraph.Id);
+            var node = new IndividualCleanUtilityDependencyNode(constructionGraph.Id);
             for (var j = 0; j < ans[i].Length; j++)
-                foreach (var dependency in ans[i][j].Dependencies) node.Dependencies.Add(dependency);
+                foreach (var dependency in ans[i][j].Dependencies)
+                    node.Dependencies.Add(dependency);
 
             result[i] = node;
         }
-            
+
         return result;
     }
-        
+
     /// <summary>
-    /// Use this method to merge a two-dimensional collection of <see cref="IndividualInitializationUtilityDependencyNode"/> instances.
+    /// Use this method to merge a two-dimensional collection of <see cref="IndividualCleanUtilityDependencyNode"/> instances.
     /// </summary>
     /// <param name="nodes">The nodes to merge.</param>
     /// <returns>Returns the another matrix containing the results of merging the provided instances.</returns>
@@ -252,26 +246,26 @@ public abstract class BaseTestCaseDiscoverer : IXunitTestCaseDiscoverer
     ///     | Service 4A |              | Service 4B |          | Service Y |               | Service Y |               | Service Y |               | Service Y |         
     ///                                                             | Service 4A |              | Service 4B |              | Service 4A |              | Service 4B |
     /// </remarks>
-    private static IndividualInitializationUtilityDependencyNode[][] Merge(IndividualInitializationUtilityDependencyNode[][] nodes) => IterateAllSequences(nodes, Duplicate);
+    private static IndividualCleanUtilityDependencyNode[][] Merge(IndividualCleanUtilityDependencyNode[][] nodes) => IterateAllSequences(nodes, Duplicate);
 
-    private static IndividualInitializationUtilityDependencyNode Union(string id, IndividualInitializationUtilityDependencyNode[] nodes)
+    private static IndividualCleanUtilityDependencyNode Union(string id, IndividualCleanUtilityDependencyNode[] nodes)
     {
-        var node = new IndividualInitializationUtilityDependencyNode(id);
+        var node = new IndividualCleanUtilityDependencyNode(id);
         foreach (var dependencyInSequence in nodes) node.Dependencies.Add(dependencyInSequence);
         return node;
     }
 
-    private static IndividualInitializationUtilityDependencyNode[] Duplicate(IndividualInitializationUtilityDependencyNode[] nodes)
+    private static IndividualCleanUtilityDependencyNode[] Duplicate(IndividualCleanUtilityDependencyNode[] nodes)
     {
-        var newSequence = new IndividualInitializationUtilityDependencyNode[nodes.Length];
+        var newSequence = new IndividualCleanUtilityDependencyNode[nodes.Length];
         Array.Copy(nodes, newSequence, nodes.Length);
         return newSequence;
     }
-        
-    private static TResult[] IterateAllSequences<TResult>(IndividualInitializationUtilityDependencyNode[][] nodes, Func<IndividualInitializationUtilityDependencyNode[], TResult> resultGenerator)
+
+    private static TResult[] IterateAllSequences<TResult>(IndividualCleanUtilityDependencyNode[][] nodes, Func<IndividualCleanUtilityDependencyNode[], TResult> resultGenerator)
     {
         var ans = new List<TResult>();
-        var sequence = new IndividualInitializationUtilityDependencyNode[nodes.Length];
+        var sequence = new IndividualCleanUtilityDependencyNode[nodes.Length];
         Generate(0);
         return ans.ToArray();
 
@@ -289,6 +283,36 @@ public abstract class BaseTestCaseDiscoverer : IXunitTestCaseDiscoverer
                 sequence[position] = nodes[position][i];
                 Generate(position + 1);
             }
+        }
+    }
+
+    private IEnumerable<IXunitTestCase> ExtractTestCases(ITestFrameworkDiscoveryOptions discoveryOptions, ITestMethod testMethod, IndividualCleanUtilityDependencyNode[] dependencies, object[][] argumentsCollection)
+    {
+        var result = new List<IXunitTestCase>();
+
+        var testData = new CleanTestCaseData(this._testCaseDiscoveryOptions.GenericTypes, dependencies);
+        var methodDisplay = discoveryOptions.MethodDisplayOrDefault();
+        var methodDisplayOptions = discoveryOptions.MethodDisplayOptionsOrDefault();
+
+        foreach (var testCaseArguments in argumentsCollection)
+        {
+            var testCase = new CleanTestCase(this._diagnosticMessageSink, methodDisplay, methodDisplayOptions, testMethod, testCaseArguments, this._cleanTestAssemblyData, testData);
+            this.SetTraits(testCase, dependencies);
+
+            result.Add(testCase);
+        }
+
+        return result;
+    }
+
+    private void SetTraits(ITestCase testCase, IEnumerable<IndividualCleanUtilityDependencyNode> dependencies)
+    {
+        foreach (var dependencyNode in dependencies)
+        {
+            var cleanUtility = this._cleanTestAssemblyData.CleanUtilitiesById[dependencyNode.Id];
+            var category = cleanUtility.Category;
+            testCase.Traits.EnsureValue("Category").Add(category);
+            testCase.Traits.EnsureValue(category).Add(cleanUtility.Name);
         }
     }
 }
