@@ -1,6 +1,5 @@
 ﻿namespace TryAtSoftware.CleanTests.Core.XUnit;
 
-using System;
 using System.Collections.Generic;
 
 /// <summary>
@@ -10,9 +9,9 @@ using System.Collections.Generic;
 /// | Service 1A |   | Service 2A |   | Service 3A |         | Service 1A |   | Service 2B |   | Service 3A |
 /// </summary>
 /// <param name="Id">The value that should be set to the <see cref="Id"/> property.</param>
-public record FullInitializationUtilityConstructionGraph(Guid Id)
+public record FullInitializationUtilityConstructionGraph(string Id)
 {
-    public Guid Id { get; } = Id;
+    public string Id { get; } = Id;
     public List<List<FullInitializationUtilityConstructionGraph>> ConstructionDescriptors { get; } = new ();
 }
 
@@ -29,8 +28,8 @@ public record FullInitializationUtilityConstructionGraph(Guid Id)
 /// | Service 1A |   | Service 2B |   | Service 3A |
 /// </summary>
 /// <param name="Id">The value that should be set to the <see cref="Id"/> property.</param>
-public record IndividualInitializationUtilityDependencyNode(Guid Id)
+public record IndividualInitializationUtilityDependencyNode(string Id)
 {
-    public Guid Id { get; } = Id;
+    public string Id { get; } = Id;
     public List<IndividualInitializationUtilityDependencyNode> Dependencies { get; } = new ();
 }

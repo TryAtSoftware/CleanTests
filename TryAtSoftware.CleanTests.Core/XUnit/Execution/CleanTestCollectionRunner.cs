@@ -15,10 +15,12 @@ using Xunit.Sdk;
 public class CleanTestCollectionRunner : XunitTestCollectionRunner
 {
     private readonly IGlobalUtilitiesProvider _globalUtilitiesProvider = new GlobalUtilitiesProvider();
+    private readonly CleanTestAssemblyData _assemblyData;
 
-    public CleanTestCollectionRunner(ITestCollection testCollection, IEnumerable<IXunitTestCase> testCases, IMessageSink diagnosticMessageSink, IMessageBus messageBus, ITestCaseOrderer testCaseOrderer, ExceptionAggregator aggregator, CancellationTokenSource cancellationTokenSource)
+    public CleanTestCollectionRunner(ITestCollection testCollection, IEnumerable<IXunitTestCase> testCases, IMessageSink diagnosticMessageSink, IMessageBus messageBus, ITestCaseOrderer testCaseOrderer, ExceptionAggregator aggregator, CancellationTokenSource cancellationTokenSource, CleanTestAssemblyData assemblyData)
         : base(testCollection, testCases, diagnosticMessageSink, messageBus, testCaseOrderer, aggregator, cancellationTokenSource)
     {
+        this._assemblyData = assemblyData ?? throw new ArgumentNullException(nameof(assemblyData));
     }
 
     protected override async Task<RunSummary> RunTestClassAsync(ITestClass testClass, IReflectionTypeInfo @class, IEnumerable<IXunitTestCase> testCases)
@@ -26,7 +28,7 @@ public class CleanTestCollectionRunner : XunitTestCollectionRunner
         var (cleanTestCases, otherTestCases) = testCases.ExtractCleanTestCases();
 
         var runSummary = new RunSummary();
-        var cleanTestClassRunner = new CleanTestClassRunner(testClass, @class, cleanTestCases, this.DiagnosticMessageSink, this.MessageBus, this.TestCaseOrderer, new ExceptionAggregator(this.Aggregator), this.CancellationTokenSource, this.CollectionFixtureMappings, this._globalUtilitiesProvider);
+        var cleanTestClassRunner = new CleanTestClassRunner(testClass, @class, cleanTestCases, this.DiagnosticMessageSink, this.MessageBus, this.TestCaseOrderer, new ExceptionAggregator(this.Aggregator), this.CancellationTokenSource, this.CollectionFixtureMappings, this._globalUtilitiesProvider, this._assemblyData);
         var cleanTestsRunSummary = await cleanTestClassRunner.RunAsync();
         runSummary.Aggregate(cleanTestsRunSummary);
 
@@ -57,11 +59,9 @@ public class CleanTestCollectionRunner : XunitTestCollectionRunner
 
     private void RegisterGlobalUtilities(ICleanTestCase cleanTestCase)
     {
-        var assemblyData = cleanTestCase.CleanTestAssemblyData;
-        
         foreach (var dependency in cleanTestCase.CleanTestCaseData.InitializationUtilities)
         {
-            if (!assemblyData.CleanUtilitiesById.TryGetValue(dependency.Id, out var utilityDescriptor) || utilityDescriptor is not  {IsGlobal:true}) continue;
+            if (!this._assemblyData.CleanUtilitiesById.TryGetValue(dependency.Id, out var utilityDescriptor) || utilityDescriptor is not  {IsGlobal:true}) continue;
             RegisterGlobalUtility(dependency);
         }
 
@@ -74,11 +74,11 @@ public class CleanTestCollectionRunner : XunitTestCollectionRunner
                 dependencies.Add(subDependencyInstance);
             }
             
-            var uniqueId = dependencyNode.GetUniqueId(cleanTestCase.CleanTestAssemblyData.CleanUtilitiesById, cleanTestCase.CleanTestCaseData.GenericTypesMap);
+            var uniqueId = dependencyNode.GetUniqueId(this._assemblyData.CleanUtilitiesById, cleanTestCase.CleanTestCaseData.GenericTypesMap);
             var registeredInstance = this._globalUtilitiesProvider.GetUtility(uniqueId);
             if (registeredInstance is not null) return registeredInstance;
 
-            var (_, implementationType) = dependencyNode.Materialize(cleanTestCase.CleanTestAssemblyData.CleanUtilitiesById, cleanTestCase.CleanTestCaseData.GenericTypesMap);
+            var (_, implementationType) = dependencyNode.Materialize(this._assemblyData.CleanUtilitiesById, cleanTestCase.CleanTestCaseData.GenericTypesMap);
             var createdInstance = Activator.CreateInstance(implementationType, dependencies.ToArray());
 
             this._globalUtilitiesProvider.AddUtility(uniqueId, createdInstance);

@@ -34,7 +34,7 @@ public class SerializableIndividualDependencyNode : IXunitSerializable
     {
         if (info is null) throw new ArgumentNullException(nameof(info));
 
-        var id = Guid.Parse(info.GetValue<string>("id"));
+        var id = info.GetValue<string>("id");
         this.DependencyNode = new IndividualInitializationUtilityDependencyNode(id);
 
         var deserializedDependencies = info.GetValue<SerializableIndividualDependencyNode[]>("d");
@@ -47,7 +47,7 @@ public class SerializableIndividualDependencyNode : IXunitSerializable
     {
         if (info is null) throw new ArgumentNullException(nameof(info));
 
-        info.AddValue("id", this.DependencyNode.Id.ToString());
+        info.AddValue("id", this.DependencyNode.Id);
 
         var serializableDependencies = this.DependencyNode.Dependencies.Select(x => new SerializableIndividualDependencyNode(x)).ToArray();
         info.AddValue("d", serializableDependencies);

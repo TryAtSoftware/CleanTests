@@ -6,18 +6,15 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using TryAtSoftware.CleanTests.Core.Extensions;
-using TryAtSoftware.CleanTests.Core.Interfaces;
 using TryAtSoftware.CleanTests.Core.XUnit.Execution;
 using TryAtSoftware.CleanTests.Core.XUnit.Interfaces;
 using TryAtSoftware.CleanTests.Core.XUnit.Serialization;
-using TryAtSoftware.Extensions.Collections;
 using Xunit.Abstractions;
 using Xunit.Sdk;
 
 public class CleanTestCase : XunitTestCase, ICleanTestCase
 {
     private CleanTestCaseData? _cleanTestCaseData;
-    private CleanTestAssemblyData? _cleanTestAssemblyData;
 
     public CleanTestCaseData CleanTestCaseData
     {
@@ -29,16 +26,6 @@ public class CleanTestCase : XunitTestCase, ICleanTestCase
         private set => this._cleanTestCaseData = value;
     }
 
-    public CleanTestAssemblyData CleanTestAssemblyData
-    {
-        get
-        {
-            this._cleanTestAssemblyData.ValidateInstantiated("clean test assembly data");
-            return this._cleanTestAssemblyData;
-        }
-        private set => this._cleanTestAssemblyData = value;
-    }
-
 #pragma warning disable CS0618
     public CleanTestCase()
     {
@@ -48,7 +35,6 @@ public class CleanTestCase : XunitTestCase, ICleanTestCase
     public CleanTestCase(IMessageSink diagnosticMessageSink, TestMethodDisplay defaultMethodDisplay, TestMethodDisplayOptions defaultMethodDisplayOptions, ITestMethod testMethod, object[] testMethodArguments, CleanTestAssemblyData cleanTestAssemblyData, CleanTestCaseData cleanTestData)
         : base(diagnosticMessageSink, defaultMethodDisplay, defaultMethodDisplayOptions, testMethod, testMethodArguments)
     {
-        this.CleanTestAssemblyData = cleanTestAssemblyData ?? throw new ArgumentNullException(nameof(cleanTestAssemblyData));
         this.CleanTestCaseData = cleanTestData ?? throw new ArgumentNullException(nameof(cleanTestData));
     }
 
@@ -63,16 +49,15 @@ public class CleanTestCase : XunitTestCase, ICleanTestCase
     {
         base.Initialize();
 
-        foreach (var initializationUtilityDependencyNode in this.CleanTestCaseData.InitializationUtilities)
+        /*foreach (var initializationUtilityDependencyNode in this.CleanTestCaseData.InitializationUtilities)
         {
-            var initializationUtility = this.GetInitializationUtilityById(initializationUtilityDependencyNode.Id);
-            var category = initializationUtility.Category;
+            var category = initializationUtilityDependencyNode.Category;
             var categories = this.Traits.EnsureValue("Category");
             categories.Add(category);
 
             var initializationUtilities = this.Traits.EnsureValue(category);
-            initializationUtilities.Add(this.IterateDependencyNode(initializationUtilityDependencyNode, x => x.DisplayName));
-        }
+            initializationUtilities.Add(initializationUtilityDependencyNode.DisplayName);
+        }*/
     }
 
     public override void Serialize(IXunitSerializationInfo data)
@@ -81,9 +66,6 @@ public class CleanTestCase : XunitTestCase, ICleanTestCase
         
         var testCaseDataSerializer = new SerializableCleanTestCaseData(this.CleanTestCaseData);
         data.AddValue("ctd", testCaseDataSerializer);
-
-        var assemblyDataSerializer = new SerializableCleanTestAssemblyData(this.CleanTestAssemblyData);
-        data.AddValue("ad", assemblyDataSerializer);
     }
 
     public override void Deserialize(IXunitSerializationInfo data)
@@ -91,9 +73,6 @@ public class CleanTestCase : XunitTestCase, ICleanTestCase
         var deserializedCleanTestData = data.GetValue<SerializableCleanTestCaseData>("ctd");
         this.CleanTestCaseData = deserializedCleanTestData.CleanTestData;
         
-        var deserializedAssemblyData = data.GetValue<SerializableCleanTestAssemblyData>("ad");
-        this.CleanTestAssemblyData = deserializedAssemblyData.CleanTestData;
-
         base.Deserialize(data);
     }
 
@@ -103,17 +82,14 @@ public class CleanTestCase : XunitTestCase, ICleanTestCase
 
         var cleanIdBuilder = new StringBuilder();
         foreach (var initializationUtility in this.CleanTestCaseData.InitializationUtilities)
-            cleanIdBuilder.Append(this.IterateDependencyNode(initializationUtility, x => x.Id.ToString()));
+            cleanIdBuilder.Append(this.IterateDependencyNode(initializationUtility, x => x.Id));
 
         return defaultId + cleanIdBuilder;
     }
 
-    private ICleanUtilityDescriptor GetInitializationUtilityById(Guid id) => this.CleanTestAssemblyData.CleanUtilitiesById[id];
-
-    private string IterateDependencyNode(IndividualInitializationUtilityDependencyNode node, Func<ICleanUtilityDescriptor, string> propertySelector)
+    private string IterateDependencyNode(IndividualInitializationUtilityDependencyNode node, Func<IndividualInitializationUtilityDependencyNode, string> propertySelector)
     {
-        var initializationUtility = this.GetInitializationUtilityById(node.Id);
-        var value = propertySelector(initializationUtility);
+        var value = propertySelector(node);
         if (node.Dependencies.Count == 0) return value;
         return $"{value} ({string.Join(", ", node.Dependencies.Select(x => this.IterateDependencyNode(x, propertySelector)))})";
     }

@@ -27,7 +27,7 @@ public static class XUnitFrameworkExtensions
         return true;
     }
     
-    public static (ICleanUtilityDescriptor InitializationUtility, Type ImplementationType) Materialize(this IndividualInitializationUtilityDependencyNode dependencyNode, IDictionary<Guid, ICleanUtilityDescriptor> cleanUtilitiesById, IDictionary<Type, Type> genericTypesMap)
+    public static (ICleanUtilityDescriptor InitializationUtility, Type ImplementationType) Materialize(this IndividualInitializationUtilityDependencyNode dependencyNode, IDictionary<string, ICleanUtilityDescriptor> cleanUtilitiesById, IDictionary<Type, Type> genericTypesMap)
     {
         var initializationUtility = cleanUtilitiesById[dependencyNode.Id];
 
@@ -37,7 +37,7 @@ public static class XUnitFrameworkExtensions
         return (initializationUtility, implementationType);
     }
 
-    public static string GetUniqueId(this IndividualInitializationUtilityDependencyNode dependencyNode, IDictionary<Guid, ICleanUtilityDescriptor> cleanUtilitiesById, IDictionary<Type, Type> genericTypesMap)
+    public static string GetUniqueId(this IndividualInitializationUtilityDependencyNode dependencyNode, IDictionary<string, ICleanUtilityDescriptor> cleanUtilitiesById, IDictionary<Type, Type> genericTypesMap)
     {
         if (dependencyNode is null) throw new ArgumentNullException(nameof(dependencyNode));
 
