@@ -37,9 +37,13 @@ public class CleanTestFrameworkDiscoverer : TestFrameworkDiscoverer
         var genericTypesMap = ExtractGenericTypesMap(@class);
         var runtimeClass = @class.ToRuntimeType();
 
-        var genericTypesSetup = runtimeClass.ExtractGenericParametersSetup(genericTypesMap);
-        var genericRuntimeClass = runtimeClass.MakeGenericType(genericTypesSetup);
-        var xUnitTypeInfo = Reflector.Wrap(genericRuntimeClass);
+        if (genericTypesMap.Count > 0)
+        {
+            var genericTypesSetup = runtimeClass.ExtractGenericParametersSetup(genericTypesMap);
+            runtimeClass = runtimeClass.MakeGenericType(genericTypesSetup);
+        }
+
+        var xUnitTypeInfo = Reflector.Wrap(runtimeClass);
 
         // 2. We can beautify the name of the test class.
         // Before: MetadataColoringCleanTests`1[[System.Int64, System.Private.CoreLib, Version=6.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]
