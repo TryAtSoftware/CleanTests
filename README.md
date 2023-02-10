@@ -65,6 +65,27 @@ Or using the `dotnet CLI` from a terminal window:
 
 > dotnet add package TryAtSoftware.CleanTests
 
+
+## Configurations
+
+In order to use the features of this library, there is one mandatory step that **must** be done.
+Your test assembly should be decorated with an appropriate attribute that will define which test framework should be used for the execution of test cases.
+Add the following line anywhere in your project (most likely this is done within an `AssemblyInfo.cs` file):
+```C#
+[assembly: Xunit.TestFramework("TryAtSoftware.CleanTests.Core.XUnit.CleanTestFramework", "TryAtSoftware.CleanTests.Core")]
+```
+
+### Modifying behavior
+
+Additionally, you can modify the behavior of the `clean tests` execution framework using the `ConfigureCleanTestsFramework` attribute.
+There is a list of the parameters that can be controlled:
+- `UseTraits` - Indicates whether or not to add traits to each generated test case. Enabling this may have performance impact over the discovery process when dealing with a big amount of tests because of the amount of data stored in these traits. The default value is `false`.
+
+Example:
+```C#
+[assembly: TryAtSoftware.CleanTests.Core.Attributes.ConfigureCleanTestsFramework(UseTraits = true)]
+```
+
 ## What are the `clean utilities`?
 
 The `clean utility` is a key component for our library. Every `clean utility` has a `category` and a `name` that are required.
@@ -79,7 +100,8 @@ These characteristics can be used to filter out on some basis the utilities that
 They do often correspond to essential segments of the requested component's behavior.
 We use `demands` to make sure that the capabilities our test needs are present for the resolved utilities used to execute the test.
 
-In order to use a type as a `clean utility`, it should be marked with the `CleanUtility` attribute that accepts `category`, `name` and `characteristics`. You can also explicitly set a value to the `IsGlobal` flag.
+In order to use a type as a `clean utility`, it should be marked with the `CleanUtility` attribute that accepts `category`, `name` and `characteristics`.
+You can also explicitly set a value to the `IsGlobal` flag.
 
 Example:
 ```C#
@@ -100,6 +122,12 @@ public class FakeWriter : IWriter
 {
     public void Write(string text) { /* Do nothing */ }
 }
+```
+
+All `clean utilities` should be located within the test assembly.
+If this is not possible, the test assembly should be explicitly decorated with an attribute denoting where the _shared_ `clean utilities` are defined.
+```C#
+[assembly: TryAtSoftware.CleanTests.Core.Attributes.SharesUtilitiesWith("Assembly.With.Shared.CleanUtilities")]
 ```
 
 ### External demands
