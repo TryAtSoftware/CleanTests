@@ -54,6 +54,12 @@ public abstract class CleanTest : ICleanTest, IDisposable, IAsyncLifetime
         this._scope = this._localDependenciesProvider.CreateScope();
     }
 
+    protected TService? GetOptionalGlobalService<TService>()
+    {
+        Assert.NotNull(this._globalDependenciesProvider);
+        return this._globalDependenciesProvider.GetService<TService>();
+    }
+
     protected TService GetGlobalService<TService>()
         where TService : notnull
     {

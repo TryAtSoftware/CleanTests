@@ -34,4 +34,13 @@ public class GenericTest<[Numeric] T> : CleanTest
         var zoo = this.GetGlobalService<IZoo>();
         Assert.NotNull(zoo);
     }
+
+    [CleanFact]
+    public void TestOptionalGlobalServiceAccessor()
+    {
+        var animal = this.GetOptionalGlobalService<IAnimal>();
+        var zoo = this.GetOptionalGlobalService<IZoo>();
+        Assert.Null(animal);
+        Assert.Null(zoo);
+    }
 }
