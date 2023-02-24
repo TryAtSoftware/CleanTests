@@ -1,5 +1,5 @@
 ﻿namespace JobAgency.Models.Benefits;
 
-public class CanHavePerformanceBonus
+public class CanHavePerformanceBonus : BaseJobOfferBenefit
 {
 }

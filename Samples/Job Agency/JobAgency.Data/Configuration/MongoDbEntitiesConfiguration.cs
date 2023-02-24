@@ -44,25 +44,12 @@ public static class MongoDbEntitiesConfiguration
         BsonSerializer.RegisterSerializer(new ImpliedImplementationInterfaceSerializer<IJobOffer, JobOffer>());
         
         // Benefits
-        BsonClassMap.RegisterClassMap<CanHaveMoreFreeDays>(
-            x =>
-            {
-                ApplyPolymorphicConfigurations(x);
-                x.MapMember(y => y.Days);
-            });
-        BsonClassMap.RegisterClassMap<CanHavePerformanceBonus>(ApplyPolymorphicConfigurations);
-        BsonClassMap.RegisterClassMap<CanUseInsurance>(
-            x =>
-            {
-                ApplyPolymorphicConfigurations(x);
-                x.MapMember(y => y.Description);
-            });
-        BsonClassMap.RegisterClassMap<CanUseMultiSportCard>(
-            x =>
-            {
-                ApplyPolymorphicConfigurations(x);
-                x.MapMember(y => y.Category);
-            });
+        BsonSerializer.RegisterSerializer(new ImpliedImplementationInterfaceSerializer<IJobOfferBenefit, BaseJobOfferBenefit>());
+        BsonClassMap.RegisterClassMap<BaseJobOfferBenefit>(ApplyPolymorphicConfigurations);
+        BsonClassMap.RegisterClassMap<CanHaveMoreFreeDays>(x => x.MapMember(y => y.Days));
+        BsonClassMap.RegisterClassMap<CanHavePerformanceBonus>();
+        BsonClassMap.RegisterClassMap<CanUseInsurance>(x => x.MapMember(y => y.Description));
+        BsonClassMap.RegisterClassMap<CanUseMultiSportCard>(x => x.MapMember(y => y.Category));
 
         // Requirements
         BsonSerializer.RegisterSerializer(new ImpliedImplementationInterfaceSerializer<IJobOfferRequirement, BaseJobOfferRequirement>());
