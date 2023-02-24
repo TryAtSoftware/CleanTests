@@ -8,7 +8,7 @@ public class JobOffer : IJobOffer
     public string Description { get; set; }
     public decimal MinSalary { get; set; }
     public decimal MaxSalary { get; set; }
-    public long AgencyId { get; set; }
+    public Guid AgencyId { get; set; }
     public ICollection<IJobOfferRequirement> Requirements { get; set; } = new List<IJobOfferRequirement>();
     public ICollection<IJobOfferBenefit> Benefits { get; set; } = new List<IJobOfferBenefit>();
 }

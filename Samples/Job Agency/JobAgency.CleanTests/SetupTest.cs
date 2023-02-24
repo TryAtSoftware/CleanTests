@@ -19,4 +19,25 @@ public class SetupTest : JobAgencyCleanTest
 
     [CleanFact]
     public void EnsureJobAgencyModelBuilderIsNotProvidedIfNotRequired() => Assert.ThrowsAny<Exception>(() => this.JobAgencyModelBuilder);
+
+    [CleanFact, WithRequirements(CleanUtilitiesCategories.JobAgency)]
+    public async Task JobAgencyShouldBeCreatedSuccessfully()
+    {
+        var jobAgency = await this.CreateJobAgencyAsync();
+        Assert.NotNull(jobAgency);
+    }
+
+    [CleanFact, WithRequirements(CleanUtilitiesCategories.JobAgency, CleanUtilitiesCategories.JobOffer)]
+    public void EnsureJobOfferModelBuilderIsSuccessfullyProvided() => Assert.NotNull(this.JobOfferModelBuilder);
+
+    [CleanFact]
+    public void EnsureJobOfferModelBuilderIsNotProvidedIfNotRequired() => Assert.ThrowsAny<Exception>(() => this.JobOfferModelBuilder);
+
+    [CleanFact, WithRequirements(CleanUtilitiesCategories.JobAgency, CleanUtilitiesCategories.JobOffer)]
+    public async Task JobOfferShouldBeCreatedSuccessfully()
+    {
+        var jobAgency = await this.CreateJobAgencyAsync();
+        var jobOffer = await this.CreateJobOfferAsync(jobAgency);
+        Assert.NotNull(jobOffer);
+    }
 }

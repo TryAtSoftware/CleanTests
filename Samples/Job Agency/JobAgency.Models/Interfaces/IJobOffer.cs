@@ -6,7 +6,7 @@ public interface IJobOffer : IIdentifiable
     decimal MinSalary { get; set; }
     decimal MaxSalary { get; set; }
     
-    long AgencyId { get; set; }
+    Guid AgencyId { get; set; }
     
     ICollection<IJobOfferRequirement> Requirements { get; set; }
     ICollection<IJobOfferBenefit> Benefits { get; set; }

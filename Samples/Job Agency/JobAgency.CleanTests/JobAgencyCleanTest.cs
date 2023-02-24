@@ -4,6 +4,7 @@ using JobAgency.CleanTests.Utilities;
 using JobAgency.CleanTests.Utilities.Common;
 using JobAgency.CleanTests.Utilities.Constants;
 using JobAgency.CleanTests.Utilities.Database;
+using JobAgency.CleanTests.Utilities.Offers;
 using JobAgency.Data.Interfaces;
 using JobAgency.Models.Benefits;
 using JobAgency.Models.Interfaces;
@@ -30,6 +31,8 @@ public abstract class JobAgencyCleanTest : CleanTest
     protected IDatabaseManager DatabaseManager => this.GetGlobalService<IDatabaseManager>();
     protected IModelBuilder<IJobAgency, Nothing> JobAgencyModelBuilder => this.GetService<IModelBuilder<IJobAgency, Nothing>>();
     protected IRepository<IJobAgency> JobAgencyRepository => this.GetService<IRepository<IJobAgency>>();
+    protected IModelBuilder<IJobOffer, JobOfferModelBuildingOptions> JobOfferModelBuilder => this.GetService<IModelBuilder<IJobOffer, JobOfferModelBuildingOptions>>();
+    protected IRepository<IJobOffer> JobOfferRepository => this.GetService<IRepository<IJobOffer>>();
     protected IEqualizer Equalizer { get; } = PrepareEqualizer();
 
     public override async Task InitializeAsync()
@@ -57,6 +60,17 @@ public abstract class JobAgencyCleanTest : CleanTest
 
         await this.JobAgencyRepository.CreateAsync(jobAgencyModel, this.GetCancellationToken());
         return jobAgencyModel;
+    }
+
+    protected async Task<IJobOffer> CreateJobOfferAsync(IJobAgency jobAgency)
+    {
+        Assert.NotNull(jobAgency);
+
+        var buildingOptions = new JobOfferModelBuildingOptions(jobAgency);
+        var jobOfferModel = await this.JobOfferModelBuilder.BuildInstanceAsync(buildingOptions, this.GetCancellationToken());
+
+        await this.JobOfferRepository.CreateAsync(jobOfferModel, this.GetCancellationToken());
+        return jobOfferModel;
     }
 
     protected CancellationToken GetCancellationToken() => CancellationToken.None;
