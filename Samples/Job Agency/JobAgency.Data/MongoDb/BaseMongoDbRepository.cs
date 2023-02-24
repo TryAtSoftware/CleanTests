@@ -1,4 +1,4 @@
-﻿namespace JobAgency.Data;
+﻿namespace JobAgency.Data.MongoDb;
 
 using System.Linq.Expressions;
 using JobAgency.Data.Configuration;
@@ -7,12 +7,12 @@ using JobAgency.Models.Interfaces;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 
-public abstract class BaseRepository<TEntity> : IRepository<TEntity>
+public abstract class BaseMongoDbRepository<TEntity> : IRepository<TEntity>
     where TEntity : IIdentifiable
 {
     private readonly IMongoDatabase _database;
     
-    protected BaseRepository(IOptions<DatabaseConnection> options)
+    protected BaseMongoDbRepository(IOptions<DatabaseConnection> options)
     {
         var mongoClient = new MongoClient(options.Value.DatabaseServerUrl);
         this._database = mongoClient.GetDatabase(options.Value.DatabaseName);

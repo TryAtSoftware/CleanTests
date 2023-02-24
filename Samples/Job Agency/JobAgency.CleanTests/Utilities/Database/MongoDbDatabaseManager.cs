@@ -53,6 +53,7 @@ public class MongoDbDatabaseManager : IDatabaseManager
                 options.DatabaseServerUrl = DatabaseServerUrl;
                 options.DatabaseName = FormatDatabaseName(databaseId);
             });
+        serviceCollection.RegisterMongoDbRepositories();
     }
 
     public void SetupEntities() => MongoDbEntitiesConfiguration.Apply();

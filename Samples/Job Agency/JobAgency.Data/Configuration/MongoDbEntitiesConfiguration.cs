@@ -9,8 +9,8 @@ using MongoDB.Bson.Serialization.Serializers;
 
 public static class MongoDbEntitiesConfiguration
 {
-    private static bool _isApplied = false;
-    private static object _lockObj = new ();
+    private static bool _isApplied;
+    private static readonly object _lockObj = new ();
     
     public static void Apply()
     {
@@ -20,31 +20,46 @@ public static class MongoDbEntitiesConfiguration
             _isApplied = true;
         }
 
-        // BsonClassMap.RegisterClassMap<IIdentifiable>(x => x.MapIdMember(y => y.Id));
-        // BsonClassMap.RegisterClassMap<IJobOfferRequirement>(x => x.SetDiscriminatorIsRequired(true));
-        // BsonClassMap.RegisterClassMap<IJobOfferBenefit>(x => x.SetDiscriminatorIsRequired(true));
-        
+        BsonClassMap.RegisterClassMap<JobAgency>(
+            x =>
+            {
+                ApplyIdentifiableConfigurations(x);
+                x.MapMember(y => y.Name);
+                x.MapMember(y => y.OfferedJobTypes);
+            });
         BsonSerializer.RegisterSerializer(new ImpliedImplementationInterfaceSerializer<IJobAgency, JobAgency>());
+
+        BsonClassMap.RegisterClassMap<JobOffer>(
+            x =>
+            {
+                ApplyIdentifiableConfigurations(x);
+                x.MapMember(y => y.Description);
+                x.MapMember(y => y.AgencyId);
+                x.MapMember(y => y.MinSalary);
+                x.MapMember(y => y.MaxSalary);
+                x.MapMember(y => y.Benefits);
+                x.MapMember(y => y.Requirements);
+            });
         BsonSerializer.RegisterSerializer(new ImpliedImplementationInterfaceSerializer<IJobOffer, JobOffer>());
         
-        /*// Benefits
+        // Benefits
         BsonClassMap.RegisterClassMap<CanHaveMoreFreeDays>(
             x =>
             {
-                x.SetDiscriminatorIsRequired(true);
+                ApplyPolymorphicConfigurations(x);
                 x.MapMember(y => y.Days);
             });
-        BsonClassMap.RegisterClassMap<CanHavePerformanceBonus>(x => x.SetDiscriminatorIsRequired(true));
+        BsonClassMap.RegisterClassMap<CanHavePerformanceBonus>(ApplyPolymorphicConfigurations);
         BsonClassMap.RegisterClassMap<CanUseInsurance>(
             x =>
             {
-                x.SetDiscriminatorIsRequired(true);
+                ApplyPolymorphicConfigurations(x);
                 x.MapMember(y => y.Description);
             });
         BsonClassMap.RegisterClassMap<CanUseMultiSportCard>(
             x =>
             {
-                x.SetDiscriminatorIsRequired(true);
+                ApplyPolymorphicConfigurations(x);
                 x.MapMember(y => y.Category);
             });
 
@@ -52,39 +67,35 @@ public static class MongoDbEntitiesConfiguration
         BsonClassMap.RegisterClassMap<MustHaveDrivingLicense>(
             x =>
             {
-                x.SetDiscriminatorIsRequired(true);
+                ApplyPolymorphicConfigurations(x);
                 x.MapMember(y => y.Categories);
             });
         BsonClassMap.RegisterClassMap<MustHaveEducation>(
             x =>
             {
-                x.SetDiscriminatorIsRequired(true);
+                ApplyPolymorphicConfigurations(x);
                 x.MapMember(y => y.Level);
                 x.MapMember(y => y.MinimumGrade);
             });
         BsonClassMap.RegisterClassMap<MustHaveMinimumExperience>(
             x =>
             {
-                x.SetDiscriminatorIsRequired(true);
+                ApplyPolymorphicConfigurations(x);
                 x.MapMember(y => y.Years);
             });
-        BsonClassMap.RegisterClassMap<MustWorkFromOffice>(x => x.SetDiscriminatorIsRequired(true));*/
-        
-        // Benefits
-        BsonClassMap.RegisterClassMap<CanHaveMoreFreeDays>(x => x.MapMember(y => y.Days));
-        BsonClassMap.RegisterClassMap<CanHavePerformanceBonus>();
-        BsonClassMap.RegisterClassMap<CanUseInsurance>(x => x.MapMember(y => y.Description));
-        BsonClassMap.RegisterClassMap<CanUseMultiSportCard>(x => x.MapMember(y => y.Category));
+        BsonClassMap.RegisterClassMap<MustWorkFromOffice>(ApplyPolymorphicConfigurations);
+    }
 
-        // Requirements
-        BsonClassMap.RegisterClassMap<MustHaveDrivingLicense>(x => x.MapMember(y => y.Categories));
-        BsonClassMap.RegisterClassMap<MustHaveEducation>(
-            x =>
-            {
-                x.MapMember(y => y.Level);
-                x.MapMember(y => y.MinimumGrade);
-            });
-        BsonClassMap.RegisterClassMap<MustHaveMinimumExperience>(x => x.MapMember(y => y.Years));
-        BsonClassMap.RegisterClassMap<MustWorkFromOffice>();
+    private static void ApplyIdentifiableConfigurations<T>(BsonClassMap<T> classMap)
+        where T : IIdentifiable
+    {
+        if (classMap is null) throw new ArgumentNullException(nameof(classMap));
+        classMap.MapIdMember(x => x.Id);
+    }
+
+    private static void ApplyPolymorphicConfigurations<T>(BsonClassMap<T> classMap)
+    {
+        if (classMap is null) throw new ArgumentNullException(nameof(classMap));
+        classMap.SetDiscriminatorIsRequired(true);
     }
 }
