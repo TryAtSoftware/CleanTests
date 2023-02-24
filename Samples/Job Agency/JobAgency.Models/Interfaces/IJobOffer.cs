@@ -2,6 +2,7 @@
 
 public interface IJobOffer : IIdentifiable
 {
+    string Title { get; set; }
     string Description { get; set; }
     decimal MinSalary { get; set; }
     decimal MaxSalary { get; set; }

@@ -33,6 +33,7 @@ public static class MongoDbEntitiesConfiguration
             x =>
             {
                 ApplyIdentifiableConfigurations(x);
+                x.MapMember(y => y.Title);
                 x.MapMember(y => y.Description);
                 x.MapMember(y => y.AgencyId);
                 x.MapMember(y => y.MinSalary);
@@ -64,26 +65,17 @@ public static class MongoDbEntitiesConfiguration
             });
 
         // Requirements
-        BsonClassMap.RegisterClassMap<MustHaveDrivingLicense>(
-            x =>
-            {
-                ApplyPolymorphicConfigurations(x);
-                x.MapMember(y => y.Categories);
-            });
+        BsonSerializer.RegisterSerializer(new ImpliedImplementationInterfaceSerializer<IJobOfferRequirement, BaseJobOfferRequirement>());
+        BsonClassMap.RegisterClassMap<BaseJobOfferRequirement>(ApplyPolymorphicConfigurations);
+        BsonClassMap.RegisterClassMap<MustHaveDrivingLicense>(x => x.MapMember(y => y.Categories));
         BsonClassMap.RegisterClassMap<MustHaveEducation>(
             x =>
             {
-                ApplyPolymorphicConfigurations(x);
                 x.MapMember(y => y.Level);
                 x.MapMember(y => y.MinimumGrade);
             });
-        BsonClassMap.RegisterClassMap<MustHaveMinimumExperience>(
-            x =>
-            {
-                ApplyPolymorphicConfigurations(x);
-                x.MapMember(y => y.Years);
-            });
-        BsonClassMap.RegisterClassMap<MustWorkFromOffice>(ApplyPolymorphicConfigurations);
+        BsonClassMap.RegisterClassMap<MustHaveMinimumExperience>(x => x.MapMember(y => y.Years));
+        BsonClassMap.RegisterClassMap<MustWorkFromOffice>();
     }
 
     private static void ApplyIdentifiableConfigurations<T>(BsonClassMap<T> classMap)

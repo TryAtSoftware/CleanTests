@@ -3,9 +3,9 @@
 using JobAgency.CleanTests.Utilities.Constants;
 using TryAtSoftware.CleanTests.Core.Attributes;
 
-[CleanUtility(CleanUtilitiesCategories.JobOffer, "software_developer")]
+[CleanUtility(CleanUtilitiesCategories.JobOffer, "dev_ops")]
 [ExternalDemands(CleanUtilitiesCategories.JobAgency, JobAgencyCharacteristics.SoftwareDevelopmentIndustry)]
-public class SoftwareDeveloperJobOfferModelBuilder : BaseJobOfferModelBuilder
+public class DevOpsJobOfferModelBuilder : BaseJobOfferModelBuilder
 {
-    protected override string GetTitle() => "Software developer";
+    protected override string GetTitle() => "DevOps";
 }

@@ -1,5 +1,5 @@
 ﻿namespace JobAgency.Models.Requirements;
 
-public class MustWorkFromOffice
+public class MustWorkFromOffice : BaseJobOfferRequirement
 {
 }
