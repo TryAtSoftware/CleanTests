@@ -36,6 +36,15 @@ public abstract class BaseMongoDbRepository<TEntity> : IRepository<TEntity>
         return await findCursor.ToListAsync(cancellationToken: cancellationToken);
     }
 
+    public async Task<bool> UpdateField<TValue>(Guid id, Expression<Func<TEntity, TValue>> fieldExpression, TValue newValue, CancellationToken cancellationToken)
+    {
+        var filter = ConstructIdFilter(id);
+        var updateDefinition = Builders<TEntity>.Update.Set(fieldExpression, newValue);
+
+        var updateResult = await this.Collection.UpdateOneAsync(filter, updateDefinition, cancellationToken: cancellationToken);
+        return updateResult.ModifiedCount == 1;
+    }
+
     public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
         var filter = ConstructIdFilter(id);

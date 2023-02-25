@@ -80,22 +80,28 @@ public abstract class JobAgencyCleanTest : CleanTest
         var equalizer = new Equalizer();
 
         var equalizationProfileProvider = new DedicatedProfileProvider();
-        equalizationProfileProvider.AddProfile(new GeneralEqualizationProfile<IJobAgency>());
-        equalizationProfileProvider.AddProfile(new GeneralEqualizationProfile<IJobOffer>());
+        RegisterGeneralEqualizationProfile<IJobAgency>();
+        RegisterGeneralEqualizationProfile<IJobOffer>();
         
         // Benefits
-        equalizationProfileProvider.AddProfile(new GeneralEqualizationProfile<CanHaveMoreFreeDays>());
-        equalizationProfileProvider.AddProfile(new GeneralEqualizationProfile<CanHavePerformanceBonus>());
-        equalizationProfileProvider.AddProfile(new GeneralEqualizationProfile<CanUseInsurance>());
-        equalizationProfileProvider.AddProfile(new GeneralEqualizationProfile<CanUseMultiSportCard>());
+        RegisterGeneralEqualizationProfile<CanHaveMoreFreeDays>();
+        RegisterGeneralEqualizationProfile<CanHavePerformanceBonus>();
+        RegisterGeneralEqualizationProfile<CanUseInsurance>();
+        RegisterGeneralEqualizationProfile<CanUseMultiSportCard>();
         
         // Requirements
-        equalizationProfileProvider.AddProfile(new GeneralEqualizationProfile<MustHaveDrivingLicense>());
-        equalizationProfileProvider.AddProfile(new GeneralEqualizationProfile<MustHaveEducation>());
-        equalizationProfileProvider.AddProfile(new GeneralEqualizationProfile<MustHaveMinimumExperience>());
-        equalizationProfileProvider.AddProfile(new GeneralEqualizationProfile<MustWorkFromOffice>());
+        RegisterGeneralEqualizationProfile<MustHaveDrivingLicense>();
+        RegisterGeneralEqualizationProfile<MustHaveEducation>();
+        RegisterGeneralEqualizationProfile<MustHaveMinimumExperience>();
+        RegisterGeneralEqualizationProfile<MustWorkFromOffice>();
         
         equalizer.AddProfileProvider(equalizationProfileProvider);
         return equalizer;
+
+        void RegisterGeneralEqualizationProfile<TEntity>()
+        {
+            equalizationProfileProvider.AddProfile(new GeneralEqualizationProfile<TEntity>());
+            equalizationProfileProvider.AddProfile(new PartialGeneralEqualizationProfile<TEntity>());
+        }
     }
 }
