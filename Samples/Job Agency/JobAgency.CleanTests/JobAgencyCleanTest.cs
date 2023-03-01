@@ -73,7 +73,9 @@ public abstract class JobAgencyCleanTest : CleanTest
         return jobOfferModel;
     }
 
+#pragma warning disable CA1822 // This may be changed in future
     protected CancellationToken GetCancellationToken() => CancellationToken.None;
+#pragma warning restore CA1822
 
     private static IEqualizer PrepareEqualizer()
     {
