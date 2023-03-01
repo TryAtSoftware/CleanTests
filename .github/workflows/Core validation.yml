@@ -11,55 +11,65 @@ jobs:
     name: Validate core functionality
     runs-on: ubuntu-latest
     env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        CONFIGURATION: Release
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      CONFIGURATION: Release
+    services:
+      mongo:
+        image: mongo:5.0
+        container_name: ja_mongo
+        hostname: mongo_db
+        volumes:
+          - mongo_data:/data/db
+          - mongo_config:/data/configdb
+        ports:
+          - 27017:27017
 
     steps:
-    - uses: actions/checkout@v2
-      with:
+      - uses: actions/checkout@v2
+        with:
           fetch-depth: 0
 
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v1
-      with:
-        dotnet-version: 7.x
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 7.x
 
-    - name: Set up JDK 11
-      uses: actions/setup-java@v1
-      with:
-        java-version: 1.11
+      - name: Set up JDK 11
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.11
 
-    - name: Cache SonarCloud packages
-      uses: actions/cache@v1
-      with:
-        path: ~/sonar/cache
-        key: ${{ runner.os }}-sonar
-        restore-keys: ${{ runner.os }}-sonar
+      - name: Cache SonarCloud packages
+        uses: actions/cache@v1
+        with:
+          path: ~/sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
 
-    - name: Cache SonarCloud scanner
-      id: cache-sonar-scanner
-      uses: actions/cache@v1
-      with:
-        path: ./.sonar/scanner
-        key: ${{ runner.os }}-sonar-scanner
-        restore-keys: ${{ runner.os }}-sonar-scanner
+      - name: Cache SonarCloud scanner
+        id: cache-sonar-scanner
+        uses: actions/cache@v1
+        with:
+          path: ./.sonar/scanner
+          key: ${{ runner.os }}-sonar-scanner
+          restore-keys: ${{ runner.os }}-sonar-scanner
 
-    - name: Install SonarCloud scanner
-      if: steps.cache-sonar-scanner.outputs.cache-hit != 'true'
-      run: dotnet tool update dotnet-sonarscanner --tool-path ./.sonar/scanner
-      
-    - name: Start analyzation with SonarCloud
-      run: ./.sonar/scanner/dotnet-sonarscanner begin /k:"TryAtSoftware_CleanTests" /o:"tryatsoftware" /d:sonar.cs.opencover.reportsPaths="**/coverage.opencover.xml" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io"
+      - name: Install SonarCloud scanner
+        if: steps.cache-sonar-scanner.outputs.cache-hit != 'true'
+        run: dotnet tool update dotnet-sonarscanner --tool-path ./.sonar/scanner
 
-    - name: Restore dependencies
-      run: dotnet restore
+      - name: Start analyzation with SonarCloud
+        run: ./.sonar/scanner/dotnet-sonarscanner begin /k:"TryAtSoftware_CleanTests" /o:"tryatsoftware" /d:sonar.cs.opencover.reportsPaths="**/coverage.opencover.xml" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io"
 
-    - name: Build the solution
-      run: dotnet build --no-restore --configuration "${{ env.CONFIGURATION }}"
+      - name: Restore dependencies
+        run: dotnet restore
 
-    - name: Test the solution
-      run: dotnet test --no-build --configuration "${{ env.CONFIGURATION }}" /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
-    
-    - name: Finalize analyzation with SonarCloud
-      run: ./.sonar/scanner/dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
+      - name: Build the solution
+        run: dotnet build --no-restore --configuration "${{ env.CONFIGURATION }}"
+
+      - name: Test the solution
+        run: dotnet test --no-build --configuration "${{ env.CONFIGURATION }}" /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
+
+      - name: Finalize analyzation with SonarCloud
+        run: ./.sonar/scanner/dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"

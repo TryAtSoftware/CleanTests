@@ -2,8 +2,6 @@ services:
   mongo:
     image: mongo:5.0
     container_name: ja_mongo
-    # NOTE: It is important to specify a host name because it will be used during the replica set configuration.
-    # If this value is empty, the replica set will not be usable after a recreation of the container.
     hostname: mongo_db
     volumes:
       - mongo_data:/data/db
