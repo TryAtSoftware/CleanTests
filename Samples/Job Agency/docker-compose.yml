@@ -1,0 +1,19 @@
+services:
+  mongo:
+    image: mongo:5.0
+    container_name: ja_mongo
+    hostname: mongo_db
+    volumes:
+      - mongo_data:/data/db
+      - mongo_config:/data/configdb
+    ports:
+      - 27017:27017
+
+volumes:
+  mongo_data:
+  mongo_config:
+
+
+networks:
+  default:
+    name: job.agency
