@@ -57,7 +57,9 @@ public class CombinatorialMachine
         HashSet<string> checkedCategories = new ();
         foreach (var (category, demands) in cleanUtilityDescriptor.ExternalDemands)
         {
-            if (slots.ContainsKey(category) && !slots[category].FulfillsAllDemands(demands)) return false;
+            if (!slots.TryGetValue(category, out var otherUtilityToCheck)) continue;
+
+            if (!otherUtilityToCheck.FulfillsAllDemands(demands)) return false;
             checkedCategories.Add(category);
         }
 

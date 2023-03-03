@@ -30,7 +30,7 @@ public static class CleanTestsFrameworkExtensions
         if (string.IsNullOrWhiteSpace(category)) throw new ArgumentNullException(nameof(category));
         if (demands is null) throw new ArgumentNullException(nameof(demands));
 
-        return utilitiesCollection.Get(category).OrEmptyIfNull().IgnoreNullValues().Where(iu => (filter is null || filter.Invoke(iu)) && iu.FulfillsAllDemands(demands)).ToArray();
+        return utilitiesCollection.Get(category).OrEmptyIfNull().IgnoreNullValues().SafeWhere(filter).Where(iu => iu.FulfillsAllDemands(demands)).ToArray();
     }
 
     internal static bool FulfillsAllDemands(this ICleanUtilityDescriptor utilityDescriptor, IEnumerable<string> demands)
