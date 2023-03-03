@@ -28,21 +28,14 @@ public abstract class BaseTestCaseDiscoverer : IXunitTestCaseDiscoverer
     /// <inheritdoc />
     public IEnumerable<IXunitTestCase> Discover(ITestFrameworkDiscoveryOptions discoveryOptions, ITestMethod testMethod, IAttributeInfo factAttribute)
     {
-        var initializationUtilitiesOptions = new Dictionary<string, IReadOnlyCollection<string>>();
-        foreach (var (category, utilities) in this._initializationUtilitiesCollection)
-            initializationUtilitiesOptions[category] = utilities.OrEmptyIfNull().IgnoreNullValues().Select(x => x.Id).AsReadOnlyCollection();
-
-        var variationMachine = new VariationMachine<string, string>(initializationUtilitiesOptions);
-        var variations = variationMachine.GetVariations();
+        var graphIterator = new CombinatorialMachine(this._initializationUtilitiesCollection);
+        var variations = graphIterator.GenerateAllCombinations();
 
         var argumentsCollection = this.GetTestMethodArguments(this._diagnosticMessageSink, testMethod).ToArray();
 
         var testCases = new List<IXunitTestCase>();
         foreach (var variation in variations)
         {
-            // NOTE: This is not the most optimal solution but it works correctly. When we have a lot of spare time, we may think of optimizing this algorithm.
-            if (!AllDemandsAreFulfilled(variation, this._cleanTestAssemblyData.CleanUtilitiesById)) continue;
-
             var (isSuccessful, dependenciesSet) = GetDependencies(variation.Values, this._cleanTestAssemblyData);
             if (!isSuccessful) continue;
 
@@ -57,19 +50,6 @@ public abstract class BaseTestCaseDiscoverer : IXunitTestCaseDiscoverer
     }
 
     protected abstract IEnumerable<object[]> GetTestMethodArguments(IMessageSink diagnosticMessageSink, ITestMethod testMethod);
-
-    private static bool AllDemandsAreFulfilled(IDictionary<string, string> variation, IDictionary<string, ICleanUtilityDescriptor> allInitializationUtilities)
-    {
-        foreach (var (_, initializationUtilityId) in variation)
-        {
-            if (!allInitializationUtilities.TryGetValue(initializationUtilityId, out var initializationUtility)) return false;
-            foreach (var (demandCategory, demands) in initializationUtility.ExternalDemands)
-                if (!variation.TryGetValue(demandCategory, out var demandUtilityId) || !allInitializationUtilities.TryGetValue(demandUtilityId, out var demandUtility) || !demands.Any(d => demandUtility.ContainsCharacteristic(d)))
-                    return false;
-        }
-
-        return true;
-    }
 
     private static (bool IsSuccessful, IndividualCleanUtilityDependencyNode[][] DependencyNodes) GetDependencies(IEnumerable<string> utilities, CleanTestAssemblyData assemblyData)
     {
@@ -97,23 +77,22 @@ public abstract class BaseTestCaseDiscoverer : IXunitTestCaseDiscoverer
 
         visited.Add(utility.Id);
 
-        var dependencyIdsByCategory = new Dictionary<string, IReadOnlyCollection<string>>();
+        var dependentUtilitiesCollection = new CleanTestInitializationCollection<ICleanUtilityDescriptor>();
         var dependencyGraphsById = new Dictionary<string, FullCleanUtilityConstructionGraph>();
         foreach (var requirement in utility.InternalRequirements)
         {
             var currentDependencies = ExtractDependencies(utility, requirement, dependencyGraphsById, assemblyData, visited);
             if (currentDependencies.Count == 0) return (IsSuccessful: false, ConstructionGraph: null);
-            dependencyIdsByCategory[requirement] = currentDependencies.AsReadOnly();
+
+            foreach (var dependency in currentDependencies) dependentUtilitiesCollection.Register(requirement, dependency);
         }
 
         visited.Remove(utility.Id);
 
-        var variationMachine = new VariationMachine<string, string>(dependencyIdsByCategory);
-        var dependenciesVariations = variationMachine.GetVariations();
+        var graphIterator = new CombinatorialMachine(dependentUtilitiesCollection);
+        var dependenciesVariations = graphIterator.GenerateAllCombinations();
         foreach (var variation in dependenciesVariations)
         {
-            if (!AllDemandsAreFulfilled(variation, assemblyData.CleanUtilitiesById)) continue;
-
             var variationDependenciesConstructionGraphs = variation.Values.Select(x => dependencyGraphsById[x]).ToList();
             graph.ConstructionDescriptors.Add(variationDependenciesConstructionGraphs);
         }
@@ -121,20 +100,19 @@ public abstract class BaseTestCaseDiscoverer : IXunitTestCaseDiscoverer
         return (IsSuccessful: true, ConstructionGraph: graph);
     }
 
-    private static List<string> ExtractDependencies(ICleanUtilityDescriptor utilityDescriptor, string requirement, IDictionary<string, FullCleanUtilityConstructionGraph> dependencyGraphsById, CleanTestAssemblyData assemblyData, HashSet<string> visited)
+    private static List<ICleanUtilityDescriptor> ExtractDependencies(ICleanUtilityDescriptor utilityDescriptor, string requirement, IDictionary<string, FullCleanUtilityConstructionGraph> dependencyGraphsById, CleanTestAssemblyData assemblyData, HashSet<string> visited)
     {
         var localDemands = utilityDescriptor.InternalDemands.Get(requirement);
-        var currentDependencies = new List<string>();
+        var currentDependencies = new List<ICleanUtilityDescriptor>();
 
         // NOTE: Global utilities can depend on other global utilities only. In future we may want to support local utilities to depend on global utilities as well. However, this is not a priority right now.
-        foreach (var dependentUtility in assemblyData.CleanUtilities.Get(requirement, localDemands).Where(iu => iu.IsGlobal == utilityDescriptor.IsGlobal))
+        foreach (var dependentUtility in assemblyData.CleanUtilities.Get(requirement, localDemands, x => x.IsGlobal == utilityDescriptor.IsGlobal))
         {
             var (isSuccessful, dependentUtilityConstructionGraph) = BuildConstructionGraph(dependentUtility, assemblyData, visited);
-            if (isSuccessful && dependentUtilityConstructionGraph is not null)
-            {
-                currentDependencies.Add(dependentUtilityConstructionGraph.Id);
-                dependencyGraphsById[dependentUtilityConstructionGraph.Id] = dependentUtilityConstructionGraph;
-            }
+            if (!isSuccessful || dependentUtilityConstructionGraph is null) continue;
+
+            currentDependencies.Add(dependentUtility);
+            dependencyGraphsById[dependentUtility.Id] = dependentUtilityConstructionGraph;
         }
 
         return currentDependencies;
