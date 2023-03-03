@@ -28,8 +28,8 @@ public abstract class BaseTestCaseDiscoverer : IXunitTestCaseDiscoverer
     /// <inheritdoc />
     public IEnumerable<IXunitTestCase> Discover(ITestFrameworkDiscoveryOptions discoveryOptions, ITestMethod testMethod, IAttributeInfo factAttribute)
     {
-        var graphIterator = new GraphIterator(this._initializationUtilitiesCollection);
-        var variations = graphIterator.Iterate();
+        var graphIterator = new CombinatorialMachine(this._initializationUtilitiesCollection);
+        var variations = graphIterator.GenerateAllCombinations();
 
         var argumentsCollection = this.GetTestMethodArguments(this._diagnosticMessageSink, testMethod).ToArray();
 
@@ -89,8 +89,8 @@ public abstract class BaseTestCaseDiscoverer : IXunitTestCaseDiscoverer
 
         visited.Remove(utility.Id);
 
-        var graphIterator = new GraphIterator(dependentUtilitiesCollection);
-        var dependenciesVariations = graphIterator.Iterate();
+        var graphIterator = new CombinatorialMachine(dependentUtilitiesCollection);
+        var dependenciesVariations = graphIterator.GenerateAllCombinations();
         foreach (var variation in dependenciesVariations)
         {
             var variationDependenciesConstructionGraphs = variation.Values.Select(x => dependencyGraphsById[x]).ToList();
