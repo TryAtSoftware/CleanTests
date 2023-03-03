@@ -108,7 +108,6 @@ public class CleanTestFrameworkDiscoverer : TestFrameworkDiscoverer
         if (method is null) return customInitializationUtilitiesCollection;
 
         var initializationRequirements = ExtractRequirements(method);
-
         var demands = method.ExtractDemands<TestDemandsAttribute>();
 
         var allRequirementSources = new[] { initializationRequirements, globalRequirements };

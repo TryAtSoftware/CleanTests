@@ -24,13 +24,13 @@ public static class CleanTestsFrameworkExtensions
         }
     }
 
-    public static ICleanUtilityDescriptor[] Get(this ICleanTestInitializationCollection<ICleanUtilityDescriptor> utilitiesCollection, string category, IEnumerable<string> demands)
+    public static ICleanUtilityDescriptor[] Get(this ICleanTestInitializationCollection<ICleanUtilityDescriptor> utilitiesCollection, string category, IEnumerable<string> demands, Func<ICleanUtilityDescriptor, bool>? filter = null)
     {
         if (utilitiesCollection is null) throw new ArgumentNullException(nameof(utilitiesCollection));
         if (string.IsNullOrWhiteSpace(category)) throw new ArgumentNullException(nameof(category));
         if (demands is null) throw new ArgumentNullException(nameof(demands));
 
-        return utilitiesCollection.Get(category).OrEmptyIfNull().IgnoreNullValues().Where(iu => iu.FulfillsAllDemands(demands)).ToArray();
+        return utilitiesCollection.Get(category).OrEmptyIfNull().IgnoreNullValues().Where(iu => (filter is null || filter.Invoke(iu)) && iu.FulfillsAllDemands(demands)).ToArray();
     }
 
     internal static bool FulfillsAllDemands(this ICleanUtilityDescriptor utilityDescriptor, IEnumerable<string> demands)

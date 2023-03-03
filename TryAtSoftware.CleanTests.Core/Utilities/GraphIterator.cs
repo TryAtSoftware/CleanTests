@@ -16,7 +16,7 @@ public class GraphIterator
         this._utilities = utilities ?? throw new ArgumentNullException(nameof(utilities));
     }
 
-    public IEnumerable<IDictionary<string, string>> Iterate(IDictionary<string, HashSet<string>>? initialDemands = null)
+    public IEnumerable<IDictionary<string, string>> Iterate(IDictionary<string, HashSet<string>>? initialDemands = null, HashSet<string> forbiddenUtilitiesIds = null)
     {
         Dictionary<string, Dictionary<string, int>> demands = new ();
         foreach (var (category, initialDemandsForCategory) in initialDemands.OrEmptyIfNull())
