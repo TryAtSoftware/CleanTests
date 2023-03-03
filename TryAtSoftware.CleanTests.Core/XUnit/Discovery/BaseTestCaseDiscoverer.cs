@@ -28,21 +28,14 @@ public abstract class BaseTestCaseDiscoverer : IXunitTestCaseDiscoverer
     /// <inheritdoc />
     public IEnumerable<IXunitTestCase> Discover(ITestFrameworkDiscoveryOptions discoveryOptions, ITestMethod testMethod, IAttributeInfo factAttribute)
     {
-        var initializationUtilitiesOptions = new Dictionary<string, IReadOnlyCollection<string>>();
-        foreach (var (category, utilities) in this._initializationUtilitiesCollection)
-            initializationUtilitiesOptions[category] = utilities.OrEmptyIfNull().IgnoreNullValues().Select(x => x.Id).AsReadOnlyCollection();
-
-        var variationMachine = new VariationMachine<string, string>(initializationUtilitiesOptions);
-        var variations = variationMachine.GetVariations();
+        var graphIterator = new GraphIterator(this._initializationUtilitiesCollection);
+        var variations = graphIterator.Iterate();
 
         var argumentsCollection = this.GetTestMethodArguments(this._diagnosticMessageSink, testMethod).ToArray();
 
         var testCases = new List<IXunitTestCase>();
         foreach (var variation in variations)
         {
-            // NOTE: This is not the most optimal solution but it works correctly. When we have a lot of spare time, we may think of optimizing this algorithm.
-            if (!AllDemandsAreFulfilled(variation, this._cleanTestAssemblyData.CleanUtilitiesById)) continue;
-
             var (isSuccessful, dependenciesSet) = GetDependencies(variation.Values, this._cleanTestAssemblyData);
             if (!isSuccessful) continue;
 

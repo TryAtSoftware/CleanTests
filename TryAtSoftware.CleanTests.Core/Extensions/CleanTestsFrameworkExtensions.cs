@@ -30,7 +30,15 @@ public static class CleanTestsFrameworkExtensions
         if (string.IsNullOrWhiteSpace(category)) throw new ArgumentNullException(nameof(category));
         if (demands is null) throw new ArgumentNullException(nameof(demands));
 
-        return utilitiesCollection.Get(category).OrEmptyIfNull().IgnoreNullValues().Where(iu => demands.All(iu.ContainsCharacteristic)).ToArray();
+        return utilitiesCollection.Get(category).OrEmptyIfNull().IgnoreNullValues().Where(iu => iu.FulfillsAllDemands(demands)).ToArray();
+    }
+
+    internal static bool FulfillsAllDemands(this ICleanUtilityDescriptor utilityDescriptor, IEnumerable<string> demands)
+    {
+        if (utilityDescriptor is null) throw new ArgumentNullException(nameof(utilityDescriptor));
+        if (demands is null) throw new ArgumentNullException(nameof(demands));
+
+        return demands.All(utilityDescriptor.ContainsCharacteristic);
     }
 
     internal static ICleanTestInitializationCollection<string> ExtractDemands<TAttribute>(this IDecoratedComponent decoratedComponent)

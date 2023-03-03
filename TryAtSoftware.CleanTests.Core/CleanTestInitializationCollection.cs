@@ -11,6 +11,9 @@ public class CleanTestInitializationCollection<TValue> : ICleanTestInitializatio
     private readonly IDictionary<string, List<TValue>> _data = new Dictionary<string, List<TValue>>();
 
     /// <inheritdoc />
+    public IReadOnlyCollection<string> Categories => this._data.Keys.AsReadOnlyCollection();
+
+    /// <inheritdoc />
     public IEnumerable<TValue> Get(string category)
     {
         this._data.TryGetValue(category, out var registeredUtilities);
@@ -29,11 +32,13 @@ public class CleanTestInitializationCollection<TValue> : ICleanTestInitializatio
     /// <inheritdoc />
     public IEnumerable<TValue> GetAllValues() => this._data.Values.SelectMany(x => x.OrEmptyIfNull().IgnoreNullValues());
 
+    /// <inheritdoc />
     public IEnumerator<KeyValuePair<string, IEnumerable<TValue>>> GetEnumerator()
     {
         foreach (var (category, utilities) in this._data)
             yield return new KeyValuePair<string, IEnumerable<TValue>>(category, utilities.AsReadOnly());
     }
 
+    /// <inheritdoc />
     IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
 }
