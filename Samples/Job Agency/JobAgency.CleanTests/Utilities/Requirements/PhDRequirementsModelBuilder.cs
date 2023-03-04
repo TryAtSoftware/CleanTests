@@ -8,7 +8,7 @@ using TryAtSoftware.CleanTests.Core.Attributes;
 using TryAtSoftware.Randomizer.Core;
 using TryAtSoftware.Randomizer.Core.Interfaces;
 
-[CleanUtility(CleanUtilitiesCategories.Requirements, "phd", RequirementsCharacteristics.High)]
+[CleanUtility(CleanUtilitiesCategories.Requirements, "phd", RequirementsCharacteristics.High, IsGlobal = true)]
 public class PhDRequirementsModelBuilder : BaseModelBuilder<IEnumerable<IJobOfferRequirement>>
 {
     protected override IRandomizer<IEnumerable<IJobOfferRequirement>> ConstructRandomizer()
