@@ -61,24 +61,26 @@ public class CleanTestCollectionRunner : XunitTestCollectionRunner
     {
         foreach (var dependency in cleanTestCase.CleanTestCaseData.CleanUtilities)
         {
-            if (!this._assemblyData.CleanUtilitiesById.TryGetValue(dependency.Id, out var utilityDescriptor) || utilityDescriptor is not  {IsGlobal:true}) continue;
+            if (!this._assemblyData.CleanUtilitiesById.ContainsKey(dependency.Id)) continue;
             RegisterGlobalUtility(dependency);
         }
 
-        object RegisterGlobalUtility(IndividualCleanUtilityDependencyNode dependencyNode)
+        object? RegisterGlobalUtility(IndividualCleanUtilityDependencyNode dependencyNode)
         {
-            var dependencies = new List<object>(capacity: dependencyNode.Dependencies.Count);
+            var dependencies = new List<object?>(capacity: dependencyNode.Dependencies.Count);
             foreach (var subDependency in dependencyNode.Dependencies)
             {
                 var subDependencyInstance = RegisterGlobalUtility(subDependency);
                 dependencies.Add(subDependencyInstance);
             }
+
+            var (utilityDescriptor, implementationType) = dependencyNode.Materialize(this._assemblyData.CleanUtilitiesById, cleanTestCase.CleanTestCaseData.GenericTypesMap);
+            if (!utilityDescriptor.IsGlobal) return null;
             
             var uniqueId = dependencyNode.GetUniqueId();
             var registeredInstance = this._globalUtilitiesProvider.GetUtility(uniqueId);
             if (registeredInstance is not null) return registeredInstance;
 
-            var (_, implementationType) = dependencyNode.Materialize(this._assemblyData.CleanUtilitiesById, cleanTestCase.CleanTestCaseData.GenericTypesMap);
             var createdInstance = Activator.CreateInstance(implementationType, dependencies.ToArray());
 
             this._globalUtilitiesProvider.AddUtility(uniqueId, createdInstance);
