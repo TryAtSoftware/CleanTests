@@ -105,8 +105,9 @@ public abstract class BaseTestCaseDiscoverer : IXunitTestCaseDiscoverer
         var localDemands = utilityDescriptor.InternalDemands.Get(requirement);
         var currentDependencies = new List<ICleanUtilityDescriptor>();
 
-        // NOTE: Global utilities can depend on other global utilities only. In future we may want to support local utilities to depend on global utilities as well. However, this is not a priority right now.
-        foreach (var dependentUtility in assemblyData.CleanUtilities.Get(requirement, localDemands, x => x.IsGlobal == utilityDescriptor.IsGlobal))
+        Func<ICleanUtilityDescriptor, bool>? predicate = null;
+        if (utilityDescriptor.IsGlobal) predicate = x => x.IsGlobal;
+        foreach (var dependentUtility in assemblyData.CleanUtilities.Get(requirement, localDemands, predicate))
         {
             var (isSuccessful, dependentUtilityConstructionGraph) = BuildConstructionGraph(dependentUtility, assemblyData, visited);
             if (!isSuccessful || dependentUtilityConstructionGraph is null) continue;
