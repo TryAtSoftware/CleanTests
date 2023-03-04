@@ -59,7 +59,7 @@ public class CleanTestInvoker : TestInvoker<ICleanTestCase>
     {
         var (utilityDescriptor, implementationType) = dependencyNode.Materialize(assemblyData.CleanUtilitiesById, this.TestCase.CleanTestCaseData.GenericTypesMap);
         if (utilityDescriptor.IsGlobal)
-            return globalUtilitiesProvider.GetUtility(utilityDescriptor.Id) ?? throw new InvalidOperationException($"The value of a global utility [{utilityDescriptor.Id}] was not retrieved successfully.");
+            return globalUtilitiesProvider.GetUtility(dependencyNode.GetUniqueId()) ?? throw new InvalidOperationException($"The value of a global utility [{utilityDescriptor.Id}] was not retrieved successfully.");
         
         var dependencies = dependencyNode.Dependencies.Select(dependentUtility => this.ConstructInitializationUtility(dependentUtility, assemblyData, globalUtilitiesProvider, serviceProvider));
         return ActivatorUtilities.CreateInstance(serviceProvider, implementationType, dependencies.ToArray());
