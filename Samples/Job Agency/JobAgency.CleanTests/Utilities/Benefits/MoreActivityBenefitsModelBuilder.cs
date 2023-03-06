@@ -8,7 +8,7 @@ using TryAtSoftware.CleanTests.Core.Attributes;
 using TryAtSoftware.Randomizer.Core;
 using TryAtSoftware.Randomizer.Core.Interfaces;
 
-[CleanUtility(CleanUtilitiesCategories.Benefits, "more_activity")]
+[CleanUtility(CleanUtilitiesCategories.Benefits, "more_activity", IsGlobal = true)]
 public class MoreActivityBenefitsModelBuilder : BaseModelBuilder<IEnumerable<IJobOfferBenefit>>
 {
     protected override IRandomizer<IEnumerable<IJobOfferBenefit>> ConstructRandomizer()
