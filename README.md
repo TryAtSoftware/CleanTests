@@ -80,10 +80,11 @@ Add the following line anywhere in your project (most likely this is done within
 Additionally, you can modify the behavior of the `clean tests` execution framework using the `ConfigureCleanTestsFramework` attribute.
 There is a list of the parameters that can be controlled:
 - `UseTraits` - Indicates whether or not to add traits to each generated test case. Enabling this may have performance impact over the discovery process when dealing with a big amount of tests because of the amount of data stored in these traits. The default value is `false`.
+- `MaxDegreeOfParallelism` - A value representing the maximum number of test cases executed in parallel. It should always be positive. There is no concrete formula that can be used to determine which is the most optimal value - it depends on the characteristics of the executing machine, specifics related to the test environment and many other circumstances. The default value is `5`.
 
 Example:
 ```C#
-[assembly: TryAtSoftware.CleanTests.Core.Attributes.ConfigureCleanTestsFramework(UseTraits = true)]
+[assembly: TryAtSoftware.CleanTests.Core.Attributes.ConfigureCleanTestsFramework(UseTraits = true, MaxDegreeOfParallelism = 3)]
 ```
 
 ## What are the `clean utilities`?
