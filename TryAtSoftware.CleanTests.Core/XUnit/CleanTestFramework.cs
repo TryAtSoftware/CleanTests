@@ -7,6 +7,7 @@ using System.Reflection;
 using TryAtSoftware.CleanTests.Core.Attributes;
 using TryAtSoftware.CleanTests.Core.Extensions;
 using TryAtSoftware.CleanTests.Core.Interfaces;
+using TryAtSoftware.CleanTests.Core.Internal;
 using TryAtSoftware.CleanTests.Core.XUnit.Discovery;
 using TryAtSoftware.CleanTests.Core.XUnit.Execution;
 using TryAtSoftware.Extensions.Collections;
@@ -54,9 +55,17 @@ public class CleanTestFramework : XunitTestFramework
 
         var assemblyData = new CleanTestAssemblyData(utilitiesCollection);
         
-        var useCleanTestTraitsAttribute = assemblyInfo.GetCustomAttributes(typeof(ConfigureCleanTestsFrameworkAttribute)).FirstOrDefault();
-        if (useCleanTestTraitsAttribute is not null && useCleanTestTraitsAttribute.GetNamedArgument<bool>(nameof(ConfigureCleanTestsFrameworkAttribute.UseTraits)))
-            assemblyData.IncludeTraits = true;
+        var configurationAttribute = assemblyInfo.GetCustomAttributes(typeof(ConfigureCleanTestsFrameworkAttribute)).FirstOrDefault();
+        if (configurationAttribute is not null)
+        {
+            assemblyData.IncludeTraits = configurationAttribute.GetNamedArgument<bool>(nameof(ConfigureCleanTestsFrameworkAttribute.UseTraits));
+            assemblyData.MaxDegreeOfParallelism = configurationAttribute.GetNamedArgument<int>(nameof(ConfigureCleanTestsFrameworkAttribute.MaxDegreeOfParallelism));
+        }
+        else
+        {
+            assemblyData.IncludeTraits = CleanTestConstants.UseTraits;
+            assemblyData.MaxDegreeOfParallelism = CleanTestConstants.MaxDegreeOfParallelism;
+        }
         
         this._utilityDescriptorsByAssembly[assemblyInfo.Name] = assemblyData;
         return assemblyData;

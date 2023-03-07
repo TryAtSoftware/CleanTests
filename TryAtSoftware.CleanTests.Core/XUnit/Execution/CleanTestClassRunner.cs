@@ -28,7 +28,7 @@ public class CleanTestClassRunner : XunitTestClassRunner
         enrichedConstructorArguments[1] = this._assemblyData;
         Array.Copy(constructorArguments, 0, enrichedConstructorArguments, 2, constructorArguments.Length);
             
-        var methodRunner = new CleanTestMethodRunner(testMethod, this.Class, method, testCases, this.DiagnosticMessageSink, this.MessageBus, new ExceptionAggregator(this.Aggregator), this.CancellationTokenSource, enrichedConstructorArguments);
+        var methodRunner = new CleanTestMethodRunner(testMethod, this.Class, method, testCases, this.DiagnosticMessageSink, this.MessageBus, new ExceptionAggregator(this.Aggregator), this.CancellationTokenSource, enrichedConstructorArguments, this._assemblyData);
         return methodRunner.RunAsync();
     }
 
