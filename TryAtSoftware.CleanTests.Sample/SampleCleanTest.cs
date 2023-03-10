@@ -93,12 +93,12 @@ public class SampleCleanTest : CleanTest
     }
 
     [CleanFact]
-    public void TestOptionalGlobalServiceAccessor()
+    public void TestOptionalServiceAccessor()
     {
         var person1 = this.GetOptionalService<IPerson>();
         Assert.Null(person1);
         
-        var person2 = this.GetOptionalGlobalService(typeof(IPerson));
+        var person2 = this.GetOptionalService(typeof(IPerson));
         Assert.Null(person2);
     }
 
