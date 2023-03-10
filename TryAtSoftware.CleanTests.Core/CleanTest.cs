@@ -60,11 +60,23 @@ public abstract class CleanTest : ICleanTest, IDisposable, IAsyncLifetime
         return this._globalDependenciesProvider.GetService<TService>();
     }
 
+    protected object? GetOptionalGlobalService(Type serviceType)
+    {
+        Assert.NotNull(this._globalDependenciesProvider);
+        return this._globalDependenciesProvider.GetService(serviceType);
+    }
+
     protected TService GetGlobalService<TService>()
         where TService : notnull
     {
         Assert.NotNull(this._globalDependenciesProvider);
         return this._globalDependenciesProvider.GetRequiredService<TService>();
+    }
+
+    protected object GetGlobalService(Type serviceType)
+    {
+        Assert.NotNull(this._globalDependenciesProvider);
+        return this._globalDependenciesProvider.GetRequiredService(serviceType);
     }
 
     protected IEnumerable<TService> GetServices<TService>()
@@ -78,6 +90,24 @@ public abstract class CleanTest : ICleanTest, IDisposable, IAsyncLifetime
     {
         Assert.NotNull(this._scope);
         return this._scope.ServiceProvider.GetRequiredService<TService>();
+    }
+
+    protected object GetService(Type serviceType)
+    {
+        Assert.NotNull(this._scope);
+        return this._scope.ServiceProvider.GetRequiredService(serviceType);
+    }
+
+    protected TService? GetOptionalService<TService>()
+    {
+        Assert.NotNull(this._scope);
+        return this._scope.ServiceProvider.GetService<TService>();
+    }
+
+    protected object? GetOptionalService(Type serviceType)
+    {
+        Assert.NotNull(this._scope);
+        return this._scope.ServiceProvider.GetService(serviceType);
     }
 
     protected virtual void Dispose(bool disposing)
