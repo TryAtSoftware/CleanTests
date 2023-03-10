@@ -36,10 +36,15 @@ public class SampleCleanTest : CleanTest
     [WithRequirements(Categories.People)]
     public void TestUtilityDistribution()
     {
-        var person = this.GetService<IPerson>();
-        Assert.NotNull(person);
+        var person1 = this.GetService<IPerson>();
+        Assert.NotNull(person1);
+        
+        var person2 = this.GetService(typeof(IPerson));
+        Assert.NotNull(person2);
+        
+        Assert.Same(person1, person2);
 
-        this.OutputUtilityInfo(person);
+        this.OutputUtilityInfo(person1);
     }
     
     [CleanFact]
@@ -85,6 +90,16 @@ public class SampleCleanTest : CleanTest
         Assert.NotNull(mathFunction);
         
         this.OutputUtilityInfo(mathFunction);
+    }
+
+    [CleanFact]
+    public void TestOptionalServiceAccessor()
+    {
+        var person1 = this.GetOptionalService<IPerson>();
+        Assert.Null(person1);
+        
+        var person2 = this.GetOptionalService(typeof(IPerson));
+        Assert.Null(person2);
     }
 
     private void OutputUtilityInfo<T>(T utility)

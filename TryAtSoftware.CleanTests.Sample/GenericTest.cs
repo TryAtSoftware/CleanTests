@@ -23,8 +23,13 @@ public class GenericTest<[Numeric] T> : CleanTest
     [WithRequirements(Categories.Animals)]
     public void TestGlobalUtilitiesDistribution()
     {
-        var animal = this.GetGlobalService<IAnimal>();
-        Assert.NotNull(animal);
+        var animal1 = this.GetGlobalService<IAnimal>();
+        Assert.NotNull(animal1);
+
+        var animal2 = this.GetGlobalService(typeof(IAnimal));
+        Assert.NotNull(animal2);
+
+        Assert.Same(animal1, animal2);
     }
     
     [CleanFact]
@@ -38,9 +43,14 @@ public class GenericTest<[Numeric] T> : CleanTest
     [CleanFact]
     public void TestOptionalGlobalServiceAccessor()
     {
-        var animal = this.GetOptionalGlobalService<IAnimal>();
-        var zoo = this.GetOptionalGlobalService<IZoo>();
-        Assert.Null(animal);
-        Assert.Null(zoo);
+        var animal1 = this.GetOptionalGlobalService<IAnimal>();
+        var zoo1 = this.GetOptionalGlobalService<IZoo>();
+        Assert.Null(animal1);
+        Assert.Null(zoo1);
+        
+        var animal2 = this.GetOptionalGlobalService(typeof(IAnimal));
+        var zoo2 = this.GetOptionalGlobalService(typeof(IZoo));
+        Assert.Null(animal2);
+        Assert.Null(zoo2);
     }
 }
