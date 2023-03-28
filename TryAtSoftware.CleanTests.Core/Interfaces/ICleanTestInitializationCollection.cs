@@ -7,6 +7,7 @@ public interface ICleanTestInitializationCollection<TValue> : IEnumerable<KeyVal
     IReadOnlyCollection<string> Categories { get; }
     IEnumerable<TValue> Get(string category);
     bool ContainsCategory(string category);
+    int Count(string category);
     void Register(string category, TValue value);
     IEnumerable<TValue> GetAllValues();
 }

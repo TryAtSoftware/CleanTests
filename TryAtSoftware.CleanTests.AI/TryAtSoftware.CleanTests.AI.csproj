@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.ML" Version="1.7.1" />
+    <PackageReference Include="Microsoft.ML.FastTree" Version="1.7.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Tests\TryAtSoftware.CleanTests.UnitTests\TryAtSoftware.CleanTests.UnitTests.csproj" />
+  </ItemGroup>
+  <ItemGroup Label="GeneratedCombinationsCountPreductor">
+    <None Include="GeneratedCombinationsCountPreductor.consumption.cs">
+      <DependentUpon>GeneratedCombinationsCountPreductor.mbconfig</DependentUpon>
+    </None>
+    <None Include="GeneratedCombinationsCountPreductor.training.cs">
+      <DependentUpon>GeneratedCombinationsCountPreductor.mbconfig</DependentUpon>
+    </None>
+    <None Include="GeneratedCombinationsCountPreductor.zip">
+      <DependentUpon>GeneratedCombinationsCountPreductor.mbconfig</DependentUpon>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+</Project>

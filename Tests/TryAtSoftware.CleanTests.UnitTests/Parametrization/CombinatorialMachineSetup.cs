@@ -8,17 +8,38 @@ using TryAtSoftware.Extensions.Collections;
 public class CombinatorialMachineSetup
 {
     private readonly Dictionary<string, int> _numberOfUtilitiesPerCategory = new ();
-    private readonly Dictionary<string, Dictionary<string, List<string>>> _demandsPerUtility = new ();
     private readonly Dictionary<string, List<string>> _characteristics = new ();
+    private readonly Dictionary<string, Dictionary<string, List<string>>> _demandsPerUtility = new ();
 
-    public CombinatorialMachineSetup(string name)
+    public CombinatorialMachineSetup(string name, CombinatorialMachineSetup? prototype = null)
     {
         if (string.IsNullOrWhiteSpace(name)) throw new ArgumentNullException(nameof(name));
         this.Name = name;
+
+        if (prototype is not null)
+        {
+            foreach (var p in prototype._numberOfUtilitiesPerCategory) this._numberOfUtilitiesPerCategory[p.Key] = p.Value;
+            foreach (var p in prototype._characteristics)
+            {
+                this._characteristics[p.Key] = new List<string>();
+                foreach (var t in p.Value) this._characteristics[p.Key].Add(t);
+            }
+
+            foreach (var p1 in prototype._demandsPerUtility)
+            {
+                this._demandsPerUtility[p1.Key] = new Dictionary<string, List<string>>();
+                foreach (var p2 in p1.Value)
+                {
+                    this._demandsPerUtility[p1.Key][p2.Key] = new List<string>();
+                    foreach (var t in p2.Value) this._demandsPerUtility[p1.Key][p2.Key].Add(t);
+                }
+            }
+        }
     }
 
     public string Name { get; }
-    
+    public IReadOnlyDictionary<string, int> NumberOfUtilitiesPerCategory => this._numberOfUtilitiesPerCategory.AsReadOnlyDictionary();
+
     public CombinatorialMachineSetup WithCategory(string category, int utilitiesCount)
     {
         if (string.IsNullOrWhiteSpace(category)) throw new ArgumentNullException(nameof(category));

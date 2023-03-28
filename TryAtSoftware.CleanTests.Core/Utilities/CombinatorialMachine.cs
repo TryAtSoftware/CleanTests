@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using TryAtSoftware.CleanTests.Core.Interfaces;
 using TryAtSoftware.Extensions.Collections;
 
@@ -15,6 +16,7 @@ public class CombinatorialMachine
         this._utilities = utilities ?? throw new ArgumentNullException(nameof(utilities));
     }
 
+    // TODO: Describe why dynamically changing the categories order (based on the external demands of already iterated utilities) does not work.
     public IEnumerable<IDictionary<string, string>> GenerateAllCombinations()
     {
         var (incompatibleUtilitiesMap, incompatibilityEnforcersByCategory, incompatibilityFactorByCategory) = this.DiscoverIncompatibleUtilities();
@@ -54,7 +56,57 @@ public class CombinatorialMachine
         }
     }
 
-    private (Dictionary<string, HashSet<string>> IncompatibleUtilitiesMap, Dictionary<string, int> IncompatibilityEnforcersByCategory, Dictionary<string, int> incompatibilityFactorByCategory) DiscoverIncompatibleUtilities()
+    public BigInteger CalculateNumberOfCombinations()
+    {
+        BigInteger product = 1;
+        foreach (var category in this._utilities.Categories) product = BigInteger.Multiply(product, this._utilities.Count(category));
+
+        var incompatiblePairs = new List<(string, string)>();
+        var visited = new HashSet<string>();
+
+        var (incompatibleUtilitiesMap, _, _) = this.DiscoverIncompatibleUtilities();
+        foreach (var (principalUtility, incompatibleUtilities) in incompatibleUtilitiesMap)
+        {
+            foreach (var incompatibleUtility in incompatibleUtilities.Where(x => !visited.Contains(x))) incompatiblePairs.Add((principalUtility, incompatibleUtility));
+            visited.Add(principalUtility);
+        }
+
+        var categoryByUtilityId = new Dictionary<string, string>();
+        foreach (var utility in this._utilities.GetAllValues()) categoryByUtilityId[utility.Id] = utility.Category;
+
+        var used = new Dictionary<string, string>();
+        BigInteger ans = 0;
+        for (var i = 0; i < incompatiblePairs.Count; i++) Solve(i, add: true, product);
+
+        return product - ans;
+        
+        void Solve(int index, bool add, BigInteger current)
+        {
+            if (index == incompatiblePairs.Count) return;
+
+            var (first, second) = incompatiblePairs[index];
+            var (firstCategory, secondCategory) = (categoryByUtilityId[first], categoryByUtilityId[second]);
+
+            if (!used.ContainsKey(firstCategory)) current = BigInteger.Divide(current, this._utilities.Count(firstCategory));
+            else if (used[firstCategory] != first) return;
+            
+            if (!used.ContainsKey(secondCategory)) current = BigInteger.Divide(current, this._utilities.Count(secondCategory));
+            else if (used[secondCategory] != second) return;
+
+            used[firstCategory] = first;
+            used[secondCategory] = second;
+
+            if (add) ans += current;
+            else ans -= current;
+            
+            for (var i = index + 1; i < incompatiblePairs.Count; i++) Solve(i, !add, current);
+
+            used.Remove(firstCategory);
+            used.Remove(secondCategory);
+        }
+    }
+
+    public (Dictionary<string, HashSet<string>> IncompatibleUtilitiesMap, Dictionary<string, int> IncompatibilityEnforcersByCategory, Dictionary<string, int> IncompatibilityFactorByCategory) DiscoverIncompatibleUtilities()
     {
         Dictionary<string, int> incompatibilityEnforcersByCategory = new (), incompatibilityFactorByCategory = new ();
         Dictionary<string, Dictionary<string, HashSet<string>>> characteristicsRegister = new ();

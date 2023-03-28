@@ -29,6 +29,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TryAtSoftware.CleanTests.Un
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TryAtSoftware.CleanTests.Benchmark", "Tests\TryAtSoftware.CleanTests.Benchmark\TryAtSoftware.CleanTests.Benchmark.csproj", "{15C6B231-CFD3-4AD9-9FE0-AC2A4A50267C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TryAtSoftware.CleanTests.AI", "TryAtSoftware.CleanTests.AI\TryAtSoftware.CleanTests.AI.csproj", "{B7F37104-C8F3-4859-BB56-888EFE0F3618}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -67,6 +69,10 @@ Global
 		{15C6B231-CFD3-4AD9-9FE0-AC2A4A50267C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{15C6B231-CFD3-4AD9-9FE0-AC2A4A50267C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{15C6B231-CFD3-4AD9-9FE0-AC2A4A50267C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B7F37104-C8F3-4859-BB56-888EFE0F3618}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B7F37104-C8F3-4859-BB56-888EFE0F3618}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B7F37104-C8F3-4859-BB56-888EFE0F3618}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B7F37104-C8F3-4859-BB56-888EFE0F3618}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{8FD16EE6-3187-4782-88A6-D6DC7159B105} = {73F18833-D956-449D-A2EC-6CAA97C9E9A2}
