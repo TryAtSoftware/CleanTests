@@ -14,10 +14,11 @@ public class CombinatorialMachineTests
 
     [Theory]
     [MemberData(nameof(GetCombinatorialMachineSetups))]
-    public void Test(CombinatorialMachineSetup setup)
+    public void CombinationsShouldBeGeneratedSuccessfully(CombinatorialMachineSetup setup)
     {
         var (machine, utilitiesById) = setup.Materialize();
         var combinations = machine.GenerateAllCombinations().ToArray();
+        Assert.NotNull(combinations);
 
         this._outputHelper.WriteLine($"Generated {combinations.Length} combinations");
         foreach (var c in combinations) this._outputHelper.WriteLine(string.Join(";", c.OrderBy(x => x.Key).Select(x => utilitiesById[x.Value].Name)));
