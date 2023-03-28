@@ -11,6 +11,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\..\TryAtSoftware.CleanTests.Core\TryAtSoftware.CleanTests.Core.csproj" />
+      <ProjectReference Include="..\TryAtSoftware.CleanTests.UnitTests\TryAtSoftware.CleanTests.UnitTests.csproj" />
     </ItemGroup>
 
 </Project>
