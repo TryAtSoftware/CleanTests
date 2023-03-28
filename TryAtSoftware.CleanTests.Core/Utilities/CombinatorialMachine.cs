@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using TryAtSoftware.CleanTests.Core.Extensions;
 using TryAtSoftware.CleanTests.Core.Interfaces;
 using TryAtSoftware.Extensions.Collections;
@@ -50,6 +51,46 @@ public class CombinatorialMachine
                 CleanupExternalDemands(utility, activeDemands);
             }
         }
+    }
+
+    private Dictionary<string, HashSet<string>> DiscoverIncompatibleUtilities()
+    {
+        Dictionary<string, Dictionary<string, HashSet<string>>> characteristicsRegister = new ();
+        foreach (var category in this._utilities.Categories) characteristicsRegister[category] = new Dictionary<string, HashSet<int>>();
+
+        Dictionary<string, HashSet<string>> ans = new ();
+        foreach (var utility in this._utilities.GetAllValues())
+        {
+            ans[utility.Id] = new HashSet<string>();
+
+            foreach (var characteristic in utility.Characteristics)
+            {
+                if (!characteristicsRegister[utility.Category].ContainsKey(characteristic)) characteristicsRegister[utility.Category][characteristic] = new HashSet<string>();
+                characteristicsRegister[utility.Category][characteristic].Add(utility.Id);
+            }
+        }
+
+        foreach (var utility in this._utilities.GetAllValues())
+        {
+            foreach (var (category, demandsForCategory) in utility.ExternalDemands)
+            {
+                if (!this._utilities.ContainsCategory(category)) continue;
+                
+                foreach (var demand in demandsForCategory)
+                {
+                    Func<ICleanUtilityDescriptor, bool>? predicate = null;
+                    if (characteristicsRegister[category].ContainsKey(demand)) predicate = x => !characteristicsRegister[category][demand].Contains(x.Id);
+
+                    foreach (var otherUtility in this._utilities.Get(category).SafeWhere(predicate))
+                    {
+                        ans[utility.Id].Add(otherUtility.Id);
+                        ans[otherUtility.Id].Add(utility.Id);
+                    }
+                }
+            }
+        }
+
+        return ans;
     }
 
     private static bool RegisterExternalDemands(ICleanUtilityDescriptor cleanUtilityDescriptor, IDictionary<string, ICleanUtilityDescriptor> slots, IDictionary<string, Dictionary<string, int>> activeDemands)
