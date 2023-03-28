@@ -60,7 +60,11 @@ public static class TestParameters
 
         yield return setup6;
         
-        // TODO: Add a setup for which none of the last level utilities satisfy the first level's demands.
+        // 1000 categories; 100 utilities in each; all utilities in the first category are incompatible with all utilities in the last category.
+        var setup7 = new CombinatorialMachineSetup("Setup #7");
+        for (var i = 0; i < 1000; i++) setup7.WithCategory(ConstructCategoryName(i), 100);
+        for (var i = 1; i <= 100; i++) setup7.WithDemands(ConstructCategoryName(0), i, ConstructCategoryName(999), "q");
+        yield return setup7;
     }
 
     private static string ConstructCategoryName(int letterIndex)
