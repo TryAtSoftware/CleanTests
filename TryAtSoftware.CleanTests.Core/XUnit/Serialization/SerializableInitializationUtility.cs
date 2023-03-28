@@ -36,8 +36,6 @@ public class SerializableInitializationUtility : IXunitSerializable
         if (info is null) throw new ArgumentNullException(nameof(info));
             
         var initializationCategory = info.GetValue<string>("c");
-        var idValue = info.GetValue<string>("id");
-        var id = Guid.Parse(idValue);
 
         var deserializedUtilityType = info.GetValue<Type>("ut");
         var utilityName = info.GetValue<string>("un");
@@ -52,7 +50,7 @@ public class SerializableInitializationUtility : IXunitSerializable
         var requirements = new HashSet<string>();
         foreach (var requirement in deserializedRequirements) requirements.Add(requirement);
 
-        this.CleanUtilityDescriptor = new CleanUtilityDescriptor(initializationCategory, id, deserializedUtilityType, utilityName, isGlobal, characteristics, requirements);
+        this.CleanUtilityDescriptor = new CleanUtilityDescriptor(initializationCategory, deserializedUtilityType, utilityName, isGlobal, characteristics, requirements);
         DeserializeDemands(deserializedGlobalDemands, this.CleanUtilityDescriptor.ExternalDemands);
         DeserializeDemands(deserializedLocalDemands, this.CleanUtilityDescriptor.InternalDemands);
     }

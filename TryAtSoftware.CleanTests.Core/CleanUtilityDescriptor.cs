@@ -11,9 +11,6 @@ public class CleanUtilityDescriptor : ICleanUtilityDescriptor
 
     /// <inheritdoc />
     public string Category { get; }
-        
-    /// <inheritdoc />
-    public Guid Id { get; }
 
     /// <inheritdoc />
     public Type Type { get; }
@@ -36,10 +33,9 @@ public class CleanUtilityDescriptor : ICleanUtilityDescriptor
     /// <inheritdoc />
     public HashSet<string> InternalRequirements { get; } = new ();
 
-    public CleanUtilityDescriptor(string initializationCategory, Guid id, Type type, string displayName, bool isGlobal, IEnumerable<string>? characteristics, IEnumerable<string>? requirements)
+    public CleanUtilityDescriptor(string initializationCategory, Type type, string displayName, bool isGlobal, IEnumerable<string>? characteristics, IEnumerable<string>? requirements)
     {
         this.Category = initializationCategory;
-        this.Id = id;
         this.Type = type ?? throw new ArgumentNullException(nameof(type));
         this.Name = displayName ?? throw new ArgumentNullException(nameof(displayName));
         this.IsGlobal = isGlobal;

@@ -1,6 +1,5 @@
 ﻿namespace TryAtSoftware.CleanTests.Core.XUnit;
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -92,7 +91,7 @@ public class CleanTestFramework : XunitTestFramework
                 var isGlobalArgument = utilityAttribute.GetNamedArgument<bool>(nameof(CleanUtilityAttribute.IsGlobal));
                 var characteristicsArgument = utilityAttribute.GetNamedArgument<IEnumerable<string>>(nameof(CleanUtilityAttribute.Characteristics));
 
-                var initializationUtility = new CleanUtilityDescriptor(categoryArgument, Guid.NewGuid(), type.ToRuntimeType(), nameArgument, isGlobalArgument, characteristicsArgument, requirements);
+                var initializationUtility = new CleanUtilityDescriptor(categoryArgument, type.ToRuntimeType(), nameArgument, isGlobalArgument, characteristicsArgument, requirements);
                 internalDemands.CopyTo(initializationUtility.InternalDemands);
                 externalDemands.CopyTo(initializationUtility.ExternalDemands);
 
