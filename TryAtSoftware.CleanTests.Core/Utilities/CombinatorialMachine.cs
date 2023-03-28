@@ -3,8 +3,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using TryAtSoftware.CleanTests.Core.Extensions;
 using TryAtSoftware.CleanTests.Core.Interfaces;
 using TryAtSoftware.Extensions.Collections;
 
@@ -19,9 +17,12 @@ public class CombinatorialMachine
 
     public IEnumerable<IDictionary<string, string>> GenerateAllCombinations()
     {
-        var categories = this._utilities.Categories.ToArray();
+        var incompatibilityFactorByUtilityId = this.DiscoverIncompatibleUtilities();
+        var categories = this._utilities.Categories.OrderByDescending(x => this._utilities.Get(x).Sum(y => incompatibilityFactorByUtilityId[y.Id].Count)).ToArray();
 
-        Dictionary<string, Dictionary<string, int>> activeDemands = new ();
+        Dictionary<string, int> utilityIsForbiddenBy = new ();
+        foreach (var utility in this._utilities.GetAllValues()) utilityIsForbiddenBy[utility.Id] = 0;
+        
         Dictionary<string, ICleanUtilityDescriptor> slots = new ();
         List<IDictionary<string, string>> resultBag = new ();
 
@@ -38,17 +39,17 @@ public class CombinatorialMachine
 
             var currentCategory = categories[categoryIndex];
 
-            var requiredCharacteristics = activeDemands.EnsureValue(currentCategory).Keys.ToArray();
             foreach (var utility in this._utilities.Get(currentCategory))
             {
-                var canBeUsed = utility.FulfillsAllDemands(requiredCharacteristics);
-                if (!canBeUsed || !RegisterExternalDemands(utility, slots, activeDemands)) continue;
+                if (utilityIsForbiddenBy[utility.Id] > 0) continue;
 
+                foreach (var iu in incompatibilityFactorByUtilityId[utility.Id]) utilityIsForbiddenBy[iu]++;
+                
                 slots[currentCategory] = utility;
                 Dfs(categoryIndex + 1);
                 slots.Remove(currentCategory);
 
-                CleanupExternalDemands(utility, activeDemands);
+                foreach (var iu in incompatibilityFactorByUtilityId[utility.Id]) utilityIsForbiddenBy[iu]--;
             }
         }
     }
@@ -56,7 +57,7 @@ public class CombinatorialMachine
     private Dictionary<string, HashSet<string>> DiscoverIncompatibleUtilities()
     {
         Dictionary<string, Dictionary<string, HashSet<string>>> characteristicsRegister = new ();
-        foreach (var category in this._utilities.Categories) characteristicsRegister[category] = new Dictionary<string, HashSet<int>>();
+        foreach (var category in this._utilities.Categories) characteristicsRegister[category] = new Dictionary<string, HashSet<string>>();
 
         Dictionary<string, HashSet<string>> ans = new ();
         foreach (var utility in this._utilities.GetAllValues())
@@ -91,47 +92,5 @@ public class CombinatorialMachine
         }
 
         return ans;
-    }
-
-    private static bool RegisterExternalDemands(ICleanUtilityDescriptor cleanUtilityDescriptor, IDictionary<string, ICleanUtilityDescriptor> slots, IDictionary<string, Dictionary<string, int>> activeDemands)
-    {
-        HashSet<string> checkedCategories = new ();
-        foreach (var (category, demands) in cleanUtilityDescriptor.ExternalDemands)
-        {
-            if (!slots.TryGetValue(category, out var otherUtilityToCheck)) continue;
-
-            if (!otherUtilityToCheck.FulfillsAllDemands(demands)) return false;
-            checkedCategories.Add(category);
-        }
-
-        foreach (var (category, demands) in cleanUtilityDescriptor.ExternalDemands)
-        {
-            if (checkedCategories.Contains(category)) continue;
-            
-            var activeDemandsForCategory = activeDemands.EnsureValue(category);
-            foreach (var demand in demands)
-            {
-                if (!activeDemandsForCategory.ContainsKey(demand)) activeDemandsForCategory[demand] = 0;
-                activeDemandsForCategory[demand]++;
-            }
-        }
-
-        return true;
-    }
-
-    private static void CleanupExternalDemands(ICleanUtilityDescriptor cleanUtilityDescriptor, IDictionary<string, Dictionary<string, int>> activeDemands)
-    {
-        foreach (var (category, demands) in cleanUtilityDescriptor.ExternalDemands)
-        {
-            if (!activeDemands.TryGetValue(category, out var activeDemandsForCategory)) continue;
-
-            foreach (var demand in demands)
-            {
-                if (!activeDemandsForCategory.TryGetValue(demand, out var demandOccurrences)) continue;
-
-                if (demandOccurrences == 1) activeDemandsForCategory.Remove(demand);
-                else activeDemandsForCategory[demand] = demandOccurrences - 1;
-            }
-        }
     }
 }
