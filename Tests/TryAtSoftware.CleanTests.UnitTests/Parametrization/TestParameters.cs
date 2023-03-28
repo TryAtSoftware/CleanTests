@@ -1,5 +1,7 @@
 ﻿namespace TryAtSoftware.CleanTests.UnitTests.Parametrization;
 
+using System.Text;
+
 public static class TestParameters
 {
     public static IEnumerable<CombinatorialMachineSetup> ConstructObservableCombinatorialMachineSetups()
@@ -14,15 +16,18 @@ public static class TestParameters
         setup2.WithDemands("A", 1, "B", "exec_A1").WithDemands("B", 2, "C", "exec_B2").WithDemands("C", 1, "D", "exec_C1").WithDemands("D", 2, "E", "exec_D2");
         yield return setup2;
 
-        var setup3 = new CombinatorialMachineSetup("5 categories; 10 utilities in each; no demands");
+        // 5 categories; 10 utilities in each; no demands
+        var setup3 = new CombinatorialMachineSetup("Setup #3");
         for (var i = 0; i < 5; i++) setup3.WithCategory(ConstructCategoryName(i), 10);
         yield return setup3;
 
-        var setup4 = new CombinatorialMachineSetup("10 categories; 3 utilities in each; no demands");
+        // 10 categories; 3 utilities in each; no demands
+        var setup4 = new CombinatorialMachineSetup("Setup #4");
         for (var i = 0; i < 10; i++) setup4.WithCategory(ConstructCategoryName(i), 3);
         yield return setup4;
 
-        var setup5 = new CombinatorialMachineSetup("10 categories; 5 utilities in each; demands");
+        // 10 categories; 5 utilities in each; demands
+        var setup5 = new CombinatorialMachineSetup("Setup #5");
         for (var i = 0; i < 10; i++) setup5.WithCategory(ConstructCategoryName(i), 5);
         for (var i = 1; i < 10; i++)
         {
@@ -39,7 +44,35 @@ public static class TestParameters
         }
         
         yield return setup5;
+        
+        // 100 categories; 10 utilities in each; only one matching utility in each
+        var setup6 = new CombinatorialMachineSetup("Setup #6");
+        for (var i = 0; i < 100; i++) setup6.WithCategory(ConstructCategoryName(i), 10);
+        for (var i = 1; i < 100; i++)
+        {
+            for (var j = 1; j <= 10; j++) setup6.WithCharacteristics(ConstructCategoryName(i), j, $"exec_{ConstructCategoryName(i - 1)}{j}");
+        }
+
+        for (var i = 0; i < 99; i++)
+        {
+            for (var j = 1; j <= 10; j++) setup6.WithDemands(ConstructCategoryName(i), j, ConstructCategoryName(i + 1), $"exec_{ConstructCategoryName(i)}{j}");
+        }
+
+        yield return setup6;
+        
+        // TODO: Add a setup for which none of the last level utilities satisfy the first level's demands.
     }
 
-    private static string ConstructCategoryName(int letterIndex) => ((char)(letterIndex + 'A')).ToString();
+    private static string ConstructCategoryName(int letterIndex)
+    {
+        var sb = new StringBuilder();
+        
+        do
+        {
+            sb.Append((char)('A' + letterIndex % 26));
+            letterIndex /= 26;
+        } while (letterIndex != 0);
+
+        return sb.ToString();
+    }
 }
