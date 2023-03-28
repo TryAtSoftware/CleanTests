@@ -10,15 +10,15 @@
   <ItemGroup>
     <ProjectReference Include="..\Tests\TryAtSoftware.CleanTests.UnitTests\TryAtSoftware.CleanTests.UnitTests.csproj" />
   </ItemGroup>
-  <ItemGroup Label="GeneratedCombinationsCountPreductor">
-    <None Include="GeneratedCombinationsCountPreductor.consumption.cs">
-      <DependentUpon>GeneratedCombinationsCountPreductor.mbconfig</DependentUpon>
+  <ItemGroup Label="CombinationsCountPredictor">
+    <None Include="CombinationsCountPredictor.consumption.cs">
+      <DependentUpon>CombinationsCountPredictor.mbconfig</DependentUpon>
     </None>
-    <None Include="GeneratedCombinationsCountPreductor.training.cs">
-      <DependentUpon>GeneratedCombinationsCountPreductor.mbconfig</DependentUpon>
+    <None Include="CombinationsCountPredictor.training.cs">
+      <DependentUpon>CombinationsCountPredictor.mbconfig</DependentUpon>
     </None>
-    <None Include="GeneratedCombinationsCountPreductor.zip">
-      <DependentUpon>GeneratedCombinationsCountPreductor.mbconfig</DependentUpon>
+    <None Include="CombinationsCountPredictor.zip">
+      <DependentUpon>CombinationsCountPredictor.mbconfig</DependentUpon>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
