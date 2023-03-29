@@ -9,3 +9,4 @@
 *.DotSettings.user
 
 TestResults/
+TryAtSoftware.CleanTests.AI/test_data.tsv
