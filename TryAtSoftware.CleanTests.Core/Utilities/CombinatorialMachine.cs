@@ -3,7 +3,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using TryAtSoftware.CleanTests.Core.Extensions;
 using TryAtSoftware.CleanTests.Core.Interfaces;
 using TryAtSoftware.Extensions.Collections;
 
@@ -18,9 +17,12 @@ public class CombinatorialMachine
 
     public IEnumerable<IDictionary<string, string>> GenerateAllCombinations()
     {
-        var categories = this._utilities.Categories.ToArray();
+        var (incompatibleUtilitiesMap, incompatibilityEnforcersByCategory, incompatibilityFactorByCategory) = this.DiscoverIncompatibleUtilities();
+        var categories = this._utilities.Categories.OrderByDescending(x => incompatibilityEnforcersByCategory[x]).ThenByDescending(x => incompatibilityFactorByCategory[x]).ToArray();
 
-        Dictionary<string, Dictionary<string, int>> activeDemands = new ();
+        Dictionary<string, int> incompatibilityFactorByUtilityId = new ();
+        foreach (var utility in this._utilities.GetAllValues()) incompatibilityFactorByUtilityId[utility.Id] = 0;
+        
         Dictionary<string, ICleanUtilityDescriptor> slots = new ();
         List<IDictionary<string, string>> resultBag = new ();
 
@@ -37,60 +39,69 @@ public class CombinatorialMachine
 
             var currentCategory = categories[categoryIndex];
 
-            var requiredCharacteristics = activeDemands.EnsureValue(currentCategory).Keys.ToArray();
             foreach (var utility in this._utilities.Get(currentCategory))
             {
-                var canBeUsed = utility.FulfillsAllDemands(requiredCharacteristics);
-                if (!canBeUsed || !RegisterExternalDemands(utility, slots, activeDemands)) continue;
+                if (incompatibilityFactorByUtilityId[utility.Id] > 0) continue;
 
+                foreach (var iu in incompatibleUtilitiesMap[utility.Id]) incompatibilityFactorByUtilityId[iu]++;
+                
                 slots[currentCategory] = utility;
                 Dfs(categoryIndex + 1);
                 slots.Remove(currentCategory);
 
-                CleanupExternalDemands(utility, activeDemands);
+                foreach (var iu in incompatibleUtilitiesMap[utility.Id]) incompatibilityFactorByUtilityId[iu]--;
             }
         }
     }
 
-    private static bool RegisterExternalDemands(ICleanUtilityDescriptor cleanUtilityDescriptor, IDictionary<string, ICleanUtilityDescriptor> slots, IDictionary<string, Dictionary<string, int>> activeDemands)
+    private (Dictionary<string, HashSet<string>> IncompatibleUtilitiesMap, Dictionary<string, int> IncompatibilityEnforcersByCategory, Dictionary<string, int> incompatibilityFactorByCategory) DiscoverIncompatibleUtilities()
     {
-        HashSet<string> checkedCategories = new ();
-        foreach (var (category, demands) in cleanUtilityDescriptor.ExternalDemands)
+        Dictionary<string, int> incompatibilityEnforcersByCategory = new (), incompatibilityFactorByCategory = new ();
+        Dictionary<string, Dictionary<string, HashSet<string>>> characteristicsRegister = new ();
+        foreach (var category in this._utilities.Categories)
         {
-            if (!slots.TryGetValue(category, out var otherUtilityToCheck)) continue;
-
-            if (!otherUtilityToCheck.FulfillsAllDemands(demands)) return false;
-            checkedCategories.Add(category);
+            incompatibilityEnforcersByCategory[category] = 0;
+            incompatibilityFactorByCategory[category] = 0;
+            characteristicsRegister[category] = new Dictionary<string, HashSet<string>>();
         }
 
-        foreach (var (category, demands) in cleanUtilityDescriptor.ExternalDemands)
+        Dictionary<string, HashSet<string>> incompatibleUtilitiesMap = new ();
+        foreach (var utility in this._utilities.GetAllValues())
         {
-            if (checkedCategories.Contains(category)) continue;
-            
-            var activeDemandsForCategory = activeDemands.EnsureValue(category);
-            foreach (var demand in demands)
+            incompatibleUtilitiesMap[utility.Id] = new HashSet<string>();
+
+            foreach (var characteristic in utility.Characteristics)
             {
-                if (!activeDemandsForCategory.ContainsKey(demand)) activeDemandsForCategory[demand] = 0;
-                activeDemandsForCategory[demand]++;
+                if (!characteristicsRegister[utility.Category].ContainsKey(characteristic)) characteristicsRegister[utility.Category][characteristic] = new HashSet<string>();
+                characteristicsRegister[utility.Category][characteristic].Add(utility.Id);
             }
         }
 
-        return true;
-    }
-
-    private static void CleanupExternalDemands(ICleanUtilityDescriptor cleanUtilityDescriptor, IDictionary<string, Dictionary<string, int>> activeDemands)
-    {
-        foreach (var (category, demands) in cleanUtilityDescriptor.ExternalDemands)
+        foreach (var utility in this._utilities.GetAllValues())
         {
-            if (!activeDemands.TryGetValue(category, out var activeDemandsForCategory)) continue;
-
-            foreach (var demand in demands)
+            foreach (var (demandCategory, demandsForCategory) in utility.ExternalDemands)
             {
-                if (!activeDemandsForCategory.TryGetValue(demand, out var demandOccurrences)) continue;
+                if (!this._utilities.ContainsCategory(demandCategory)) continue;
+                
+                foreach (var demand in demandsForCategory)
+                {
+                    Func<ICleanUtilityDescriptor, bool>? predicate = null;
+                    if (characteristicsRegister[demandCategory].ContainsKey(demand)) predicate = x => !characteristicsRegister[demandCategory][demand].Contains(x.Id);
 
-                if (demandOccurrences == 1) activeDemandsForCategory.Remove(demand);
-                else activeDemandsForCategory[demand] = demandOccurrences - 1;
+                    foreach (var incompatibleUtilityId in this._utilities.Get(demandCategory).SafeWhere(predicate).Select(x => x.Id))
+                    {
+                        if (incompatibleUtilitiesMap[utility.Id].Add(incompatibleUtilityId))
+                        {
+                            incompatibilityEnforcersByCategory[utility.Category]++;
+                            incompatibilityFactorByCategory[utility.Category]++;
+                        }
+
+                        if (incompatibleUtilitiesMap[incompatibleUtilityId].Add(utility.Id)) incompatibilityFactorByCategory[demandCategory]++;
+                    }
+                }
             }
         }
+
+        return (incompatibleUtilitiesMap, incompatibilityEnforcersByCategory, incompatibilityFactorByCategory);
     }
 }
