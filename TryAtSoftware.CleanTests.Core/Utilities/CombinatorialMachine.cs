@@ -88,15 +88,15 @@ public class CombinatorialMachine
                     Func<ICleanUtilityDescriptor, bool>? predicate = null;
                     if (characteristicsRegister[demandCategory].ContainsKey(demand)) predicate = x => !characteristicsRegister[demandCategory][demand].Contains(x.Id);
 
-                    foreach (var otherUtility in this._utilities.Get(demandCategory).SafeWhere(predicate))
+                    foreach (var incompatibleUtilityId in this._utilities.Get(demandCategory).SafeWhere(predicate).Select(x => x.Id))
                     {
-                        if (incompatibleUtilitiesMap[utility.Id].Add(otherUtility.Id))
+                        if (incompatibleUtilitiesMap[utility.Id].Add(incompatibleUtilityId))
                         {
                             incompatibilityEnforcersByCategory[utility.Category]++;
                             incompatibilityFactorByCategory[utility.Category]++;
                         }
 
-                        if (incompatibleUtilitiesMap[otherUtility.Id].Add(utility.Id)) incompatibilityFactorByCategory[demandCategory]++;
+                        if (incompatibleUtilitiesMap[incompatibleUtilityId].Add(utility.Id)) incompatibilityFactorByCategory[demandCategory]++;
                     }
                 }
             }
