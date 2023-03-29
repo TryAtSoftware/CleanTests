@@ -72,54 +72,67 @@ public static class TestParameters
         for (var i = 0; i < 1000; i++) setup7.WithCategory(ConstructCategoryName(i), 100);
         for (var i = 1; i <= 100; i++) setup7.WithDemands(ConstructCategoryName(0), i, ConstructCategoryName(999), "q");
         yield return setup7;*/
+    }
 
-        foreach (var randomizedSetup in RandomizeSetup("Setup #9", 1, 2)) yield return randomizedSetup;
-        foreach (var randomizedSetup in RandomizeSetup("Setup #10", 2, 2)) yield return randomizedSetup;
-        foreach (var randomizedSetup in RandomizeSetup("Setup #11", 3, 2)) yield return randomizedSetup;
-        foreach (var randomizedSetup in RandomizeSetup("Setup #12", 4, 2)) yield return randomizedSetup;
-        foreach (var randomizedSetup in RandomizeSetup("Setup #13", 5, 2)) yield return randomizedSetup;
-        foreach (var randomizedSetup in RandomizeSetup("Setup #14", 6, 2)) yield return randomizedSetup;
-        foreach (var randomizedSetup in RandomizeSetup("Setup #15", 1, 3)) yield return randomizedSetup;
-        foreach (var randomizedSetup in RandomizeSetup("Setup #16", 2, 3)) yield return randomizedSetup;
-        foreach (var randomizedSetup in RandomizeSetup("Setup #17", 3, 3)) yield return randomizedSetup;
-        foreach (var randomizedSetup in RandomizeSetup("Setup #18", 4, 3)) yield return randomizedSetup;
-        foreach (var randomizedSetup in RandomizeSetup("Setup #19", 5, 3)) yield return randomizedSetup;
-        foreach (var randomizedSetup in RandomizeSetup("Setup #20", 1, 4)) yield return randomizedSetup;
-        foreach (var randomizedSetup in RandomizeSetup("Setup #21", 2, 4)) yield return randomizedSetup;
-        foreach (var randomizedSetup in RandomizeSetup("Setup #22", 3, 4)) yield return randomizedSetup;
-        foreach (var randomizedSetup in RandomizeSetup("Setup #23", 4, 4)) yield return randomizedSetup;
-        foreach (var randomizedSetup in RandomizeSetup("Setup #24", 5, 4)) yield return randomizedSetup;
-        foreach (var randomizedSetup in RandomizeSetup("Setup #25", 1, 5)) yield return randomizedSetup;
-        foreach (var randomizedSetup in RandomizeSetup("Setup #25", 2, 5)) yield return randomizedSetup;
-        foreach (var randomizedSetup in RandomizeSetup("Setup #25", 3, 5)) yield return randomizedSetup;
+    public static IEnumerable<CombinatorialMachineSetup> ConstructExhaustiveCombinatorialMachineSetups()
+    {
+        const string setupPrefix = "Exhaustive setup #";
+        var index = 1;
+        
+        // for (var i = 1; i <= 6; i++, index++) 
+        //     foreach (var randomizedSetup in RandomizeSetup($"{setupPrefix}{index}", i, 2)) yield return randomizedSetup;
+        // for (var i = 1; i <= 5; i++, index++) 
+        //     foreach (var randomizedSetup in RandomizeSetup($"{setupPrefix}{index}", i, 3)) yield return randomizedSetup;
+        // for (var i = 1; i <= 5; i++, index++) 
+        //     foreach (var randomizedSetup in RandomizeSetup($"{setupPrefix}{index}", i, 4)) yield return randomizedSetup;
+        // for (var i = 1; i <= 3; i++, index++) 
+        //     foreach (var randomizedSetup in RandomizeSetup($"{setupPrefix}{index}", i, 5)) yield return randomizedSetup;
+        // for (var i = 1; i <= 3; i++, index++) 
+        //     foreach (var randomizedSetup in RandomizeSetup($"{setupPrefix}{index}", i, 6)) yield return randomizedSetup;
+        // for (var i = 1; i <= 3; i++, index++) 
+        //     foreach (var randomizedSetup in RandomizeSetup($"{setupPrefix}{index}", i, 7)) yield return randomizedSetup;
+        // for (var i = 1; i <= 3; i++, index++) 
+        //     foreach (var randomizedSetup in RandomizeSetup($"{setupPrefix}{index}", i, 8)) yield return randomizedSetup;
+        // for (var i = 1; i <= 3; i++, index++) 
+        //     foreach (var randomizedSetup in RandomizeSetup($"{setupPrefix}{index}", i, 9)) yield return randomizedSetup;
+        for (var i = 1; i <= 2; i++, index++) 
+            foreach (var randomizedSetup in RandomizeSetup($"{setupPrefix}{index}", i, 10)) yield return randomizedSetup;
     }
 
     private static IEnumerable<CombinatorialMachineSetup> RandomizeSetup(string name, int categories, int utilitiesCount)
     {
         var emptySetup = new CombinatorialMachineSetup(name);
         for (var i = 0; i < categories; i++) emptySetup.WithCategory(ConstructCategoryName(i), utilitiesCount);
-        
-        var ans = new List<CombinatorialMachineSetup> { emptySetup };
-        Randomize(0, emptySetup);
-        
-        return ans;
 
-        void Randomize(int categoryIndex, CombinatorialMachineSetup baseSetup)
+        yield return emptySetup;
+
+        foreach (var setup in Randomize(0, emptySetup)) yield return setup;
+
+        IEnumerable<CombinatorialMachineSetup> Randomize(int categoryIndex, CombinatorialMachineSetup baseSetup)
         {
-            if (categoryIndex >= categories - 1) return;
+            if (categoryIndex >= categories - 1) yield break;
 
+            var index = 1;
             for (var i = 1; i <= utilitiesCount; i++)
             {
                 for (var j = 1; j <= utilitiesCount; j++)
                 {
-                    var nextSetup = new CombinatorialMachineSetup($"{name}.{ans.Count}", baseSetup);
+                    var restrictiveSetup = new CombinatorialMachineSetup($"{baseSetup.Name}.{index++}", baseSetup);
+                    restrictiveSetup.WithDemands(ConstructCategoryName(categoryIndex), i, ConstructCategoryName(categoryIndex + 1), $"exec_{ConstructCategoryName(categoryIndex)}{i}");
+
+                    yield return restrictiveSetup;
+                    foreach (var s in Randomize(categoryIndex + 1, restrictiveSetup)) yield return s;
+
                     for (var k = 1; k <= utilitiesCount; k++)
-                        if (j != k) nextSetup.WithCharacteristics(ConstructCategoryName(categoryIndex + 1), k, $"exec_{ConstructCategoryName(categoryIndex)}{i}");
+                    {
+                        if (j == k) continue;
 
-                    nextSetup.WithDemands(ConstructCategoryName(categoryIndex), i, ConstructCategoryName(categoryIndex + 1), $"exec_{ConstructCategoryName(categoryIndex)}{i}");
-                    ans.Add(nextSetup);
+                        var permittingSetup = new CombinatorialMachineSetup($"{baseSetup.Name}.{index++}", restrictiveSetup);
+                        permittingSetup.WithCharacteristics(ConstructCategoryName(categoryIndex + 1), k, $"exec_{ConstructCategoryName(categoryIndex)}{i}");
 
-                    Randomize(categoryIndex + 1, nextSetup);
+                        yield return permittingSetup;
+                        foreach (var s in Randomize(categoryIndex + 1, permittingSetup)) yield return s;
+                    }
                 }
             }
         }

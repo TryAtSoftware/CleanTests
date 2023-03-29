@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.ML.Data;
 using Microsoft.ML.Trainers.FastTree;
 using Microsoft.ML.Trainers;
+using Microsoft.ML.Transforms;
 using Microsoft.ML;
 
 namespace TryAtSoftware_CleanTests_AI
@@ -35,11 +36,10 @@ namespace TryAtSoftware_CleanTests_AI
         public static IEstimator<ITransformer> BuildPipeline(MLContext mlContext)
         {
             // Data process configuration with pipeline data transformations
-            var pipeline = mlContext.Transforms.Text.FeaturizeText(inputColumnName:@"Categories",outputColumnName:@"Categories")      
+            var pipeline = mlContext.Transforms.Categorical.OneHotEncoding(@"Categories", @"Categories", outputKind: OneHotEncodingEstimator.OutputKind.Indicator)      
                                     .Append(mlContext.Transforms.Text.FeaturizeText(inputColumnName:@"IncompatiblePairs",outputColumnName:@"IncompatiblePairs"))      
                                     .Append(mlContext.Transforms.Concatenate(@"Features", new []{@"Categories",@"IncompatiblePairs"}))      
-                                    .Append(mlContext.Transforms.NormalizeMinMax(@"Features", @"Features"))      
-                                    .Append(mlContext.Regression.Trainers.FastTreeTweedie(new FastTreeTweedieTrainer.Options(){NumberOfLeaves=127,MinimumExampleCountPerLeaf=37,NumberOfTrees=59,MaximumBinCountPerFeature=560,FeatureFraction=0.949817108320339,LearningRate=0.999999776672986,LabelColumnName=@"Count",FeatureColumnName=@"Features"}));
+                                    .Append(mlContext.Regression.Trainers.FastTree(new FastTreeRegressionTrainer.Options(){NumberOfLeaves=146,MinimumExampleCountPerLeaf=17,NumberOfTrees=57,MaximumBinCountPerFeature=982,FeatureFraction=0.622393631631181,LearningRate=0.999999776672986,LabelColumnName=@"Count",FeatureColumnName=@"Features"}));
 
             return pipeline;
         }

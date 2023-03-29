@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using TryAtSoftware.CleanTests.UnitTests.Parametrization;
 
-var setups = TestParameters.ConstructObservableCombinatorialMachineSetups();
+var setups = TestParameters.ConstructExhaustiveCombinatorialMachineSetups();
 
 Console.Write("Path to the file: ");
 var pathToFile = Console.ReadLine() ?? throw new InvalidOperationException("The file path was not read successfully.");
