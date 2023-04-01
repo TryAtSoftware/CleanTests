@@ -46,7 +46,7 @@ public class CleanTestReflectionTypeInfoWrapper : IReflectionTypeInfo
     public bool IsValueType => this._wrapped.IsValueType;
 
     /// <inheritdoc/>
-    public string Name => $"{this.Type.Namespace}.{TypeNames.Get(this.Type)}";
+    public string Name => $"{this.Type.Namespace}.{this.Type.Name}";
 
     /// <inheritdoc/>
     public Type Type => this._wrapped.Type;
@@ -64,5 +64,5 @@ public class CleanTestReflectionTypeInfoWrapper : IReflectionTypeInfo
     public IEnumerable<IMethodInfo> GetMethods(bool includePrivateMethods) => this._wrapped.GetMethods(includePrivateMethods);
 
     /// <inheritdoc/>
-    public override string ToString() => this.Name;
+    public override string ToString() => $"{this.Type.Namespace}.{TypeNames.Get(this.Type)}";
 }
