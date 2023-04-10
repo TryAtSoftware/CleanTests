@@ -1,6 +1,7 @@
 ﻿namespace TryAtSoftware.CleanTests.Core.Attributes;
 
 using System;
+using TryAtSoftware.CleanTests.Core.Enums;
 using TryAtSoftware.CleanTests.Core.Internal;
 
 [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = false)]
@@ -19,4 +20,6 @@ public class ConfigureCleanTestsFrameworkAttribute : Attribute
             this._maxDegreeOfParallelism = value;
         }
     }
+
+    public GenericTypeMappingPresentation GenericTypeMappingPresentation { get; set; } = GenericTypeMappingPresentation.InTestCaseName;
 }
