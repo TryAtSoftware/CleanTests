@@ -271,7 +271,7 @@ public abstract class BaseTestCaseDiscoverer : IXunitTestCaseDiscoverer
     {
         var result = new List<IXunitTestCase>();
 
-        var testData = new CleanTestCaseData(this._testCaseDiscoveryOptions.GenericTypes, dependencies);
+        var testData = new CleanTestCaseData(this._testCaseDiscoveryOptions.GenericTypes, dependencies, this.ExtractDisplayNamePrefix(this._testCaseDiscoveryOptions.GenericTypes, dependencies));
         var methodDisplay = discoveryOptions.MethodDisplayOrDefault();
         var methodDisplayOptions = discoveryOptions.MethodDisplayOptionsOrDefault();
 
@@ -286,23 +286,49 @@ public abstract class BaseTestCaseDiscoverer : IXunitTestCaseDiscoverer
         return result;
     }
 
-    private void SetTraits(ITestCase testCase, CleanTestCaseData testData)
+    private string ExtractDisplayNamePrefix(IDictionary<Type, Type> genericTypes, IndividualCleanUtilityDependencyNode[] dependencies)
     {
-        if (this._cleanTestAssemblyData.UtilitiesPresentation == CleanTestMetadataPresentation.InTraits)
+        var segments = new List<string>(capacity: 2);
+
+        if (genericTypes.Count > 0 && ((this._cleanTestAssemblyData.GenericTypeMappingPresentation & CleanTestMetadataPresentation.InTestCaseName) != CleanTestMetadataPresentation.None)) segments.Add(string.Join("; ", genericTypes.Select(x => $"{TypeNames.Get(x.Key)}: {TypeNames.Get(x.Value)}")).SurroundWith("[", "]"));
+        
+        if (dependencies.Length > 0 && (this._cleanTestAssemblyData.UtilitiesPresentation & CleanTestMetadataPresentation.InTestCaseName) != CleanTestMetadataPresentation.None)
         {
-            foreach (var dependencyNode in testData.CleanUtilities)
+            var dependenciesInfo = new string[dependencies.Length];
+            for (var i = 0; i < dependencies.Length; i++)
             {
-                var cleanUtility = this._cleanTestAssemblyData.CleanUtilitiesById[dependencyNode.Id];
-                var category = cleanUtility.Category;
-                testCase.Traits.EnsureValue("Category").Add(category);
-                testCase.Traits.EnsureValue(category).Add(cleanUtility.Name);
+                var (name, category) = this.ExtractCleanUtilityInfo(dependencies[i].Id);
+                dependenciesInfo[i] = $"{category}: {name}";
             }
+
+            segments.Add(string.Join("; ", dependenciesInfo).SurroundWith("{", "}"));
         }
 
-        if (this._cleanTestAssemblyData.GenericTypeMappingPresentation == CleanTestMetadataPresentation.InTraits)
+        return string.Join(", ", segments);
+    }
+
+    private void SetTraits(ITestCase testCase, CleanTestCaseData testData)
+    {
+        if ((this._cleanTestAssemblyData.GenericTypeMappingPresentation & CleanTestMetadataPresentation.InTraits) != CleanTestMetadataPresentation.None)
         {
             foreach (var (attributeType, genericParameterType) in testData.GenericTypesMap)
                 testCase.Traits.EnsureValue(TypeNames.Get(attributeType)).Add(TypeNames.Get(genericParameterType));
         }
+
+        if ((this._cleanTestAssemblyData.UtilitiesPresentation & CleanTestMetadataPresentation.InTraits) != CleanTestMetadataPresentation.None)
+        {
+            foreach (var dependencyNode in testData.CleanUtilities)
+            {
+                var (name, category) = this.ExtractCleanUtilityInfo(dependencyNode.Id);
+                testCase.Traits.EnsureValue("Category").Add(category);
+                testCase.Traits.EnsureValue(category).Add(name);
+            }
+        }
+    }
+
+    private (string Name, string Category) ExtractCleanUtilityInfo(string id)
+    {
+        var cleanUtility = this._cleanTestAssemblyData.CleanUtilitiesById[id];
+        return (cleanUtility.Name, cleanUtility.Category);
     }
 }

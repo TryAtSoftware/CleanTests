@@ -41,7 +41,9 @@ public class SerializableCleanTestCaseData : IXunitSerializable
 
         var deserializedInitializationUtilities = info.GetValue<SerializableIndividualDependencyNode[]>("iu");
         var initializationUtilities = deserializedInitializationUtilities.OrEmptyIfNull().Select(x => x?.DependencyNode).IgnoreNullValues();
-        this.CleanTestData = new CleanTestCaseData(genericTypesMap, initializationUtilities);
+        var displayNamePrefix = info.GetValue<string?>("dnp");
+        
+        this.CleanTestData = new CleanTestCaseData(genericTypesMap, initializationUtilities, displayNamePrefix);
     }
 
     /// <inheritdoc />
@@ -54,5 +56,7 @@ public class SerializableCleanTestCaseData : IXunitSerializable
 
         var serializableDependencyNodes = this.CleanTestData.CleanUtilities.Select(x => new SerializableIndividualDependencyNode(x)).ToArray();
         info.AddValue("iu", serializableDependencyNodes);
+
+        info.AddValue("dnp", this.CleanTestData.DisplayNamePrefix);
     }
 }

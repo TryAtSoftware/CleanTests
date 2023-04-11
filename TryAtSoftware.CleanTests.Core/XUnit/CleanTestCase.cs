@@ -1,7 +1,6 @@
 namespace TryAtSoftware.CleanTests.Core.XUnit;
 
 using System;
-using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,7 +9,7 @@ using TryAtSoftware.CleanTests.Core.XUnit.Execution;
 using TryAtSoftware.CleanTests.Core.XUnit.Extensions;
 using TryAtSoftware.CleanTests.Core.XUnit.Interfaces;
 using TryAtSoftware.CleanTests.Core.XUnit.Serialization;
-using TryAtSoftware.Extensions.Reflection;
+using TryAtSoftware.Extensions.Collections;
 using Xunit.Abstractions;
 using Xunit.Sdk;
 
@@ -74,12 +73,6 @@ public class CleanTestCase : XunitTestCase, ICleanTestCase
         return defaultId + cleanIdBuilder;
     }
 
-    // protected override string GetDisplayName(IAttributeInfo factAttribute, string displayName)
-    // {
-    //     var baseDisplayName = base.GetDisplayName(factAttribute, displayName);
-    //     if (this.CleanTestCaseData.GenericTypesMap.Count == 0) return baseDisplayName;
-    //
-    //     var genericTypesMapDescriptor = this.CleanTestCaseData.GenericTypesMap.Select(x => $"{TypeNames.Get(x.Key)}: {TypeNames.Get(x.Value)}");
-    //     return $"[{string.Join(", ", genericTypesMapDescriptor)}] {baseDisplayName}";
-    // }
+    protected override string GetDisplayName(IAttributeInfo factAttribute, string displayName) 
+        => string.Join(" ", new[] { this.CleanTestCaseData.DisplayNamePrefix, base.GetDisplayName(factAttribute, displayName) }.IgnoreNullOrWhitespaceValues());
 }
