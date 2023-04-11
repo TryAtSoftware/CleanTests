@@ -74,12 +74,12 @@ public class CleanTestCase : XunitTestCase, ICleanTestCase
         return defaultId + cleanIdBuilder;
     }
 
-    protected override string GetDisplayName(IAttributeInfo factAttribute, string displayName)
-    {
-        var baseDisplayName = base.GetDisplayName(factAttribute, displayName);
-        if (this.CleanTestCaseData.GenericTypesMap.Count == 0) return baseDisplayName;
-
-        var genericTypesMapDescriptor = this.CleanTestCaseData.GenericTypesMap.Select(x => $"{TypeNames.Get(x.Key)}: {TypeNames.Get(x.Value)}");
-        return $"[{string.Join(", ", genericTypesMapDescriptor)}] {baseDisplayName}";
-    }
+    // protected override string GetDisplayName(IAttributeInfo factAttribute, string displayName)
+    // {
+    //     var baseDisplayName = base.GetDisplayName(factAttribute, displayName);
+    //     if (this.CleanTestCaseData.GenericTypesMap.Count == 0) return baseDisplayName;
+    //
+    //     var genericTypesMapDescriptor = this.CleanTestCaseData.GenericTypesMap.Select(x => $"{TypeNames.Get(x.Key)}: {TypeNames.Get(x.Value)}");
+    //     return $"[{string.Join(", ", genericTypesMapDescriptor)}] {baseDisplayName}";
+    // }
 }

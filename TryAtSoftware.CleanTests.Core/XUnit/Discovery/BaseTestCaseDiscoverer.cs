@@ -8,6 +8,7 @@ using TryAtSoftware.CleanTests.Core.Extensions;
 using TryAtSoftware.CleanTests.Core.Interfaces;
 using TryAtSoftware.CleanTests.Core.Utilities;
 using TryAtSoftware.Extensions.Collections;
+using TryAtSoftware.Extensions.Reflection;
 using Xunit.Abstractions;
 using Xunit.Sdk;
 
@@ -300,7 +301,8 @@ public abstract class BaseTestCaseDiscoverer : IXunitTestCaseDiscoverer
 
         if (this._cleanTestAssemblyData.GenericTypeMappingPresentation == CleanTestMetadataPresentation.InTraits)
         {
-            
+            foreach (var (attributeType, genericParameterType) in testData.GenericTypesMap)
+                testCase.Traits.EnsureValue(TypeNames.Get(attributeType)).Add(TypeNames.Get(genericParameterType));
         }
     }
 }
