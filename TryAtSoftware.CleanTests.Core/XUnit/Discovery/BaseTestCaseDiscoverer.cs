@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using TryAtSoftware.CleanTests.Core.Enums;
 using TryAtSoftware.CleanTests.Core.Extensions;
 using TryAtSoftware.CleanTests.Core.Interfaces;
 using TryAtSoftware.CleanTests.Core.Utilities;
@@ -275,8 +276,8 @@ public abstract class BaseTestCaseDiscoverer : IXunitTestCaseDiscoverer
 
         foreach (var testCaseArguments in argumentsCollection)
         {
-            var testCase = new CleanTestCase(this._diagnosticMessageSink, methodDisplay, methodDisplayOptions, testMethod, testCaseArguments, this._cleanTestAssemblyData, testData);
-            this.SetTraits(testCase, dependencies);
+            var testCase = new CleanTestCase(this._diagnosticMessageSink, methodDisplay, methodDisplayOptions, testMethod, testCaseArguments, testData);
+            this.SetTraits(testCase, testData);
 
             result.Add(testCase);
         }
@@ -284,16 +285,22 @@ public abstract class BaseTestCaseDiscoverer : IXunitTestCaseDiscoverer
         return result;
     }
 
-    private void SetTraits(ITestCase testCase, IEnumerable<IndividualCleanUtilityDependencyNode> dependencies)
+    private void SetTraits(ITestCase testCase, CleanTestCaseData testData)
     {
-        if (!this._cleanTestAssemblyData.IncludeTraits) return;
-
-        foreach (var dependencyNode in dependencies)
+        if (this._cleanTestAssemblyData.UtilitiesPresentation == CleanTestMetadataPresentation.InTraits)
         {
-            var cleanUtility = this._cleanTestAssemblyData.CleanUtilitiesById[dependencyNode.Id];
-            var category = cleanUtility.Category;
-            testCase.Traits.EnsureValue("Category").Add(category);
-            testCase.Traits.EnsureValue(category).Add(cleanUtility.Name);
+            foreach (var dependencyNode in testData.CleanUtilities)
+            {
+                var cleanUtility = this._cleanTestAssemblyData.CleanUtilitiesById[dependencyNode.Id];
+                var category = cleanUtility.Category;
+                testCase.Traits.EnsureValue("Category").Add(category);
+                testCase.Traits.EnsureValue(category).Add(cleanUtility.Name);
+            }
+        }
+
+        if (this._cleanTestAssemblyData.GenericTypeMappingPresentation == CleanTestMetadataPresentation.InTraits)
+        {
+            
         }
     }
 }

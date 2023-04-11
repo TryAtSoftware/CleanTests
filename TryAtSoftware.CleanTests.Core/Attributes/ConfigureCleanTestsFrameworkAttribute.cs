@@ -9,8 +9,6 @@ public class ConfigureCleanTestsFrameworkAttribute : Attribute
 {
     private int _maxDegreeOfParallelism = CleanTestConstants.MaxDegreeOfParallelism;
 
-    public bool UseTraits { get; set; } = CleanTestConstants.UseTraits;
-
     public int MaxDegreeOfParallelism
     {
         get => this._maxDegreeOfParallelism;
@@ -21,5 +19,6 @@ public class ConfigureCleanTestsFrameworkAttribute : Attribute
         }
     }
 
-    public GenericTypeMappingPresentation GenericTypeMappingPresentation { get; set; } = GenericTypeMappingPresentation.InTestCaseName;
+    public CleanTestMetadataPresentation UtilitiesPresentation { get; set; } = CleanTestConstants.UtilitiesPresentation;
+    public CleanTestMetadataPresentation GenericTypeMappingPresentation { get; set; } = CleanTestConstants.GenericTypeMappingPresentation;
 }

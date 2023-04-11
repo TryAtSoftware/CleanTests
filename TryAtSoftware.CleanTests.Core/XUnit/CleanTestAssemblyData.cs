@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using TryAtSoftware.CleanTests.Core.Enums;
 using TryAtSoftware.CleanTests.Core.Interfaces;
 using TryAtSoftware.Extensions.Collections;
 
@@ -10,9 +11,9 @@ public class CleanTestAssemblyData
     public ICleanTestInitializationCollection<ICleanUtilityDescriptor> CleanUtilities { get; } = new CleanTestInitializationCollection<ICleanUtilityDescriptor>();
     public IDictionary<string, ICleanUtilityDescriptor> CleanUtilitiesById { get; } = new Dictionary<string, ICleanUtilityDescriptor>();
 
-    public bool IncludeTraits { get; set; }
-    
     public int MaxDegreeOfParallelism { get; set; }
+    public CleanTestMetadataPresentation UtilitiesPresentation { get; set; }
+    public CleanTestMetadataPresentation GenericTypeMappingPresentation { get; set; }
 
     public CleanTestAssemblyData(IEnumerable<ICleanUtilityDescriptor> cleanUtilities)
     {

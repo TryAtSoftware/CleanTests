@@ -1,6 +1,6 @@
 ﻿namespace TryAtSoftware.CleanTests.Core.Enums;
 
-public enum GenericTypeMappingPresentation
+public enum CleanTestMetadataPresentation
 {
     None,
     InTestCaseName,
