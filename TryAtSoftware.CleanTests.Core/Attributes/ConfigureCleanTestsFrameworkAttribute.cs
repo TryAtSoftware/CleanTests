@@ -19,6 +19,6 @@ public class ConfigureCleanTestsFrameworkAttribute : Attribute
         }
     }
 
-    public CleanTestMetadataPresentation UtilitiesPresentation { get; set; } = CleanTestConstants.UtilitiesPresentation;
-    public CleanTestMetadataPresentation GenericTypeMappingPresentation { get; set; } = CleanTestConstants.GenericTypeMappingPresentation;
+    public CleanTestMetadataPresentations UtilitiesPresentations { get; set; } = CleanTestConstants.UtilitiesPresentation;
+    public CleanTestMetadataPresentations GenericTypeMappingPresentations { get; set; } = CleanTestConstants.GenericTypeMappingPresentation;
 }

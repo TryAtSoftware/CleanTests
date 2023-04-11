@@ -59,14 +59,14 @@ public class CleanTestFramework : XunitTestFramework
         if (configurationAttribute is not null)
         {
             assemblyData.MaxDegreeOfParallelism = configurationAttribute.GetNamedArgument<int>(nameof(ConfigureCleanTestsFrameworkAttribute.MaxDegreeOfParallelism));
-            assemblyData.UtilitiesPresentation = configurationAttribute.GetNamedArgument<CleanTestMetadataPresentation>(nameof(ConfigureCleanTestsFrameworkAttribute.UtilitiesPresentation));
-            assemblyData.GenericTypeMappingPresentation = configurationAttribute.GetNamedArgument<CleanTestMetadataPresentation>(nameof(ConfigureCleanTestsFrameworkAttribute.GenericTypeMappingPresentation));
+            assemblyData.UtilitiesPresentations = configurationAttribute.GetNamedArgument<CleanTestMetadataPresentations>(nameof(ConfigureCleanTestsFrameworkAttribute.UtilitiesPresentations));
+            assemblyData.GenericTypeMappingPresentations = configurationAttribute.GetNamedArgument<CleanTestMetadataPresentations>(nameof(ConfigureCleanTestsFrameworkAttribute.GenericTypeMappingPresentations));
         }
         else
         {
             assemblyData.MaxDegreeOfParallelism = CleanTestConstants.MaxDegreeOfParallelism;
-            assemblyData.UtilitiesPresentation = CleanTestConstants.UtilitiesPresentation;
-            assemblyData.GenericTypeMappingPresentation = CleanTestConstants.GenericTypeMappingPresentation;
+            assemblyData.UtilitiesPresentations = CleanTestConstants.UtilitiesPresentation;
+            assemblyData.GenericTypeMappingPresentations = CleanTestConstants.GenericTypeMappingPresentation;
         }
         
         this._utilityDescriptorsByAssembly[assemblyInfo.Name] = assemblyData;

@@ -290,9 +290,9 @@ public abstract class BaseTestCaseDiscoverer : IXunitTestCaseDiscoverer
     {
         var segments = new List<string>(capacity: 2);
 
-        if (genericTypes.Count > 0 && ((this._cleanTestAssemblyData.GenericTypeMappingPresentation & CleanTestMetadataPresentation.InTestCaseName) != CleanTestMetadataPresentation.None)) segments.Add(string.Join("; ", genericTypes.Select(x => $"{TypeNames.Get(x.Key)}: {TypeNames.Get(x.Value)}")).SurroundWith("[", "]"));
+        if (genericTypes.Count > 0 && ((this._cleanTestAssemblyData.GenericTypeMappingPresentations & CleanTestMetadataPresentations.InTestCaseName) != CleanTestMetadataPresentations.None)) segments.Add(string.Join("; ", genericTypes.Select(x => $"{TypeNames.Get(x.Key)}: {TypeNames.Get(x.Value)}")).SurroundWith("[", "]"));
         
-        if (dependencies.Length > 0 && (this._cleanTestAssemblyData.UtilitiesPresentation & CleanTestMetadataPresentation.InTestCaseName) != CleanTestMetadataPresentation.None)
+        if (dependencies.Length > 0 && (this._cleanTestAssemblyData.UtilitiesPresentations & CleanTestMetadataPresentations.InTestCaseName) != CleanTestMetadataPresentations.None)
         {
             var dependenciesInfo = new string[dependencies.Length];
             for (var i = 0; i < dependencies.Length; i++)
@@ -309,13 +309,13 @@ public abstract class BaseTestCaseDiscoverer : IXunitTestCaseDiscoverer
 
     private void SetTraits(ITestCase testCase, CleanTestCaseData testData)
     {
-        if ((this._cleanTestAssemblyData.GenericTypeMappingPresentation & CleanTestMetadataPresentation.InTraits) != CleanTestMetadataPresentation.None)
+        if ((this._cleanTestAssemblyData.GenericTypeMappingPresentations & CleanTestMetadataPresentations.InTraits) != CleanTestMetadataPresentations.None)
         {
             foreach (var (attributeType, genericParameterType) in testData.GenericTypesMap)
                 testCase.Traits.EnsureValue(TypeNames.Get(attributeType)).Add(TypeNames.Get(genericParameterType));
         }
 
-        if ((this._cleanTestAssemblyData.UtilitiesPresentation & CleanTestMetadataPresentation.InTraits) != CleanTestMetadataPresentation.None)
+        if ((this._cleanTestAssemblyData.UtilitiesPresentations & CleanTestMetadataPresentations.InTraits) != CleanTestMetadataPresentations.None)
         {
             foreach (var dependencyNode in testData.CleanUtilities)
             {

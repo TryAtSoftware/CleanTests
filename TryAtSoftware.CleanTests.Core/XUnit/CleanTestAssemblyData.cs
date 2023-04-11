@@ -12,8 +12,8 @@ public class CleanTestAssemblyData
     public IDictionary<string, ICleanUtilityDescriptor> CleanUtilitiesById { get; } = new Dictionary<string, ICleanUtilityDescriptor>();
 
     public int MaxDegreeOfParallelism { get; set; }
-    public CleanTestMetadataPresentation UtilitiesPresentation { get; set; }
-    public CleanTestMetadataPresentation GenericTypeMappingPresentation { get; set; }
+    public CleanTestMetadataPresentations UtilitiesPresentations { get; set; }
+    public CleanTestMetadataPresentations GenericTypeMappingPresentations { get; set; }
 
     public CleanTestAssemblyData(IEnumerable<ICleanUtilityDescriptor> cleanUtilities)
     {

@@ -2,6 +2,6 @@
 using TryAtSoftware.CleanTests.Core.Enums;
 
 [assembly: TestFramework("TryAtSoftware.CleanTests.Core.XUnit.CleanTestFramework", "TryAtSoftware.CleanTests.Core")]
-[assembly: ConfigureCleanTestsFramework(UtilitiesPresentation = CleanTestMetadataPresentation.InTraits | CleanTestMetadataPresentation.InTestCaseName, MaxDegreeOfParallelism = 3)]
+[assembly: ConfigureCleanTestsFramework(UtilitiesPresentations = CleanTestMetadataPresentations.InTraits | CleanTestMetadataPresentations.InTestCaseName, MaxDegreeOfParallelism = 3)]
 [assembly: SharesUtilitiesWith("TryAtSoftware.CleanTests.Sample.Mathematics")]
 [assembly: SharesUtilitiesWith("SomeMissingAssembly")]

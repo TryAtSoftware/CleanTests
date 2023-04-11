@@ -10,8 +10,8 @@ public class ConfigureCleanTestsFrameworkAttributeTests
     {
         var attribute = new ConfigureCleanTestsFrameworkAttribute();
         Assert.Equal(CleanTestConstants.MaxDegreeOfParallelism, attribute.MaxDegreeOfParallelism);
-        Assert.Equal(CleanTestConstants.UtilitiesPresentation, attribute.UtilitiesPresentation);
-        Assert.Equal(CleanTestConstants.GenericTypeMappingPresentation, attribute.GenericTypeMappingPresentation);
+        Assert.Equal(CleanTestConstants.UtilitiesPresentation, attribute.UtilitiesPresentations);
+        Assert.Equal(CleanTestConstants.GenericTypeMappingPresentation, attribute.GenericTypeMappingPresentations);
     }
 
     [Theory, InlineData(3), InlineData(5), InlineData(10)]

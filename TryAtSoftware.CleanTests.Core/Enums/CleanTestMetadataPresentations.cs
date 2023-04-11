@@ -3,7 +3,7 @@
 using System;
 
 [Flags]
-public enum CleanTestMetadataPresentation
+public enum CleanTestMetadataPresentations
 {
     None = 0,
     InTestCaseName = 1,
