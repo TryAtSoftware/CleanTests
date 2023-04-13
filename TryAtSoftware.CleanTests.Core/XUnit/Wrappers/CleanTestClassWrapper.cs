@@ -57,7 +57,7 @@ public class CleanTestClassWrapper : ITestClass
     public void Serialize(IXunitSerializationInfo info)
     {
         info.AddValue("an", this.Class.Assembly.Name);
-        info.AddValue("cn", this._fullyQualifiedTypeName);
+        info.AddValue("cn", this.FullyQualifiedTypeName);
         info.AddValue("c", this.TestCollection);
     }
     

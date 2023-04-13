@@ -79,13 +79,25 @@ Add the following line anywhere in your project (most likely this is done within
 
 Additionally, you can modify the behavior of the `clean tests` execution framework using the `ConfigureCleanTestsFramework` attribute.
 There is a list of the parameters that can be controlled:
-- `UseTraits` - Indicates whether or not to add traits to each generated test case. Enabling this may have performance impact over the discovery process when dealing with a big amount of tests because of the amount of data stored in these traits. The default value is `false`.
+- `UtilitiesPresentations` - A value used to control the presentation of the clean utilities used to generate a test case. The default value is `CleanTestMetadataPresentations.None`. _For a detailed description see the [`Metadata presentation`](#metadata-presentation) section._
+- `GenericTypeMappingPresentations` - A value used to control the presentation of the generic types configuration used for the execution of a test case. The default value is `CleanTestMetadataPresentations.InTestCaseName`. _For a detailed description see the [`Metadata presentation`](#metadata-presentation) section._
 - `MaxDegreeOfParallelism` - A value representing the maximum number of test cases executed in parallel. It should always be positive. There is no concrete formula that can be used to determine which is the most optimal value - it depends on the characteristics of the executing machine, specifics related to the test environment and many other circumstances. The default value is `5`.
 
 Example:
 ```C#
-[assembly: TryAtSoftware.CleanTests.Core.Attributes.ConfigureCleanTestsFramework(UseTraits = true, MaxDegreeOfParallelism = 3)]
+[assembly: TryAtSoftware.CleanTests.Core.Attributes.ConfigureCleanTestsFramework(UtilitiesPresentations = CleanTestMetadataPresentations.InTraits, GenericTypeMappingPresentations = CleanTestMetadataPresentations.InTraits | CleanTestMetadataPresentations.InTestCaseName, MaxDegreeOfParallelism = 3)]
 ```
+
+#### Metadata presentation
+
+The enum `CleanTestMetadataPresentations` offers three options used for additional configuration over the `clean tests` execution framework:
+- `CleanTestMetadataPresentations.None` - Test metadata will not be included as a part of a test case.
+- `CleanTestMetadataPresentations.InTestCaseName` - Test metadata will be included within the display name of a test case.
+- `CleanTestMetadataPresentations.InTraits` - Test metadata will be included within the traits of a test case.
+
+This is a flag enumeration, i.e. test metadata presentation methods can be easily combined. For example, this is a valid test metadata presentation method: `CleanTestMetadataPresentations.InTestCaseName | CleanTestMetadataPresentations.InTraits`.
+
+_Enabling test metadata presentation methods often has performance impact over the discovery process when dealing with a big amount of tests because of the amount of additional data that should be stored with every test case._
 
 ## What are the `clean utilities`?
 
