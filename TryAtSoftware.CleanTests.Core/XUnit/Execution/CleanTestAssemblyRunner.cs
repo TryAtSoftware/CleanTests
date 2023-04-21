@@ -17,9 +17,11 @@ public class CleanTestAssemblyRunner : XunitTestAssemblyRunner
         this._assemblyData = assemblyData ?? throw new ArgumentNullException(nameof(assemblyData));
     }
 
-    protected override Task<RunSummary> RunTestCollectionAsync(IMessageBus messageBus, ITestCollection testCollection, IEnumerable<IXunitTestCase> testCases, CancellationTokenSource cancellationTokenSource)
+    protected override async Task<RunSummary> RunTestCollectionAsync(IMessageBus messageBus, ITestCollection testCollection, IEnumerable<IXunitTestCase> testCases, CancellationTokenSource cancellationTokenSource)
     {
-        var collectionRunner = new CleanTestCollectionRunner(testCollection, testCases, this.DiagnosticMessageSink, messageBus, this.TestCaseOrderer, new ExceptionAggregator(this.Aggregator), cancellationTokenSource, this._assemblyData);
-        return collectionRunner.RunAsync();
+        using var collectionRunner = new CleanTestCollectionRunner(testCollection, testCases, this.DiagnosticMessageSink, messageBus, this.TestCaseOrderer, new ExceptionAggregator(this.Aggregator), cancellationTokenSource, this._assemblyData);
+
+        var runSummary = await collectionRunner.RunAsync();
+        return runSummary;
     }
 }
