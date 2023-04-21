@@ -8,13 +8,15 @@ public class GlobalUtilitiesProvider : IGlobalUtilitiesProvider
 {
     private readonly Dictionary<string, object> _utilities = new ();
 
-    public bool AddUtility(string uniqueId, object instance)
+    public bool RegisterUtility(string uniqueId, object instance)
     {
-        if (!this._utilities.ContainsKey(uniqueId)) this._utilities[uniqueId] = new Dictionary<Type, object>();
+        if (!this.IsRegistered(uniqueId)) this._utilities[uniqueId] = new Dictionary<Type, object>();
 
         this._utilities[uniqueId] = instance;
         return true;
     }
+
+    public bool IsRegistered(string uniqueId) => this._utilities.ContainsKey(uniqueId);
 
     public object? GetUtility(string uniqueId)
     {

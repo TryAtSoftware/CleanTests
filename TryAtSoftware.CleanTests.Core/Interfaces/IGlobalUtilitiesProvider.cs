@@ -7,7 +7,8 @@ using System.Collections.Generic;
 /// </remarks>
 public interface IGlobalUtilitiesProvider
 {
-    bool AddUtility(string uniqueId, object instance);
+    bool RegisterUtility(string uniqueId, object instance);
+    bool IsRegistered(string uniqueId);
     object? GetUtility(string uniqueId);
     IEnumerable<T> GetUtilities<T>();
 }

@@ -83,7 +83,7 @@ public class CleanTestCollectionRunner : XunitTestCollectionRunner
 
             var createdInstance = Activator.CreateInstance(implementationType, dependencies.ToArray());
 
-            this._globalUtilitiesProvider.AddUtility(uniqueId, createdInstance);
+            this._globalUtilitiesProvider.RegisterUtility(uniqueId, createdInstance);
             return createdInstance;
         }
     }
