@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net7.0</TargetFramework>
+        <OutputType>Exe</OutputType>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="BenchmarkDotNet" Version="0.13.5" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\TryAtSoftware.CleanTests.Core\TryAtSoftware.CleanTests.Core.csproj" />
+      <ProjectReference Include="..\TryAtSoftware.CleanTests.UnitTests\TryAtSoftware.CleanTests.UnitTests.csproj" />
+    </ItemGroup>
+
+</Project>

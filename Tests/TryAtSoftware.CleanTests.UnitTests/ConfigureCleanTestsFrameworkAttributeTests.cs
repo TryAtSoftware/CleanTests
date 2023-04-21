@@ -9,15 +9,9 @@ public class ConfigureCleanTestsFrameworkAttributeTests
     public void PropertiesShouldHaveDefaultValues()
     {
         var attribute = new ConfigureCleanTestsFrameworkAttribute();
-        Assert.Equal(CleanTestConstants.UseTraits, attribute.UseTraits);
         Assert.Equal(CleanTestConstants.MaxDegreeOfParallelism, attribute.MaxDegreeOfParallelism);
-    }
-
-    [Theory, InlineData(true), InlineData(false)]
-    public void UseTraitsShouldBeSuccessfullySet(bool val)
-    {
-        var attribute = new ConfigureCleanTestsFrameworkAttribute { UseTraits = val };
-        Assert.Equal(val, attribute.UseTraits);
+        Assert.Equal(CleanTestConstants.UtilitiesPresentation, attribute.UtilitiesPresentations);
+        Assert.Equal(CleanTestConstants.GenericTypeMappingPresentation, attribute.GenericTypeMappingPresentations);
     }
 
     [Theory, InlineData(3), InlineData(5), InlineData(10)]

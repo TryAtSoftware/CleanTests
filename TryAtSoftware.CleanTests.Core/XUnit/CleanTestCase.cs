@@ -1,7 +1,6 @@
 namespace TryAtSoftware.CleanTests.Core.XUnit;
 
 using System;
-using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,6 +9,7 @@ using TryAtSoftware.CleanTests.Core.XUnit.Execution;
 using TryAtSoftware.CleanTests.Core.XUnit.Extensions;
 using TryAtSoftware.CleanTests.Core.XUnit.Interfaces;
 using TryAtSoftware.CleanTests.Core.XUnit.Serialization;
+using TryAtSoftware.Extensions.Collections;
 using Xunit.Abstractions;
 using Xunit.Sdk;
 
@@ -33,7 +33,7 @@ public class CleanTestCase : XunitTestCase, ICleanTestCase
     }
 #pragma warning restore CS0618
 
-    public CleanTestCase(IMessageSink diagnosticMessageSink, TestMethodDisplay defaultMethodDisplay, TestMethodDisplayOptions defaultMethodDisplayOptions, ITestMethod testMethod, object[] testMethodArguments, CleanTestAssemblyData cleanTestAssemblyData, CleanTestCaseData cleanTestData)
+    public CleanTestCase(IMessageSink diagnosticMessageSink, TestMethodDisplay defaultMethodDisplay, TestMethodDisplayOptions defaultMethodDisplayOptions, ITestMethod testMethod, object[] testMethodArguments, CleanTestCaseData cleanTestData)
         : base(diagnosticMessageSink, defaultMethodDisplay, defaultMethodDisplayOptions, testMethod, testMethodArguments)
     {
         this.CleanTestCaseData = cleanTestData ?? throw new ArgumentNullException(nameof(cleanTestData));
@@ -72,4 +72,7 @@ public class CleanTestCase : XunitTestCase, ICleanTestCase
 
         return defaultId + cleanIdBuilder;
     }
+
+    protected override string GetDisplayName(IAttributeInfo factAttribute, string displayName) 
+        => string.Join(" ", new[] { this.CleanTestCaseData.DisplayNamePrefix, base.GetDisplayName(factAttribute, displayName) }.IgnoreNullOrWhitespaceValues());
 }

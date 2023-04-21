@@ -8,10 +8,12 @@ public class CleanTestCaseData
 {
     public IDictionary<Type, Type> GenericTypesMap { get; }
     public IReadOnlyCollection<IndividualCleanUtilityDependencyNode> CleanUtilities { get; }
+    public string? DisplayNamePrefix { get; }
 
-    public CleanTestCaseData(IDictionary<Type, Type>? genericTypesMap, IEnumerable<IndividualCleanUtilityDependencyNode>? cleanUtilities)
+    public CleanTestCaseData(IDictionary<Type, Type>? genericTypesMap, IEnumerable<IndividualCleanUtilityDependencyNode>? cleanUtilities, string? displayNamePrefix)
     {
         this.GenericTypesMap = genericTypesMap.OrEmptyIfNull();
         this.CleanUtilities = cleanUtilities.OrEmptyIfNull().IgnoreNullValues().AsReadOnlyCollection();
+        this.DisplayNamePrefix = displayNamePrefix;
     }
 }

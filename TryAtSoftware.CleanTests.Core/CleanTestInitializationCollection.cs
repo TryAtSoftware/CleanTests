@@ -21,6 +21,9 @@ public class CleanTestInitializationCollection<TValue> : ICleanTestInitializatio
     }
 
     /// <inheritdoc />
+    public bool ContainsCategory(string category) => this._data.ContainsKey(category);
+
+    /// <inheritdoc />
     public void Register(string category, TValue value)
     {
         if (value is null) return;
