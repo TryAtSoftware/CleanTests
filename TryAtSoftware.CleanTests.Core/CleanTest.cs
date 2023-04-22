@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using TryAtSoftware.CleanTests.Core.Interfaces;
+using TryAtSoftware.CleanTests.Core.Utilities;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -43,13 +44,13 @@ public abstract class CleanTest : ICleanTest, IDisposable, IAsyncLifetime
 
     protected void InitializeGlobalDependenciesProvider()
     {
-        var serviceProviderOptions = ConstructServiceProviderOptions();
+        var serviceProviderOptions = DependencyInjectionUtilities.ConstructServiceProviderOptions();
         this._globalDependenciesProvider = this.GlobalDependenciesCollection.BuildServiceProvider(serviceProviderOptions);
     }
 
     protected void InitializeLocalDependenciesProvider()
     {
-        var serviceProviderOptions = ConstructServiceProviderOptions();
+        var serviceProviderOptions = DependencyInjectionUtilities.ConstructServiceProviderOptions();
         this._localDependenciesProvider = this.LocalDependenciesCollection.BuildServiceProvider(serviceProviderOptions);
         this._scope = this._localDependenciesProvider.CreateScope();
     }
@@ -119,7 +120,4 @@ public abstract class CleanTest : ICleanTest, IDisposable, IAsyncLifetime
         // The global dependencies provider should not be disposed as that would cause the disposal of all dependent utilities and that may be problematic.
         // Its disposal is handled on a different level.
     }
-    
-    private static ServiceProviderOptions ConstructServiceProviderOptions() => new() { ValidateScopes = true, ValidateOnBuild = true };
-
 }

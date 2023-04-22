@@ -4,16 +4,19 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 using TryAtSoftware.CleanTests.Core.Extensions;
 using TryAtSoftware.CleanTests.Core.Interfaces;
+using TryAtSoftware.CleanTests.Core.Utilities;
 using TryAtSoftware.CleanTests.Core.XUnit.Extensions;
 using TryAtSoftware.CleanTests.Core.XUnit.Interfaces;
 using Xunit;
 using Xunit.Abstractions;
 using Xunit.Sdk;
 
-public class CleanTestCollectionRunner : XunitTestCollectionRunner
+public sealed class CleanTestCollectionRunner : XunitTestCollectionRunner, IDisposable
 {
+    private readonly ServiceProvider _globalServicesProvider;
     private readonly IGlobalUtilitiesProvider _globalUtilitiesProvider = new GlobalUtilitiesProvider();
     private readonly CleanTestAssemblyData _assemblyData;
 
@@ -21,6 +24,12 @@ public class CleanTestCollectionRunner : XunitTestCollectionRunner
         : base(testCollection, testCases, diagnosticMessageSink, messageBus, testCaseOrderer, aggregator, cancellationTokenSource)
     {
         this._assemblyData = assemblyData ?? throw new ArgumentNullException(nameof(assemblyData));
+
+        // This is reserved for future use.
+        var globalServicesCollection = new ServiceCollection();
+        
+        var serviceProviderOptions = DependencyInjectionUtilities.ConstructServiceProviderOptions();
+        this._globalServicesProvider = globalServicesCollection.BuildServiceProvider(serviceProviderOptions);
     }
 
     protected override async Task<RunSummary> RunTestClassAsync(ITestClass testClass, IReflectionTypeInfo @class, IEnumerable<IXunitTestCase> testCases)
@@ -44,7 +53,12 @@ public class CleanTestCollectionRunner : XunitTestCollectionRunner
         await base.AfterTestCollectionStartingAsync();
 
         var (cleanTestCases, _) = this.TestCases.ExtractCleanTestCases();
-        foreach (var testCase in cleanTestCases) this.RegisterGlobalUtilities(testCase);
+        
+        this.Aggregator.Run(
+            () =>
+            {
+                foreach (var testCase in cleanTestCases) this.RegisterGlobalUtilities(testCase);
+            });
 
         foreach (var globalInitializationUtility in this._globalUtilitiesProvider.GetUtilities<IAsyncLifetime>()) await globalInitializationUtility.InitializeAsync();
     }
@@ -59,32 +73,43 @@ public class CleanTestCollectionRunner : XunitTestCollectionRunner
 
     private void RegisterGlobalUtilities(ICleanTestCase cleanTestCase)
     {
-        foreach (var dependency in cleanTestCase.CleanTestCaseData.CleanUtilities)
+        foreach (var utility in cleanTestCase.CleanTestCaseData.CleanUtilities)
         {
-            if (!this._assemblyData.CleanUtilitiesById.ContainsKey(dependency.Id)) continue;
-            RegisterGlobalUtility(dependency);
-        }
-
-        object? RegisterGlobalUtility(IndividualCleanUtilityDependencyNode dependencyNode)
-        {
-            var dependencies = new List<object?>(capacity: dependencyNode.Dependencies.Count);
-            foreach (var subDependency in dependencyNode.Dependencies)
-            {
-                var subDependencyInstance = RegisterGlobalUtility(subDependency);
-                dependencies.Add(subDependencyInstance);
-            }
-
-            var (utilityDescriptor, implementationType) = dependencyNode.Materialize(this._assemblyData.CleanUtilitiesById, cleanTestCase.CleanTestCaseData.GenericTypesMap);
-            if (!utilityDescriptor.IsGlobal) return null;
-            
-            var uniqueId = dependencyNode.GetUniqueId();
-            var registeredInstance = this._globalUtilitiesProvider.GetUtility(uniqueId);
-            if (registeredInstance is not null) return registeredInstance;
-
-            var createdInstance = Activator.CreateInstance(implementationType, dependencies.ToArray());
-
-            this._globalUtilitiesProvider.AddUtility(uniqueId, createdInstance);
-            return createdInstance;
+            if (!this._assemblyData.CleanUtilitiesById.ContainsKey(utility.Id)) continue;
+            this.RegisterGlobalUtility(utility, cleanTestCase.CleanTestCaseData);
         }
     }
+    
+    /// <remarks>
+    /// This method can be called with non-global utilities as well because some of them may depend on global utilities that should be registered.
+    /// </remarks>
+    private object? RegisterGlobalUtility(IndividualCleanUtilityDependencyNode dependencyNode, CleanTestCaseData testCaseData)
+    {
+        var (utilityDescriptor, implementationType) = dependencyNode.Materialize(this._assemblyData.CleanUtilitiesById, testCaseData.GenericTypesMap);
+        
+        var subDependencies = new List<object>(capacity: utilityDescriptor.IsGlobal ? dependencyNode.Dependencies.Count : 0);
+        foreach (var subDependency in dependencyNode.Dependencies)
+        {
+            var subDependencyInstance = this.RegisterGlobalUtility(subDependency, testCaseData);
+
+            if (utilityDescriptor.IsGlobal)
+            {
+                if (subDependencyInstance is null) throw new InvalidOperationException($"Some of the dependencies for the global clean utility {utilityDescriptor.Id} could not be constructed.");
+                subDependencies.Add(subDependencyInstance);
+            }
+        }
+        
+        if (!utilityDescriptor.IsGlobal) return null;
+            
+        var uniqueId = dependencyNode.GetUniqueId();
+        var registeredInstance = this._globalUtilitiesProvider.GetUtility(uniqueId);
+        if (registeredInstance is not null) return registeredInstance;
+
+        var createdInstance = ActivatorUtilities.CreateInstance(this._globalServicesProvider, implementationType, subDependencies.ToArray());
+
+        this._globalUtilitiesProvider.RegisterUtility(uniqueId, createdInstance);
+        return createdInstance;
+    }
+
+    public void Dispose() => this._globalServicesProvider.Dispose();
 }

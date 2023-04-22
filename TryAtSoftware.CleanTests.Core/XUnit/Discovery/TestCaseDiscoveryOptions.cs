@@ -8,7 +8,7 @@ public class TestCaseDiscoveryOptions
 {
     public IDictionary<Type, Type> GenericTypes { get; }
 
-    public TestCaseDiscoveryOptions(IDictionary<Type, Type>? genericTypes)
+    public TestCaseDiscoveryOptions(IDictionary<Type, Type>? genericTypes = null)
     {
         this.GenericTypes = genericTypes.OrEmptyIfNull();
     }

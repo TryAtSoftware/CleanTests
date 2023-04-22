@@ -32,9 +32,7 @@ public class CleanTestInvoker : TestInvoker<ICleanTestCase>
         if (instance is not ICleanTest cleanTest) return instance;
 
         foreach (var dependencyNode in this.TestCase.CleanTestCaseData.CleanUtilities.OrEmptyIfNull())
-        {
             this.RegisterDependency(dependencyNode, assemblyData, globalUtilitiesProvider, cleanTest);
-        }
 
         return instance;
     }
