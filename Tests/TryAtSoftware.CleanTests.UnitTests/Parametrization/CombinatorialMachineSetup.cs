@@ -65,7 +65,7 @@ public class CombinatorialMachineSetup
                 var universalId = ComposeUniversalUtilityId(category, j);
 
                 this._characteristics.TryGetValue(universalId, out var characteristics);
-                ICleanUtilityDescriptor utility = new CleanUtilityDescriptor(category, typeof(int), universalId, isGlobal: false, characteristics, requirements: Enumerable.Empty<string>());
+                ICleanUtilityDescriptor utility = new CleanUtilityDescriptor(category, typeof(int), universalId, isGlobal: false, characteristics);
 
                 this._demandsPerUtility.TryGetValue(universalId, out var demandsByCategory);
                 foreach (var (demandCategory, demands) in demandsByCategory.OrEmptyIfNull())

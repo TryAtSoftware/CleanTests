@@ -31,5 +31,5 @@ public interface ICleanUtilityDescriptor
     /// <summary>
     /// Gets a collection of categories the represented utility depends on in order to be instantiated.
     /// </summary>
-    HashSet<string> InternalRequirements { get; }
+    IReadOnlyCollection<string> InternalRequirements { get; }
 }

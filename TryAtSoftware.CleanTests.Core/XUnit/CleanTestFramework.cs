@@ -7,7 +7,6 @@ using TryAtSoftware.CleanTests.Core.Attributes;
 using TryAtSoftware.CleanTests.Core.Enums;
 using TryAtSoftware.CleanTests.Core.Extensions;
 using TryAtSoftware.CleanTests.Core.Interfaces;
-using TryAtSoftware.CleanTests.Core.Internal;
 using TryAtSoftware.CleanTests.Core.XUnit.Discovery;
 using TryAtSoftware.CleanTests.Core.XUnit.Execution;
 using TryAtSoftware.Extensions.Collections;
@@ -61,12 +60,6 @@ public class CleanTestFramework : XunitTestFramework
             assemblyData.MaxDegreeOfParallelism = configurationAttribute.GetNamedArgument<int>(nameof(ConfigureCleanTestsFrameworkAttribute.MaxDegreeOfParallelism));
             assemblyData.UtilitiesPresentations = configurationAttribute.GetNamedArgument<CleanTestMetadataPresentations>(nameof(ConfigureCleanTestsFrameworkAttribute.UtilitiesPresentations));
             assemblyData.GenericTypeMappingPresentations = configurationAttribute.GetNamedArgument<CleanTestMetadataPresentations>(nameof(ConfigureCleanTestsFrameworkAttribute.GenericTypeMappingPresentations));
-        }
-        else
-        {
-            assemblyData.MaxDegreeOfParallelism = CleanTestConstants.MaxDegreeOfParallelism;
-            assemblyData.UtilitiesPresentations = CleanTestConstants.UtilitiesPresentation;
-            assemblyData.GenericTypeMappingPresentations = CleanTestConstants.GenericTypeMappingPresentation;
         }
         
         this._utilityDescriptorsByAssembly[assemblyInfo.Name] = assemblyData;

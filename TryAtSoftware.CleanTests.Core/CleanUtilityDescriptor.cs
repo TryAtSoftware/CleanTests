@@ -8,6 +8,7 @@ using TryAtSoftware.Extensions.Collections;
 public class CleanUtilityDescriptor : ICleanUtilityDescriptor
 {
     private readonly HashSet<string> _characteristics = new();
+    private readonly HashSet<string> _internalRequirements = new ();
 
     /// <inheritdoc />
     public string Category { get; }
@@ -31,16 +32,16 @@ public class CleanUtilityDescriptor : ICleanUtilityDescriptor
     public ICleanTestInitializationCollection<string> InternalDemands { get; } = new CleanTestInitializationCollection<string>();
 
     /// <inheritdoc />
-    public HashSet<string> InternalRequirements { get; } = new ();
+    public IReadOnlyCollection<string> InternalRequirements => this._internalRequirements.AsReadOnlyCollection();
 
-    public CleanUtilityDescriptor(string initializationCategory, Type type, string displayName, bool isGlobal, IEnumerable<string>? characteristics, IEnumerable<string>? requirements)
+    public CleanUtilityDescriptor(string initializationCategory, Type type, string displayName, bool isGlobal, IEnumerable<string>? characteristics = null, IEnumerable<string>? requirements = null)
     {
         this.Category = initializationCategory;
         this.Type = type ?? throw new ArgumentNullException(nameof(type));
         this.Name = displayName ?? throw new ArgumentNullException(nameof(displayName));
         this.IsGlobal = isGlobal;
         foreach (var characteristic in characteristics.OrEmptyIfNull().IgnoreNullOrWhitespaceValues()) this._characteristics.Add(characteristic);
-        foreach (var requirement in requirements.OrEmptyIfNull().IgnoreNullOrWhitespaceValues()) this.InternalRequirements.Add(requirement);
+        foreach (var requirement in requirements.OrEmptyIfNull().IgnoreNullOrWhitespaceValues()) this._internalRequirements.Add(requirement);
     }
 
     public bool ContainsCharacteristic(string characteristic)
