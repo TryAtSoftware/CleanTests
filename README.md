@@ -26,7 +26,7 @@ After finalizing the integration, we could notice the following:
 | Criteria                        | Standard test assembly | Clean test assembly |
 |---------------------------------|------------------------|---------------------|
 | Number of written test          | \> 1500                | \< 100              |
-| Number of test cases            | \< 1700                | \> 15000            |
+| Number of test cases            | \< 1700                | \> 20000            |
 | Execution time _(approximated)_ | 15 minutes             | 20-25 minutes       |
 | Code coverage _(approximated)_  | \< 20%                 | \> 80%              |
 | Number of found bugs            | 0                      | \> 20               |
