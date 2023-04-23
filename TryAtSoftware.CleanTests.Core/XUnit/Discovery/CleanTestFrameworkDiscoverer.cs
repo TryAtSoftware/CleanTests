@@ -37,10 +37,20 @@ public class CleanTestFrameworkDiscoverer : TestFrameworkDiscoverer
         var genericTypesMap = ExtractGenericTypesMap(@class);
         var runtimeClass = @class.ToRuntimeType();
 
-        if (genericTypesMap.Count > 0)
+        if (runtimeClass.IsGenericType)
         {
-            var genericTypesSetup = runtimeClass.ExtractGenericParametersSetup(genericTypesMap);
-            runtimeClass = runtimeClass.MakeGenericType(genericTypesSetup);
+            try
+            {
+                var genericTypesSetup = runtimeClass.ExtractGenericParametersSetup(genericTypesMap);
+                runtimeClass = runtimeClass.MakeGenericType(genericTypesSetup);
+            }
+            catch (Exception e)
+            {
+                var diagnosticMessage = new DiagnosticMessage($"Exception occurred while trying to build the generic type {TypeNames.Get(runtimeClass)}: {e.Message}");
+                this.DiagnosticMessageSink.OnMessage(diagnosticMessage);
+
+                return null!;
+            }
         }
 
         var xUnitTypeInfo = Reflector.Wrap(runtimeClass);
