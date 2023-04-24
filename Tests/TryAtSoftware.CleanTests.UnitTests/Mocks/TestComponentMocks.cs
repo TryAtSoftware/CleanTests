@@ -76,4 +76,10 @@ internal static class TestComponentMocks
         var testFrameworkExecutionOptionsMock = new Mock<ITestFrameworkExecutionOptions>();
         return testFrameworkExecutionOptionsMock.Object;
     }
+
+    internal static ISourceInformationProvider MockSourceInformationProvider()
+    {
+        var sourceInformationProviderMock = new Mock<ISourceInformationProvider>();
+        return sourceInformationProviderMock.Object;
+    }
 }

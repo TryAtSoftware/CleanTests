@@ -16,7 +16,7 @@ public class CleanTestAssemblyData
     public CleanTestMetadataPresentations UtilitiesPresentations { get; set; } = CleanTestConstants.UtilitiesPresentation;
     public CleanTestMetadataPresentations GenericTypeMappingPresentations { get; set; } = CleanTestConstants.GenericTypeMappingPresentation;
 
-    public CleanTestAssemblyData(IEnumerable<ICleanUtilityDescriptor> cleanUtilities)
+    public CleanTestAssemblyData(IEnumerable<ICleanUtilityDescriptor>? cleanUtilities = null)
     {
         foreach (var cleanUtility in cleanUtilities.OrEmptyIfNull().IgnoreNullValues())
         {

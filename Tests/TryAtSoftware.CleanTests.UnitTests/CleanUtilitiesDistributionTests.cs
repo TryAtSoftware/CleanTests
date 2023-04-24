@@ -1,8 +1,8 @@
 ﻿namespace TryAtSoftware.CleanTests.UnitTests;
 
 using System.Reflection;
-using Moq;
 using TryAtSoftware.CleanTests.Core;
+using TryAtSoftware.CleanTests.Core.Attributes;
 using TryAtSoftware.CleanTests.Core.XUnit;
 using TryAtSoftware.CleanTests.Core.XUnit.Discovery;
 using TryAtSoftware.CleanTests.Core.XUnit.Execution;
@@ -14,9 +14,9 @@ public class CleanUtilitiesDistributionTests
     [Theory]
     [InlineData(true, nameof(ClassWithTests.TestGlobalUtilityDistribution))]
     [InlineData(false, nameof(ClassWithTests.TestNonGlobalUtilityDistribution))]
-    public async Task GlobalUtilitiesShouldBeDistributedSuccessfully(bool isGlobal, string methodName)
+    public async Task UtilitiesDistributionShouldHaveProperErrorHandling(bool isGlobal, string methodName)
     {
-        var reflectionMocks = ReflectionMocks.MockReflectionSuite(Assembly.GetExecutingAssembly(), typeof(ClassWithTests), methodName, new FactAttribute());
+        var reflectionMocks = ReflectionMocks.MockReflectionSuite(Assembly.GetExecutingAssembly(), typeof(ClassWithTests), methodName, new CleanFactAttribute());
         var testComponentMocks = reflectionMocks.MockTestComponentsSuite();
 
         var cleanUtilityDescriptor = new CleanUtilityDescriptor("_", typeof(InconclusiveUtility), "Inconclusive utility", isGlobal);
@@ -30,10 +30,11 @@ public class CleanUtilitiesDistributionTests
         var executionResult = await cleanTestAssemblyRunner.RunAsync();
         Assert.NotNull(executionResult);
         Assert.Equal(1, executionResult.Failed);
+        Assert.Equal(0, executionResult.Skipped);
         Assert.Equal(1, executionResult.Total);
     }
-    
-    public class ClassWithTests : CleanTest
+
+    private class ClassWithTests : CleanTest
     {
         public ClassWithTests(ITestOutputHelper testOutputHelper)
             : base(testOutputHelper)
@@ -45,7 +46,7 @@ public class CleanUtilitiesDistributionTests
         public void TestNonGlobalUtilityDistribution() => this.GetService<InconclusiveUtility>();
     }
 
-    public class InconclusiveUtility
+    private class InconclusiveUtility
     {
         public InconclusiveUtility(string unresolvableParameter)
         {
