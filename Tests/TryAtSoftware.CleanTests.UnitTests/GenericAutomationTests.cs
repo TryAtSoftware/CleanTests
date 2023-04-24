@@ -1,7 +1,6 @@
 ﻿namespace TryAtSoftware.CleanTests.UnitTests;
 
 using System.Reflection;
-using TryAtSoftware.CleanTests.Core;
 using TryAtSoftware.CleanTests.Core.Attributes;
 using TryAtSoftware.CleanTests.Core.XUnit;
 using TryAtSoftware.CleanTests.Core.XUnit.Discovery;
@@ -30,7 +29,7 @@ public class GenericAutomationTests
     }
     
     [Fact]
-    public async Task TestCasesShouldPassForIncompleteGenericTestClasses()
+    public async Task TestCasesShouldPassForCompleteGenericTestClasses()
     {
         var reflectionMocks = ReflectionMocks.MockReflectionSuite(Assembly.GetExecutingAssembly(), typeof(CompleteGenericTestClass<>), nameof(CompleteGenericTestClass<object>.Test), new CleanFactAttribute());
         var testComponentMocks = reflectionMocks.MockTestComponentsSuite();
@@ -54,19 +53,20 @@ public class GenericAutomationTests
     private class IncompleteGenericTestClass<T>
         where T : new()
     {
-        public void Test() => Assert.NotNull(new T());
+        public static void Test() => Assert.NotNull(new T());
     }
 
     [AttributeUsage(AttributeTargets.GenericParameter)]
     private class TestGenericParameterAttribute : Attribute
     {
     }
-
+    
+// To be removed when upgrading `TryAtSoftware.Extensions.Randomizer`.
 #nullable disable
     private class CompleteGenericTestClass<[TestGenericParameter] T>
         where T : new()
     {
-        public void Test() => Assert.NotNull(new T());
+        public static void Test() => Assert.NotNull(new T());
     }
 #nullable restore
 }
