@@ -22,7 +22,7 @@ internal static class ReflectionMocks
         return assemblyInfoMock.Object;
     }
 
-    internal static IReflectionTypeInfo MockReflectionTypeInfo(this Type type, IAssemblyInfo assemblyInfo)
+    internal static IReflectionTypeInfo MockReflectionTypeInfo(this Type type, IAssemblyInfo assemblyInfo, Dictionary<string, IMethodInfo> methodsMap)
     {
         var originalTypeInfo = Reflector.Wrap(type);
 
@@ -39,8 +39,8 @@ internal static class ReflectionMocks
         typeInfoMock.SetupGet(x => x.IsValueType).Returns(originalTypeInfo.IsValueType);
         typeInfoMock.Setup(x => x.GetCustomAttributes(It.IsAny<string>())).Returns<string>(x => originalTypeInfo.GetCustomAttributes(x));
         typeInfoMock.Setup(x => x.GetGenericArguments()).Returns(() => originalTypeInfo.GetGenericArguments());
-        typeInfoMock.Setup(x => x.GetMethod(It.IsAny<string>(), It.IsAny<bool>())).Returns<string, bool>((x, y) => originalTypeInfo.GetMethod(x, y));
-        typeInfoMock.Setup(x => x.GetMethods(It.IsAny<bool>())).Returns<bool>(x => originalTypeInfo.GetMethods(x));
+        typeInfoMock.Setup(x => x.GetMethod(It.IsAny<string>(), It.IsAny<bool>())).Returns<string, bool>((x, y) => methodsMap.TryGetValue(x, out var method) ? method : null!);
+        typeInfoMock.Setup(x => x.GetMethods(It.IsAny<bool>())).Returns<bool>(_ => methodsMap.Values);
 
         return typeInfoMock.Object;
     }
@@ -88,20 +88,22 @@ internal static class ReflectionMocks
         var method = type.GetMethod(methodName);
         Assert.NotNull(method);
 
-        var attributeType = attribute.GetType();
-        Assert.NotNull(attributeType.AssemblyQualifiedName);
+        var factAttributeAssemblyQualifiedName = typeof(FactAttribute).AssemblyQualifiedName;
+        Assert.NotNull(factAttributeAssemblyQualifiedName);
         
         var typesMap = new Dictionary<string, IReflectionTypeInfo>();
         var assemblyInfo = assembly.MockReflectionAssemblyInfo(typesMap);
 
-        var typeInfo = type.MockReflectionTypeInfo(assemblyInfo);
+        var methodsMap = new Dictionary<string, IMethodInfo>();
+        var typeInfo = type.MockReflectionTypeInfo(assemblyInfo, methodsMap);
         typesMap[type.AssemblyQualifiedName] = typeInfo;
 
         var attributesMap = new Dictionary<string, IReflectionAttributeInfo>();
         var methodInfo = method.MockReflectionMethodInfo(typeInfo, attributesMap);
+        methodsMap[methodInfo.Name] = methodInfo;
         
         var attributeInfo = attribute.MockReflectionAttributeInfo();
-        attributesMap[attributeType.AssemblyQualifiedName] = attributeInfo;
+        attributesMap[factAttributeAssemblyQualifiedName] = attributeInfo;
 
         return new ReflectionMocksSuite(assemblyInfo, typeInfo, methodInfo, attributeInfo);
     }

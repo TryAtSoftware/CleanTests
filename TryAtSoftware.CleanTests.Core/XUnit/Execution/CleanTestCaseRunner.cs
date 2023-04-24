@@ -39,9 +39,8 @@ public class CleanTestCaseRunner : TestCaseRunner<ICleanTestCase>
 
         try
         {
-            var runtimeType = testClass.ToRuntimeType();
-            var genericTypesSetup = runtimeType.ExtractGenericParametersSetup(this.TestCase.CleanTestCaseData.GenericTypesMap);
-            var genericRuntimeType = runtimeType.MakeGenericType(genericTypesSetup);
+            var genericTypesSetup = originalRuntimeType.ExtractGenericParametersSetup(this.TestCase.CleanTestCaseData.GenericTypesMap);
+            var genericRuntimeType = originalRuntimeType.MakeGenericType(genericTypesSetup);
 
             var methodParameterTypes = testMethod.GetParameters().Select(x => x.ParameterType.ToRuntimeType()).ToArray();
             var genericRuntimeMethod = genericRuntimeType.GetMethod(testMethod.Name, methodParameterTypes);
