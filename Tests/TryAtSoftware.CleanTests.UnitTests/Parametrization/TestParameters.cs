@@ -4,6 +4,13 @@ using System.Text;
 
 public static class TestParameters
 {
+    public static IEnumerable<object?[]> GetInvalidStringParameters()
+    {
+        yield return new object?[] { null };
+        yield return new object?[] { string.Empty };
+        yield return new object?[] { " " };
+    }
+
     public static IEnumerable<CombinatorialMachineSetup> ConstructObservableCombinatorialMachineSetups()
     {
         var setup1 = new CombinatorialMachineSetup("Setup #1", 26).WithCategory("A", 3).WithCategory("B", 2).WithCategory("C", 3).WithCategory("D", 3);
@@ -72,6 +79,11 @@ public static class TestParameters
         for (var i = 0; i < 5; i++)
             setup8.WithDemands(ConstructCategoryName(i), 1, "non-existing demand category", "demand1", "demand2");
         yield return setup8;
+
+        var setup9 = new CombinatorialMachineSetup("Setup #9", 48);
+        for (var i = 0; i < 5; i++) setup9.WithCategory(ConstructCategoryName(i), 3);
+        for (var i = 0; i < 4; i++) setup9.WithDemands(ConstructCategoryName(i), 1, ConstructCategoryName(4), $"exec_{ConstructCategoryName(i)}{1}");
+        yield return setup9;
     }
 
     private static string ConstructCategoryName(int letterIndex)

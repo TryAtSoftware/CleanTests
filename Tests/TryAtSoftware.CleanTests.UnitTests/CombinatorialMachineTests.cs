@@ -1,6 +1,5 @@
 ﻿namespace TryAtSoftware.CleanTests.UnitTests;
 
-using System.Text;
 using TryAtSoftware.CleanTests.UnitTests.Parametrization;
 
 public class CombinatorialMachineTests
