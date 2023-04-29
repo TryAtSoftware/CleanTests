@@ -9,7 +9,7 @@ using TryAtSoftware.CleanTests.UnitTests.Mocks;
 
 public class GenericAutomationTests
 {
-    [Fact]
+    [Fact(Timeout = 1000)]
     public async Task TestCasesShouldFailForIncompleteGenericTestClasses()
     {
         var reflectionMocks = ReflectionMocks.MockReflectionSuite(Assembly.GetExecutingAssembly(), typeof(IncompleteGenericTestClass<>), nameof(IncompleteGenericTestClass<object>.Test), new CleanFactAttribute());
@@ -28,7 +28,7 @@ public class GenericAutomationTests
         Assert.Equal(1, executionResult.Total);
     }
     
-    [Fact]
+    [Fact(Timeout = 1000)]
     public async Task TestCasesShouldPassForCompleteGenericTestClasses()
     {
         var reflectionMocks = ReflectionMocks.MockReflectionSuite(Assembly.GetExecutingAssembly(), typeof(CompleteGenericTestClass<>), nameof(CompleteGenericTestClass<object>.Test), new CleanFactAttribute());

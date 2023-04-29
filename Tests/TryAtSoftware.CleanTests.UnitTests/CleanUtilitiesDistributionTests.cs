@@ -11,7 +11,7 @@ using Xunit.Abstractions;
 
 public class CleanUtilitiesDistributionTests
 {
-    [Theory]
+    [Theory(Timeout = 1000)]
     [InlineData(true, nameof(ClassWithTests.TestGlobalUtilityDistribution))]
     [InlineData(false, nameof(ClassWithTests.TestNonGlobalUtilityDistribution))]
     public async Task UtilitiesDistributionShouldHaveProperErrorHandling(bool isGlobal, string methodName)
