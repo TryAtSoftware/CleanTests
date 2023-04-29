@@ -25,7 +25,7 @@ public class CombinatorialMachineBenchmark
     public CombinatorialMachineSetup Setup { get; set; }
     
     [GlobalSetup]
-    public void SetupCombinatorialMachine() => (this._machine, _) = this.Setup.Materialize();
+    public void SetupCombinatorialMachine() => this._machine = this.Setup.Materialize();
 
     [Benchmark]
     public void GenerateAllCombinations() => _ = this._machine.GenerateAllCombinations();

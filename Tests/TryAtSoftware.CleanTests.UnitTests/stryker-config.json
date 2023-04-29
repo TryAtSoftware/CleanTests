@@ -1,0 +1,10 @@
+﻿{
+  "stryker-config": {
+    "reporters": [
+      "html", "progress"
+    ],
+    "ignore-mutations": [
+      "string"
+    ]
+  }
+}

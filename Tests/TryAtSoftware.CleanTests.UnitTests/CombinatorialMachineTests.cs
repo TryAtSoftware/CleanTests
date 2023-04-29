@@ -1,28 +1,34 @@
 ﻿namespace TryAtSoftware.CleanTests.UnitTests;
 
+using System.Text;
 using TryAtSoftware.CleanTests.UnitTests.Parametrization;
-using Xunit.Abstractions;
 
 public class CombinatorialMachineTests
 {
-    private readonly ITestOutputHelper _outputHelper;
-
-    public CombinatorialMachineTests(ITestOutputHelper outputHelper)
-    {
-        this._outputHelper = outputHelper ?? throw new ArgumentNullException(nameof(outputHelper));
-    }
-
-    [Theory]
+    [Theory(Timeout = 1000)]
     [MemberData(nameof(GetCombinatorialMachineSetups))]
-    public void CombinationsShouldBeGeneratedSuccessfully(CombinatorialMachineSetup setup)
+    public async Task CombinationsShouldBeGeneratedSuccessfully(CombinatorialMachineSetup setup)
     {
-        var (machine, utilitiesById) = setup.Materialize();
-        var combinations = machine.GenerateAllCombinations().ToArray();
+        var machine = setup.Materialize();
+        var combinations = await Task.Run(() => machine.GenerateAllCombinations().ToArray());
         Assert.NotNull(combinations);
+        Assert.Equal(setup.ExpectedCombinationsCount, combinations.Length);
 
-        this._outputHelper.WriteLine($"Generated {combinations.Length} combinations");
-        foreach (var c in combinations) this._outputHelper.WriteLine(string.Join(";", c.OrderBy(x => x.Key).Select(x => utilitiesById[x.Value].Name)));
+        var uniqueCombinations = new HashSet<string>();
+
+        var assertUniqueCombinations = combinations.Length < 1000;
+        foreach (var currentCombination in combinations)
+        {
+            Assert.Equal(setup.CategoriesCount, currentCombination.Count);
+            if (!assertUniqueCombinations) continue;
+
+            var combinationId = string.Join(";", currentCombination.Select(x => x.Value));
+            Assert.DoesNotContain(combinationId, uniqueCombinations);
+            uniqueCombinations.Add(combinationId);
+        }
     }
 
-    public static IEnumerable<object[]> GetCombinatorialMachineSetups() => TestParameters.ConstructObservableCombinatorialMachineSetups().Select(combinatorialMachineSetup => new object[] { combinatorialMachineSetup });
+    public static IEnumerable<object[]> GetCombinatorialMachineSetups()
+        => TestParameters.ConstructObservableCombinatorialMachineSetups()
+            .Select(combinatorialMachineSetup => new object[] { combinatorialMachineSetup });
 }

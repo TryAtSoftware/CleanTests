@@ -22,22 +22,25 @@ public class CombinatorialMachine
 
         Dictionary<string, int> incompatibilityFactorByUtilityId = new ();
         foreach (var utility in this._utilities.GetAllValues()) incompatibilityFactorByUtilityId[utility.Id] = 0;
-        
-        Dictionary<string, ICleanUtilityDescriptor> slots = new ();
+
+        var slots = new string[categories.Length];
         List<IDictionary<string, string>> resultBag = new ();
 
-        Dfs(categoryIndex: 0);
+        Dfs(slotIndex: 0);
         return resultBag;
 
-        void Dfs(int categoryIndex)
+        void Dfs(int slotIndex)
         {
-            if (categoryIndex == categories.Length)
+            if (slotIndex == slots.Length)
             {
-                resultBag.Add(slots.ToDictionary(x => x.Key, x => x.Value.Id));
+                var result = new Dictionary<string, string>();
+                for (var i = 0; i < slots.Length; i++) result[categories[i]] = slots[i];
+
+                resultBag.Add(result);
                 return;
             }
 
-            var currentCategory = categories[categoryIndex];
+            var currentCategory = categories[slotIndex];
 
             foreach (var utility in this._utilities.Get(currentCategory))
             {
@@ -45,9 +48,8 @@ public class CombinatorialMachine
 
                 foreach (var iu in incompatibleUtilitiesMap[utility.Id]) incompatibilityFactorByUtilityId[iu]++;
                 
-                slots[currentCategory] = utility;
-                Dfs(categoryIndex + 1);
-                slots.Remove(currentCategory);
+                slots[slotIndex] = utility.Id;
+                Dfs(slotIndex + 1);
 
                 foreach (var iu in incompatibleUtilitiesMap[utility.Id]) incompatibilityFactorByUtilityId[iu]--;
             }

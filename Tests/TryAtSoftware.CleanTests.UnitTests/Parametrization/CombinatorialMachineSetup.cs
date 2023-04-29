@@ -11,13 +11,16 @@ public class CombinatorialMachineSetup
     private readonly Dictionary<string, Dictionary<string, List<string>>> _demandsPerUtility = new ();
     private readonly Dictionary<string, List<string>> _characteristics = new ();
 
-    public CombinatorialMachineSetup(string name)
+    public CombinatorialMachineSetup(string name, int expectedCombinationsCount)
     {
         if (string.IsNullOrWhiteSpace(name)) throw new ArgumentNullException(nameof(name));
         this.Name = name;
+        this.ExpectedCombinationsCount = expectedCombinationsCount;
     }
 
     public string Name { get; }
+    public int ExpectedCombinationsCount { get; }
+    public int CategoriesCount => this._numberOfUtilitiesPerCategory.Count;
     
     public CombinatorialMachineSetup WithCategory(string category, int utilitiesCount)
     {
@@ -43,7 +46,6 @@ public class CombinatorialMachineSetup
     public CombinatorialMachineSetup WithDemands(string utilityCategory, int utilityId, string demandsCategory, params string[] demands)
     {
         this.ValidateUtilityExists(utilityCategory, utilityId);
-        this.ValidateCategoryExists(demandsCategory);
         
         var universalId = ComposeUniversalUtilityId(utilityCategory, utilityId);
         if (!this._demandsPerUtility.ContainsKey(universalId)) this._demandsPerUtility[universalId] = new Dictionary<string, List<string>>();
@@ -53,10 +55,9 @@ public class CombinatorialMachineSetup
         return this;
     }
 
-    public (CombinatorialMachine CombinatorialMachine, IDictionary<string, ICleanUtilityDescriptor> UtilitiesById) Materialize()
+    public CombinatorialMachine Materialize()
     {
         var utilitiesCollection = new CleanTestInitializationCollection<ICleanUtilityDescriptor>();
-        var utilitiesById = new Dictionary<string, ICleanUtilityDescriptor>();
 
         foreach (var (category, utilitiesCount) in this._numberOfUtilitiesPerCategory)
         {
@@ -74,11 +75,10 @@ public class CombinatorialMachineSetup
                 }
 
                 utilitiesCollection.Register(category, utility);
-                utilitiesById[utility.Id] = utility;
             }
         }
 
-        return (CombinatorialMachine: new CombinatorialMachine(utilitiesCollection), UtilitiesById: utilitiesById);
+        return new CombinatorialMachine(utilitiesCollection);
     }
 
     private void ValidateUtilityExists(string category, int utilityId)
