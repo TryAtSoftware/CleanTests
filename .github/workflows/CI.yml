@@ -1,4 +1,4 @@
-name: Core validation
+name: CI
 
 on:
     push:
@@ -70,3 +70,12 @@ jobs:
 
             - name: Finalize analyzation with SonarCloud
               run: ./.sonar/scanner/dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
+
+            - name: Run Stryker
+              run: dotnet stryker --project "./TryAtSoftware.CleanTests.Core/TryAtSoftware.CleanTests.Core.csproj" --test-project "./Tests/TryAtSoftware.CleanTests.UnitTests/TryAtSoftware.CleanTests.UnitTests.csproj" --output ".stryker/output"
+
+            - name: Publish "Mutation result"
+              uses: actions/upload-artifact@v3.1.2
+              with:
+                  name: "Mutation report"
+                  path: .stryker/output
