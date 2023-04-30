@@ -88,7 +88,8 @@ jobs:
               run: dotnet tool restore
           
             - name: Run Stryker
-              run: dotnet stryker --project "./TryAtSoftware.CleanTests.Core/TryAtSoftware.CleanTests.Core.csproj" --test-project "./Tests/TryAtSoftware.CleanTests.UnitTests/TryAtSoftware.CleanTests.UnitTests.csproj" --output ".stryker/output"
+              run: dotnet stryker --project "TryAtSoftware.CleanTests.Core" --output ".stryker/output"
+              working-directory: "./Tests/TryAtSoftware.CleanTests.UnitTests"
 
             - name: Publish "Mutation result"
               uses: actions/upload-artifact@v3.1.2
