@@ -70,7 +70,23 @@ jobs:
 
             - name: Finalize analyzation with SonarCloud
               run: ./.sonar/scanner/dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
+  
+    mutate:
+        name: Execute test mutation
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v2
+              with:
+                  fetch-depth: 0
 
+            - name: Setup .NET
+              uses: actions/setup-dotnet@v3
+              with:
+                  dotnet-version: 7.x
+                  
+            - name: Restore .NET tools
+              run: dotnet tool restore
+          
             - name: Run Stryker
               run: dotnet stryker --project "./TryAtSoftware.CleanTests.Core/TryAtSoftware.CleanTests.Core.csproj" --test-project "./Tests/TryAtSoftware.CleanTests.UnitTests/TryAtSoftware.CleanTests.UnitTests.csproj" --output ".stryker/output"
 
@@ -79,3 +95,7 @@ jobs:
               with:
                   name: "Mutation report"
                   path: .stryker/output
+          
+          
+            
+        
