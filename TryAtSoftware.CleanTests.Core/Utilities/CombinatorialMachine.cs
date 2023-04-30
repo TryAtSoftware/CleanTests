@@ -22,35 +22,35 @@ public class CombinatorialMachine
 
         Dictionary<string, int> incompatibilityFactorByUtilityId = new ();
         foreach (var utility in this._utilities.GetAllValues()) incompatibilityFactorByUtilityId[utility.Id] = 0;
-        
-        Dictionary<string, ICleanUtilityDescriptor> slots = new ();
-        List<IDictionary<string, string>> resultBag = new ();
 
-        Dfs(categoryIndex: 0);
-        return resultBag;
+        var slots = new string[categories.Length];
+        return this.Dfs(slotIndex: 0, categories, slots, incompatibleUtilitiesMap, incompatibilityFactorByUtilityId);
+    }
 
-        void Dfs(int categoryIndex)
+    private IEnumerable<IDictionary<string, string>> Dfs(int slotIndex, string[] categories, string[] slots, Dictionary<string, HashSet<string>> incompatibleUtilitiesMap, Dictionary<string, int> incompatibilityFactorByUtilityId)
+    {
+        if (slotIndex == slots.Length)
         {
-            if (categoryIndex == categories.Length)
-            {
-                resultBag.Add(slots.ToDictionary(x => x.Key, x => x.Value.Id));
-                return;
-            }
+            var result = new Dictionary<string, string>();
+            for (var i = 0; i < slots.Length; i++) result[categories[i]] = slots[i];
 
-            var currentCategory = categories[categoryIndex];
+            yield return result;
+            yield break;
+        }
 
-            foreach (var utility in this._utilities.Get(currentCategory))
-            {
-                if (incompatibilityFactorByUtilityId[utility.Id] > 0) continue;
+        var currentCategory = categories[slotIndex];
 
-                foreach (var iu in incompatibleUtilitiesMap[utility.Id]) incompatibilityFactorByUtilityId[iu]++;
+        foreach (var utilityId in this._utilities.Get(currentCategory).Select(x => x.Id))
+        {
+            if (incompatibilityFactorByUtilityId[utilityId] > 0) continue;
+
+            foreach (var iu in incompatibleUtilitiesMap[utilityId]) incompatibilityFactorByUtilityId[iu]++;
                 
-                slots[currentCategory] = utility;
-                Dfs(categoryIndex + 1);
-                slots.Remove(currentCategory);
+            slots[slotIndex] = utilityId;
+            var combinations = this.Dfs(slotIndex + 1, categories, slots, incompatibleUtilitiesMap, incompatibilityFactorByUtilityId);
+            foreach (var combination in combinations) yield return combination;
 
-                foreach (var iu in incompatibleUtilitiesMap[utility.Id]) incompatibilityFactorByUtilityId[iu]--;
-            }
+            foreach (var iu in incompatibleUtilitiesMap[utilityId]) incompatibilityFactorByUtilityId[iu]--;
         }
     }
 

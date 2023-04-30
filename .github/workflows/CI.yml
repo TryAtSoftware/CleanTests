@@ -1,4 +1,4 @@
-name: Core validation
+name: CI
 
 on:
     push:

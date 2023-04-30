@@ -5,7 +5,7 @@
 [![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=TryAtSoftware_CleanTests&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=TryAtSoftware_CleanTests)
 [![Bugs](https://sonarcloud.io/api/project_badges/measure?project=TryAtSoftware_CleanTests&metric=bugs)](https://sonarcloud.io/summary/new_code?id=TryAtSoftware_CleanTests)
 
-[![Core validation](https://github.com/TryAtSoftware/CleanTests/actions/workflows/Core%20validation.yml/badge.svg)](https://github.com/TryAtSoftware/CleanTests/actions/workflows/Core%20validation.yml)
+[![Core validation](https://github.com/TryAtSoftware/CleanTests/actions/workflows/CI.yml/badge.svg)](https://github.com/TryAtSoftware/CleanTests/actions/workflows/CI.yml)
 
 # About the project
 
