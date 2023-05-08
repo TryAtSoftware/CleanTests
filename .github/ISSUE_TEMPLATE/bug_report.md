@@ -16,10 +16,11 @@ A clear and concise description of what you expected to happen.
 **Screenshots**
 If applicable, add screenshots to help explain your problem.
 
-**Desktop (please complete the following information):**
- - OS: [e.g. iOS]
- - IDE [e.g. Visual Studio 2022, Rider]
- - Version [e.g. 22]
+**Environment (please complete the following information):**
+
+- OS: [e.g. Windows 11, Ubuntu 23.04]
+- IDE: [e.g. Visual Studio 2022, JetBrains Rider 2023.1]
+- Version: [e.g. 1.0.0]
 
 **Additional context**
 Add any other context about the problem here.
