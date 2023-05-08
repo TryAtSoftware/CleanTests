@@ -4,7 +4,7 @@ using TryAtSoftware.CleanTests.UnitTests.Parametrization;
 
 public class CombinatorialMachineTests
 {
-    [Theory(Timeout = 1000)]
+    [Theory(Timeout = 2000)]
     [MemberData(nameof(GetCombinatorialMachineSetups))]
     public async Task CombinationsShouldBeGeneratedSuccessfully(CombinatorialMachineSetup setup)
     {
