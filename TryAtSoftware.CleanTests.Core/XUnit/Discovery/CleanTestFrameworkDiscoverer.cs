@@ -2,7 +2,6 @@ namespace TryAtSoftware.CleanTests.Core.XUnit.Discovery;
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using TryAtSoftware.CleanTests.Core.Attributes;
 using TryAtSoftware.CleanTests.Core.Extensions;
 using TryAtSoftware.CleanTests.Core.Interfaces;
@@ -33,13 +32,12 @@ public class CleanTestFrameworkDiscoverer : TestFrameworkDiscoverer
     {
         var collection = this._fallbackTestFrameworkDiscoverer.TestCollectionFactory.Get(@class);
         
-        var genericTypesMap = ExtractGenericTypesMap(@class);
-        var runtimeClass = @class.ToRuntimeType();
-
-        if (runtimeClass.IsGenericType)
+        if (@class.IsCleanTest() && @class.IsGenericType)
         {
+            var runtimeClass = @class.ToRuntimeType();
             try
             {
+                var genericTypesMap = ExtractGenericTypesMap(@class);
                 var genericTypesSetup = runtimeClass.ExtractGenericParametersSetup(genericTypesMap);
                 runtimeClass = runtimeClass.MakeGenericType(genericTypesSetup);
             }
@@ -50,14 +48,15 @@ public class CleanTestFrameworkDiscoverer : TestFrameworkDiscoverer
 
                 return null!;
             }
+
+            @class = Reflector.Wrap(runtimeClass);
         }
         
-        var xUnitTypeInfo = Reflector.Wrap(runtimeClass);
-        var wrappedXUnitTypeInfo = new CleanTestReflectionTypeInfoWrapper(xUnitTypeInfo);
+        var wrappedXUnitTypeInfo = new CleanTestReflectionTypeInfoWrapper(@class);
         
-        // xUnitTypeInfo.Name -> Fully qualified type name
+        // @class.Name -> Fully qualified type name
         // The subsequently created wrapper's `Name` property should expose a readable value for generic types.
-        return new CleanTestClassWrapper(collection, wrappedXUnitTypeInfo, xUnitTypeInfo.Name);
+        return new CleanTestClassWrapper(collection, wrappedXUnitTypeInfo, @class.Name);
     }
 
     /// <inheritdoc />
@@ -73,7 +72,7 @@ public class CleanTestFrameworkDiscoverer : TestFrameworkDiscoverer
         var testCaseDiscoveryOptions = new TestCaseDiscoveryOptions(genericTypesMap);
 
         var decoratedClass = new DecoratedType(testClass.Class);
-        var isCleanTestClass = testClass.Class.Interfaces.Any(i => i.ToRuntimeType() == typeof(ICleanTest));
+        var isCleanTestClass = testClass.Class.IsCleanTest();
         var globalRequirements = ExtractRequirements(decoratedClass);
 
         var options = (includeSourceInformation, messageBus, discoveryOptions, testCaseDiscoveryOptions, isCleanTestClass, globalRequirements);

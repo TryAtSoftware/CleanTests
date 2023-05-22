@@ -7,6 +7,7 @@ using TryAtSoftware.CleanTests.Sample.Utilities;
 using TryAtSoftware.CleanTests.Sample.Utilities.Animals;
 using Xunit.Abstractions;
 
+[TestSuiteGenericTypeMapping(typeof(NumericAttribute), typeof(int))]
 public class GenericTest<[Numeric] T> : CleanTest
     where T : notnull
 {

@@ -42,4 +42,6 @@ public static class XUnitFrameworkExtensions
         if (node.Dependencies.Count == 0) return value;
         return $"{value} ({string.Join(", ", node.Dependencies.Select(x => x.GetUniqueId()))})";
     }
+
+    public static bool IsCleanTest(this ITypeInfo? typeInfo) => typeInfo is not null && typeInfo.Interfaces.Any(i => i.ToRuntimeType() == typeof(ICleanTest));
 }
