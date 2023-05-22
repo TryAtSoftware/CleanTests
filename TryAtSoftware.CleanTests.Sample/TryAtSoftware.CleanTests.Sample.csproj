@@ -30,4 +30,10 @@
         <ProjectReference Include="..\TryAtSoftware.CleanTests.Sample.Mathematics\TryAtSoftware.CleanTests.Sample.Mathematics.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Update="xunit.runner.json">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
 </Project>
