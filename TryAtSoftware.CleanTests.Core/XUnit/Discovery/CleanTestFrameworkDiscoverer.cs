@@ -10,6 +10,7 @@ using TryAtSoftware.CleanTests.Core.XUnit.Extensions;
 using TryAtSoftware.CleanTests.Core.XUnit.Interfaces;
 using TryAtSoftware.CleanTests.Core.XUnit.Wrappers;
 using TryAtSoftware.Extensions.Collections;
+using TryAtSoftware.Extensions.Reflection;
 using Xunit;
 using Xunit.Abstractions;
 using Xunit.Sdk;
@@ -31,11 +32,32 @@ public class CleanTestFrameworkDiscoverer : TestFrameworkDiscoverer
     protected override ITestClass CreateTestClass(ITypeInfo @class)
     {
         var collection = this._fallbackTestFrameworkDiscoverer.TestCollectionFactory.Get(@class);
-        var wrappedXUnitTypeInfo = new CleanTestReflectionTypeInfoWrapper(@class);
+        
+        var genericTypesMap = ExtractGenericTypesMap(@class);
+        var runtimeClass = @class.ToRuntimeType();
 
-        // @class.Name -> Fully qualified type name
+        if (runtimeClass.IsGenericType)
+        {
+            try
+            {
+                var genericTypesSetup = runtimeClass.ExtractGenericParametersSetup(genericTypesMap);
+                runtimeClass = runtimeClass.MakeGenericType(genericTypesSetup);
+            }
+            catch (Exception e)
+            {
+                var diagnosticMessage = new DiagnosticMessage($"Exception occurred while trying to build the generic type {TypeNames.Get(runtimeClass)}: {e.Message}");
+                this.DiagnosticMessageSink.OnMessage(diagnosticMessage);
+
+                return null!;
+            }
+        }
+        
+        var xUnitTypeInfo = Reflector.Wrap(runtimeClass);
+        var wrappedXUnitTypeInfo = new CleanTestReflectionTypeInfoWrapper(xUnitTypeInfo);
+        
+        // xUnitTypeInfo.Name -> Fully qualified type name
         // The subsequently created wrapper's `Name` property should expose a readable value for generic types.
-        return new CleanTestClassWrapper(collection, wrappedXUnitTypeInfo, @class.Name);
+        return new CleanTestClassWrapper(collection, wrappedXUnitTypeInfo, xUnitTypeInfo.Name);
     }
 
     /// <inheritdoc />

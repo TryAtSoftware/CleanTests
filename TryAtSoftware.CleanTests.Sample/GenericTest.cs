@@ -7,7 +7,6 @@ using TryAtSoftware.CleanTests.Sample.Utilities;
 using TryAtSoftware.CleanTests.Sample.Utilities.Animals;
 using Xunit.Abstractions;
 
-[TestSuiteGenericTypeMapping(typeof(NumericAttribute), typeof(int))]
 public class GenericTest<[Numeric] T> : CleanTest
     where T : notnull
 {
@@ -18,6 +17,10 @@ public class GenericTest<[Numeric] T> : CleanTest
 
     [CleanFact]
     public void StandardFact() => Assert.Equal(4, 2 + 2);
+
+    [CleanTheory]
+    [MemberData(nameof(GetTestData))]
+    public void StandardTheory(int number) => Assert.True(number > 0);
 
     [CleanFact]
     [WithRequirements(Categories.Animals)]
@@ -52,5 +55,10 @@ public class GenericTest<[Numeric] T> : CleanTest
         var zoo2 = this.GetOptionalGlobalService(typeof(IZoo));
         Assert.Null(animal2);
         Assert.Null(zoo2);
+    }
+
+    public static IEnumerable<object[]> GetTestData()
+    {
+        yield return new object[] { 1 };
     }
 }

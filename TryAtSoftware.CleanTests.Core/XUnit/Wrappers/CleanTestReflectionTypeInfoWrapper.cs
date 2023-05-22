@@ -10,16 +10,15 @@ using Xunit.Abstractions;
 /// </summary>
 public class CleanTestReflectionTypeInfoWrapper : IReflectionTypeInfo
 {
-    private readonly ITypeInfo _wrapped;
+    private readonly IReflectionTypeInfo _wrapped;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CleanTestReflectionTypeInfoWrapper"/> class.
     /// </summary>
-    /// <param name="wrapped">The wrapped <see cref="ITypeInfo"/> instance.</param>
-    public CleanTestReflectionTypeInfoWrapper(ITypeInfo wrapped)
+    /// <param name="wrapped">The wrapped <see cref="IReflectionTypeInfo"/> instance.</param>
+    public CleanTestReflectionTypeInfoWrapper(IReflectionTypeInfo wrapped)
     {
         this._wrapped = wrapped ?? throw new ArgumentNullException(nameof(wrapped));
-        this.Type = wrapped.ToRuntimeType();
     }
 
     /// <inheritdoc/>
@@ -50,7 +49,7 @@ public class CleanTestReflectionTypeInfoWrapper : IReflectionTypeInfo
     public string Name => $"{this.Type.Namespace}.{this.Type.Name}";
 
     /// <inheritdoc/>
-    public Type Type { get; }
+    public Type Type => this._wrapped.Type;
 
     /// <inheritdoc/>
     public IEnumerable<IAttributeInfo> GetCustomAttributes(string assemblyQualifiedAttributeTypeName) => this._wrapped.GetCustomAttributes(assemblyQualifiedAttributeTypeName);

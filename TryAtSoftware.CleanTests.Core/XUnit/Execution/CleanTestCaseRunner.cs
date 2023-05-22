@@ -1,12 +1,10 @@
 ﻿namespace TryAtSoftware.CleanTests.Core.XUnit.Execution;
 
 using System;
-using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using TryAtSoftware.CleanTests.Core.XUnit.Interfaces;
-using TryAtSoftware.Extensions.Reflection;
 using Xunit.Sdk;
 
 public class CleanTestCaseRunner : TestCaseRunner<ICleanTestCase>
@@ -33,24 +31,6 @@ public class CleanTestCaseRunner : TestCaseRunner<ICleanTestCase>
         var testMethod = this.TestCase.TestMethod.Method;
         var testClass = this.TestCase.TestMethod.TestClass.Class;
 
-        var originalRuntimeType = testClass.ToRuntimeType();
-        var originalRuntimeMethod = testMethod.ToRuntimeMethod();
-        if (!testClass.IsGenericType) return (originalRuntimeType, originalRuntimeMethod);
-
-        try
-        {
-            var genericTypesSetup = originalRuntimeType.ExtractGenericParametersSetup(this.TestCase.CleanTestCaseData.GenericTypesMap);
-            var genericRuntimeType = originalRuntimeType.MakeGenericType(genericTypesSetup);
-
-            var methodParameterTypes = testMethod.GetParameters().Select(x => x.ParameterType.ToRuntimeType()).ToArray();
-            var genericRuntimeMethod = genericRuntimeType.GetMethod(testMethod.Name, methodParameterTypes);
-            return (genericRuntimeType, genericRuntimeMethod);
-        }
-        catch (Exception e)
-        {
-            // If the generic type cannot be constructed successfully, we add the exception to the aggregator and return the original runtime type and method so that the `Clean test runner`can subsequently send the required messages denoting test failure.
-            this.Aggregator.Add(e);
-            return (originalRuntimeType, originalRuntimeMethod);
-        }
+        return (testClass.ToRuntimeType(), testMethod.ToRuntimeMethod());
     }
 }
