@@ -5,6 +5,7 @@ using TryAtSoftware.CleanTests.Core;
 using TryAtSoftware.CleanTests.Core.Attributes;
 using TryAtSoftware.CleanTests.Core.XUnit;
 using TryAtSoftware.CleanTests.Core.XUnit.Execution;
+using TryAtSoftware.CleanTests.UnitTests.Constants;
 using TryAtSoftware.CleanTests.UnitTests.Extensions;
 using TryAtSoftware.CleanTests.UnitTests.Mocks;
 using Xunit.Abstractions;
@@ -13,7 +14,7 @@ public class CleanUtilitiesDistributionTests
 {
     private const string Category = "_";
     
-    [Theory(Timeout = 1000)]
+    [Theory(Timeout = TestExecutionConstants.Timeout)]
     [InlineData(true, typeof(TestClassConsumingGlobalUtilities))]
     [InlineData(false, typeof(TestClassConsumingLocalUtilities))]
     public async Task UtilitiesDistributionShouldHaveProperErrorHandling(bool isGlobal, Type testClass)

@@ -5,13 +5,14 @@ using TryAtSoftware.CleanTests.Core;
 using TryAtSoftware.CleanTests.Core.Attributes;
 using TryAtSoftware.CleanTests.Core.XUnit;
 using TryAtSoftware.CleanTests.Core.XUnit.Execution;
+using TryAtSoftware.CleanTests.UnitTests.Constants;
 using TryAtSoftware.CleanTests.UnitTests.Extensions;
 using TryAtSoftware.CleanTests.UnitTests.Mocks;
 using Xunit.Abstractions;
 
 public class GenericAutomationTests
 {
-    [Fact(Timeout = 1000)]
+    [Fact(Timeout = TestExecutionConstants.Timeout)]
     public async Task TestCasesShouldFailForIncompleteGenericTestClasses()
     {
         var reflectionMocks = ReflectionMocks.MockReflectionSuite(Assembly.GetExecutingAssembly(), typeof(IncompleteGenericTestClass<>));
@@ -22,7 +23,7 @@ public class GenericAutomationTests
         Assert.Empty(testCases);
     }
     
-    [Fact(Timeout = 1000)]
+    [Fact(Timeout = TestExecutionConstants.Timeout)]
     public async Task TestCasesShouldPassForCompleteGenericTestClasses()
     {
         var reflectionMocks = ReflectionMocks.MockReflectionSuite(Assembly.GetExecutingAssembly(), typeof(CompleteGenericTestClass<>));
