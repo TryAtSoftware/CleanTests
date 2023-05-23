@@ -9,6 +9,9 @@ using Xunit.Sdk;
 
 public static class DiscoveryExtensions
 {
+    private const int DelayBetweenDiscoveryRetries = 50;
+    private const int MaxDiscoveryRetries = 20;
+    
     public static async Task<IEnumerable<IXunitTestCase>> DiscoverTestCasesAsync(this IAssemblyInfo assembly, CleanTestAssemblyData assemblyData, TestComponentMocksSuite testComponentMocks)
     {
         Assert.NotNull(assembly);
@@ -32,14 +35,14 @@ public static class DiscoveryExtensions
         var testFrameworkDiscoverer = new CleanTestFrameworkDiscoverer(assembly, testComponentMocks.SourceInformationProvider, testComponentMocks.DiagnosticMessageSink, assemblyData);
         testFrameworkDiscoverer.Find(includeSourceInformation: true, discoveryMessageSinkMock.Object, testComponentMocks.TestFrameworkDiscoveryOptions);
 
-        var repetitionId = 0;
-        while (!discoveryIsOver && repetitionId < 10)
+        var retryId = 0;
+        while (!discoveryIsOver && retryId < MaxDiscoveryRetries)
         {
-            await Task.Delay(100);
-            repetitionId++;
+            await Task.Delay(DelayBetweenDiscoveryRetries);
+            retryId++;
         }
         
-        Assert.True(discoveryIsOver, "The discovery process did not finish in time.");
+        Assert.True(discoveryIsOver, $"The discovery process did not finish in time after {MaxDiscoveryRetries} retries.");
         return discoveredTestCases;
     }
 }

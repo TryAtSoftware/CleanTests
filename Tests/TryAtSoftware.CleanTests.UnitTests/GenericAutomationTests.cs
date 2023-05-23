@@ -36,7 +36,7 @@ public class GenericAutomationTests
         Assert.NotNull(executionResult);
         Assert.Equal(0, executionResult.Failed);
         Assert.Equal(0, executionResult.Skipped);
-        Assert.Equal(1, executionResult.Total);
+        Assert.Equal(4, executionResult.Total);
     }
 
     private class IncompleteGenericTestClass<T> : CleanTest
@@ -68,7 +68,21 @@ public class GenericAutomationTests
         }
 
         [Fact]
-        public static void Test() => Assert.NotNull(new T());
+        public static void Fact() => Assert.NotNull(new T());
+        
+        [Theory]
+        [MemberData(nameof(GetTheoryData))]
+        public static void Theory(int iterations)
+        {
+            for (var i = 0; i < iterations; i++) Assert.NotNull(new T());
+        }
+
+        public static IEnumerable<object[]> GetTheoryData()
+        {
+            yield return new object[] { 1 };
+            yield return new object[] { 2 };
+            yield return new object[] { 3 };
+        }
     }
 #nullable restore
 }
