@@ -43,7 +43,7 @@ public class CleanUtilitiesDistributionTests
         }
         
         [CleanFact, WithRequirements(Category)]
-        public void Test() => this.GetGlobalService<InconclusiveUtility>();
+        public void Test() => Assert.ThrowsAny<Exception>(this.GetGlobalService<InconclusiveUtility>);
     }
 
     private class TestClassConsumingLocalUtilities : CleanTest
@@ -54,7 +54,7 @@ public class CleanUtilitiesDistributionTests
         }
         
         [CleanFact, WithRequirements(Category)]
-        public void Test() => this.GetService<InconclusiveUtility>();
+        public void Test() => Assert.ThrowsAny<Exception>(this.GetService<InconclusiveUtility>);
     }
 
     private class InconclusiveUtility
