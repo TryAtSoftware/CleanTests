@@ -4,27 +4,27 @@ using System.Reflection;
 using TryAtSoftware.CleanTests.Core;
 using TryAtSoftware.CleanTests.Core.Attributes;
 using TryAtSoftware.CleanTests.Core.XUnit;
-using TryAtSoftware.CleanTests.Core.XUnit.Discovery;
 using TryAtSoftware.CleanTests.Core.XUnit.Execution;
+using TryAtSoftware.CleanTests.UnitTests.Extensions;
 using TryAtSoftware.CleanTests.UnitTests.Mocks;
 using Xunit.Abstractions;
 
 public class CleanUtilitiesDistributionTests
 {
+    private const string Category = "_";
+    
     [Theory(Timeout = 1000)]
-    [InlineData(true, nameof(ClassWithTests.TestGlobalUtilityDistribution))]
-    [InlineData(false, nameof(ClassWithTests.TestNonGlobalUtilityDistribution))]
-    public async Task UtilitiesDistributionShouldHaveProperErrorHandling(bool isGlobal, string methodName)
+    [InlineData(true, typeof(TestClassConsumingGlobalUtilities))]
+    [InlineData(false, typeof(TestClassConsumingLocalUtilities))]
+    public async Task UtilitiesDistributionShouldHaveProperErrorHandling(bool isGlobal, Type testClass)
     {
-        var reflectionMocks = ReflectionMocks.MockReflectionSuite(Assembly.GetExecutingAssembly(), typeof(ClassWithTests), methodName, new CleanFactAttribute());
+        var reflectionMocks = ReflectionMocks.MockReflectionSuite(Assembly.GetExecutingAssembly(), testClass);
         var testComponentMocks = reflectionMocks.MockTestComponentsSuite();
 
-        var cleanUtilityDescriptor = new CleanUtilityDescriptor("_", typeof(InconclusiveUtility), "Inconclusive utility", isGlobal);
+        var cleanUtilityDescriptor = new CleanUtilityDescriptor(Category, typeof(InconclusiveUtility), "Inconclusive utility", isGlobal);
         var assemblyData = new CleanTestAssemblyData(new[] { cleanUtilityDescriptor });
-
-        var testCaseDiscoverer = new TestableTestCaseDiscoverer(testComponentMocks.DiagnosticMessageSink, new TestCaseDiscoveryOptions(), assemblyData.CleanUtilities, assemblyData) { TestMethodArguments = new[] { Array.Empty<object>() } };
-
-        var testCases = testCaseDiscoverer.Discover(testComponentMocks.TestFrameworkDiscoveryOptions, testComponentMocks.TestMethod, reflectionMocks.AttributeInfo);
+        
+        var testCases = await reflectionMocks.AssemblyInfo.DiscoverTestCasesAsync(assemblyData, testComponentMocks);
         var cleanTestAssemblyRunner = new CleanTestAssemblyRunner(testComponentMocks.TestAssembly, testCases, testComponentMocks.DiagnosticMessageSink, testComponentMocks.ExecutionMessageSink, testComponentMocks.TestFrameworkExecutionOptions, assemblyData);
 
         var executionResult = await cleanTestAssemblyRunner.RunAsync();
@@ -34,16 +34,26 @@ public class CleanUtilitiesDistributionTests
         Assert.Equal(1, executionResult.Total);
     }
 
-    private class ClassWithTests : CleanTest
+    private class TestClassConsumingGlobalUtilities : CleanTest
     {
-        public ClassWithTests(ITestOutputHelper testOutputHelper)
+        public TestClassConsumingGlobalUtilities(ITestOutputHelper testOutputHelper)
             : base(testOutputHelper)
         {
         }
         
-        public void TestGlobalUtilityDistribution() => this.GetGlobalService<InconclusiveUtility>();
+        [CleanFact, WithRequirements(Category)]
+        public void Test() => this.GetGlobalService<InconclusiveUtility>();
+    }
 
-        public void TestNonGlobalUtilityDistribution() => this.GetService<InconclusiveUtility>();
+    private class TestClassConsumingLocalUtilities : CleanTest
+    {
+        public TestClassConsumingLocalUtilities(ITestOutputHelper testOutputHelper)
+            : base(testOutputHelper)
+        {
+        }
+        
+        [CleanFact, WithRequirements(Category)]
+        public void Test() => this.GetService<InconclusiveUtility>();
     }
 
     private class InconclusiveUtility

@@ -43,16 +43,15 @@ internal static class TestComponentMocks
         var testAssembly = reflectionMocks.AssemblyInfo.MockTestAssembly();
         var testCollection = testAssembly.MockTestCollection();
         var testClass = testCollection.MockTestClass(reflectionMocks.TypeInfo);
-        var testMethod = testClass.MockTestMethod(reflectionMocks.MethodInfo);
 
         return new TestComponentMocksSuite
         {
             TestAssembly = testAssembly,
             TestCollection = testCollection,
             TestClass = testClass,
-            TestMethod = testMethod,
             DiagnosticMessageSink = MockMessageSink(),
             ExecutionMessageSink = MockMessageSink(),
+            SourceInformationProvider = MockSourceInformationProvider(),
             TestFrameworkDiscoveryOptions = MockTestFrameworkDiscoveryOptions(),
             TestFrameworkExecutionOptions = MockTestFrameworkExecutionOptions()
         };
