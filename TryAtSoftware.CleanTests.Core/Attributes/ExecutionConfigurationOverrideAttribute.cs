@@ -7,14 +7,17 @@ using TryAtSoftware.CleanTests.Core.Internal;
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = false)]
 public class ExecutionConfigurationOverrideAttribute : Attribute
 {
-    private int? _maxDegreeOfParallelism = CleanTestConstants.MaxDegreeOfParallelism;
-
-    public int? MaxDegreeOfParallelism
+    private int _maxDegreeOfParallelism;
+    
+    internal bool MaxDegreeOfParallelismIsSet { get; private set; }
+    
+    public int MaxDegreeOfParallelism
     {
-        get => this._maxDegreeOfParallelism;
+        get => this._maxDegreeOfParallelism;        
         set
         {
-            if (value.HasValue) Validator.ValidateMaxDegreeOfParallelism(value.Value);
+            Validator.ValidateMaxDegreeOfParallelism(value);
+            this.MaxDegreeOfParallelismIsSet = true;
             this._maxDegreeOfParallelism = value;
         }
     }

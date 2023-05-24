@@ -73,7 +73,7 @@ public class CleanTestMethodRunner : XunitTestMethodRunner
         var overrideAttribute = reflect.GetCustomAttribute<ExecutionConfigurationOverrideAttribute>();
 
         if (overrideAttribute is null) return;
-        if (overrideAttribute.MaxDegreeOfParallelism.HasValue) config.MaxDegreeOfParallelism = overrideAttribute.MaxDegreeOfParallelism.Value;
+        if (overrideAttribute.MaxDegreeOfParallelismIsSet) config.MaxDegreeOfParallelism = overrideAttribute.MaxDegreeOfParallelism;
     }
 
     private class ExecutionConfiguration

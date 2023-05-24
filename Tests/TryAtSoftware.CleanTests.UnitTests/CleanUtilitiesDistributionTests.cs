@@ -14,7 +14,7 @@ public class CleanUtilitiesDistributionTests
 {
     private const string Category = "_";
     
-    [Theory(Timeout = TestExecutionConstants.Timeout)]
+    [Theory(Timeout = UnitTestConstants.Timeout)]
     [InlineData(true, typeof(TestClassConsumingGlobalUtilities))]
     [InlineData(false, typeof(TestClassConsumingLocalUtilities))]
     public async Task UtilitiesDistributionShouldHaveProperErrorHandling(bool isGlobal, Type testClass)
