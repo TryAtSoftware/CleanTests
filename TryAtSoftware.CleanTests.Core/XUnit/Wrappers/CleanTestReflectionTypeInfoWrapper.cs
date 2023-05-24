@@ -19,7 +19,6 @@ public class CleanTestReflectionTypeInfoWrapper : IReflectionTypeInfo
     public CleanTestReflectionTypeInfoWrapper(ITypeInfo wrapped)
     {
         this._wrapped = wrapped ?? throw new ArgumentNullException(nameof(wrapped));
-        this.Type = wrapped.ToRuntimeType();
     }
 
     /// <inheritdoc/>
@@ -50,7 +49,7 @@ public class CleanTestReflectionTypeInfoWrapper : IReflectionTypeInfo
     public string Name => $"{this.Type.Namespace}.{this.Type.Name}";
 
     /// <inheritdoc/>
-    public Type Type { get; }
+    public Type Type => this._wrapped.ToRuntimeType();
 
     /// <inheritdoc/>
     public IEnumerable<IAttributeInfo> GetCustomAttributes(string assemblyQualifiedAttributeTypeName) => this._wrapped.GetCustomAttributes(assemblyQualifiedAttributeTypeName);
