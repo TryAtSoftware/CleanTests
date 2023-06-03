@@ -58,7 +58,7 @@ public class CleanTestMethodRunner : XunitTestMethodRunner
         return config;
     }
 
-    private class ExecutionConfiguration
+    private sealed class ExecutionConfiguration
     {
         public int MaxDegreeOfParallelism { get; set; }
     }
