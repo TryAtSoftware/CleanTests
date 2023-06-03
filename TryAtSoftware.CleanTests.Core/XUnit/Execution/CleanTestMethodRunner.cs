@@ -3,7 +3,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
@@ -49,31 +48,14 @@ public class CleanTestMethodRunner : XunitTestMethodRunner
     {
         var config = new ExecutionConfiguration { MaxDegreeOfParallelism = this._assemblyData.MaxDegreeOfParallelism };
 
-        var typeHierarchy = new Stack<Type>();
-        var iter = this.Class.Type;
-        while (iter != null)
+        var configurationOverrides = this._assemblyData.HierarchyScanner.ScanForAttribute<ExecutionConfigurationOverrideAttribute>(this.Method.MethodInfo);
+        foreach (var configOverride in configurationOverrides)
         {
-            typeHierarchy.Push(iter);
-            iter = iter.BaseType;
+            if (configOverride.MaxDegreeOfParallelismIsSet)
+                config.MaxDegreeOfParallelism = configOverride.MaxDegreeOfParallelism;
         }
-        
-        while (typeHierarchy.Count > 0)
-        {
-            var currentType = typeHierarchy.Pop();
-            ExtractExecutionConfiguration(currentType, config);
-        }
-        
-        ExtractExecutionConfiguration(this.Method.MethodInfo, config);
 
         return config;
-    }
-
-    private static void ExtractExecutionConfiguration(MemberInfo reflect, ExecutionConfiguration config)
-    {
-        var overrideAttribute = reflect.GetCustomAttribute<ExecutionConfigurationOverrideAttribute>();
-
-        if (overrideAttribute is null) return;
-        if (overrideAttribute.MaxDegreeOfParallelismIsSet) config.MaxDegreeOfParallelism = overrideAttribute.MaxDegreeOfParallelism;
     }
 
     private class ExecutionConfiguration
