@@ -2,6 +2,7 @@
 
 using System.Reflection;
 using Moq;
+using TryAtSoftware.Extensions.Reflection.Interfaces;
 using Xunit.Abstractions;
 using Xunit.Sdk;
 
@@ -104,4 +105,12 @@ internal static class ReflectionMocks
 
         return new ReflectionMocksSuite(assemblyInfo, typeInfo);
     }
+
+    internal static IHierarchyScanner MockHierarchyScanner<TAttribute>(Type type, string memberName, TAttribute[] attributes)
+        where TAttribute : Attribute
+    {
+        var mockedHierarchyScanner = new Mock<IHierarchyScanner>();
+        mockedHierarchyScanner.Setup(x => x.ScanForAttribute<TAttribute>(It.Is<MemberInfo>(mi => mi .ReflectedType == type && mi.Name == memberName))).Returns<MemberInfo>(_ => attributes);
+        return mockedHierarchyScanner.Object;
+    } 
 }

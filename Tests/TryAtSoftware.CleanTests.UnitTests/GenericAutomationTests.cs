@@ -12,7 +12,7 @@ using Xunit.Abstractions;
 
 public class GenericAutomationTests
 {
-    [Fact(Timeout = TestExecutionConstants.Timeout)]
+    [Fact(Timeout = UnitTestConstants.Timeout)]
     public async Task TestCasesShouldFailForIncompleteGenericTestClasses()
     {
         var reflectionMocks = ReflectionMocks.MockReflectionSuite(Assembly.GetExecutingAssembly(), typeof(IncompleteGenericTestClass<>));
@@ -23,7 +23,7 @@ public class GenericAutomationTests
         Assert.Empty(testCases);
     }
     
-    [Fact(Timeout = TestExecutionConstants.Timeout)]
+    [Fact(Timeout = UnitTestConstants.Timeout)]
     public async Task TestCasesShouldPassForCompleteGenericTestClasses()
     {
         var reflectionMocks = ReflectionMocks.MockReflectionSuite(Assembly.GetExecutingAssembly(), typeof(CompleteGenericTestClass<>));

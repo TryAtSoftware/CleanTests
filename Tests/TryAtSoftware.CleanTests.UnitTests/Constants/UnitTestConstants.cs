@@ -1,6 +1,6 @@
 ﻿namespace TryAtSoftware.CleanTests.UnitTests.Constants;
 
-public static class TestExecutionConstants
+public static class UnitTestConstants
 {
     public const int Timeout = 2000;
 }

@@ -14,7 +14,7 @@ public class ConfigureCleanTestsFrameworkAttribute : Attribute
         get => this._maxDegreeOfParallelism;
         set
         {
-            if (value <= 0) throw new ArgumentException("The value max degree of parallelism should be always positive.");
+            Validator.ValidateMaxDegreeOfParallelism(value);
             this._maxDegreeOfParallelism = value;
         }
     }
