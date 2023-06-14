@@ -1,7 +1,6 @@
 ﻿namespace TryAtSoftware.CleanTests.Core.Attributes;
 
 using System;
-using TryAtSoftware.CleanTests.Core.Enums;
 using TryAtSoftware.CleanTests.Core.Internal;
 
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = false)]
