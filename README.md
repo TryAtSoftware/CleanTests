@@ -88,6 +88,29 @@ Example:
 [assembly: TryAtSoftware.CleanTests.Core.Attributes.ConfigureCleanTestsFramework(UtilitiesPresentations = CleanTestMetadataPresentations.InTraits, GenericTypeMappingPresentations = CleanTestMetadataPresentations.InTraits | CleanTestMetadataPresentations.InTestCaseName, MaxDegreeOfParallelism = 3)]
 ```
 
+Moreover, the execution behavior of `clean tests` can be finely controlled by utilizing the `ExecutionConfigurationOverride` attribute.
+This attribute allows you to apply overrides either for all test methods within a given class, or for individual test methods.
+Currently, the only parameter that can be controlled is the `MaxDegreeOfParallelism` (however, it is worth noting that this will be enhanced in future releases).
+
+There are many scenarios for which this opportunity would be beneficial:
+- If we need to use multiple threads within a single test case, it is often useful to reduce the max degree of parallelism.
+
+Example:
+```C#
+[CleanFact]
+[ExecutionConfigurationOverride(MaxDegreeOfParallelism = 1)]
+public async Task OperationShouldSucceeedInParallel()
+{
+    const int parallelTasksCount = 1_000;
+    var tasks = new Task[parallelTasksCount];
+    
+    for (int i = 0; i < parallelTasksCount; i++) tasks[i] = ExecuteOperation();
+    
+    await Task.WhenAll(tasks);
+    AssertState();
+}
+```
+
 #### Metadata presentation
 
 The enum `CleanTestMetadataPresentations` offers three options used for additional configuration over the `clean tests` execution framework:
@@ -210,3 +233,7 @@ public void WriteShouldSucceed()
     writer.Write("Some text");
 }
 ```
+
+# Helpful Links
+
+For additional information on troubleshooting, migration guides, answers to Frequently asked questions (FAQ), and more, you can refer to the [Wiki pages](https://github.com/TryAtSoftware/CleanTests/wiki) of this project.

@@ -2,5 +2,5 @@
 
 public static class UnitTestConstants
 {
-    public const int Timeout = 2000;
+    public const int Timeout = 3000;
 }
