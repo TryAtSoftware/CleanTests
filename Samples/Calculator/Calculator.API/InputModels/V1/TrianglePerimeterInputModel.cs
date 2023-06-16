@@ -2,7 +2,7 @@
 
 public class TrianglePerimeterInputModel
 {
-    public required int A { get; init; }
-    public required int B { get; init; }
-    public required int C { get; init; }
+    public required int Side1 { get; init; }
+    public required int Side2 { get; init; }
+    public required int Side3 { get; init; }
 }

@@ -2,6 +2,6 @@
 
 public class RectanglePerimeterInputModel
 {
-    public required decimal Side1 { get; init; }
-    public required decimal Side2 { get; init; }
+    public required int Side1 { get; init; }
+    public required int Side2 { get; init; }
 }
