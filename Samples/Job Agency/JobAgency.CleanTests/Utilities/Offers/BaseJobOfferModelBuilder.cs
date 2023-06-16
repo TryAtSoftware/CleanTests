@@ -36,13 +36,13 @@ public abstract class BaseJobOfferModelBuilder : BaseModelBuilder<IJobOffer, Job
     {
         var randomizer = new ComplexRandomizer<JobOffer>();
         randomizer.RegisterCommonIdentifiableRandomizationRules();
-        randomizer.AddRandomizationRule(x => x.Title, this.GetTitle().AsConstantRandomizer());
-        randomizer.AddRandomizationRule(x => x.Description, new StringRandomizer());
-        randomizer.AddRandomizationRule(x => x.AgencyId, options.Agency.Id.AsConstantRandomizer());
-        randomizer.AddRandomizationRule(x => x.MinSalary, new DecimalRandomizer());
-        randomizer.AddRandomizationRule(x => x.MaxSalary, x => new DecimalRandomizer(minValue: x.MinSalary + 10));
-        randomizer.AddRandomizationRule(x => x.Requirements, setup.Requirements.ToList().AsConstantRandomizer());
-        randomizer.AddRandomizationRule(x => x.Benefits, setup.Benefits.ToList().AsConstantRandomizer());
+        randomizer.Randomize(x => x.Title, this.GetTitle().AsConstantRandomizer());
+        randomizer.Randomize(x => x.Description, new StringRandomizer());
+        randomizer.Randomize(x => x.AgencyId, options.Agency.Id.AsConstantRandomizer());
+        randomizer.Randomize(x => x.MinSalary, new DecimalRandomizer());
+        randomizer.Randomize(x => x.MaxSalary, x => new DecimalRandomizer(minValue: x.MinSalary + 10));
+        randomizer.Randomize(x => x.Requirements, setup.Requirements.ToList().AsConstantRandomizer());
+        randomizer.Randomize(x => x.Benefits, setup.Benefits.ToList().AsConstantRandomizer());
         
         return randomizer;
     }

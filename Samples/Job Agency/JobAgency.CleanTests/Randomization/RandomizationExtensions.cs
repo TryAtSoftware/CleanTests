@@ -11,6 +11,6 @@ public static class RandomizationExtensions
         where TEntity : IIdentifiable
     {
         if (randomizer is null) throw new ArgumentNullException(nameof(randomizer));
-        randomizer.AddRandomizationRule(x => x.Id, new GuidRandomizer());
+        randomizer.Randomize(x => x.Id, new GuidRandomizer());
     }
 }

@@ -27,7 +27,7 @@
         </PackageReference>
         <PackageReference Include="System.Threading.Tasks.Dataflow" Version="7.0.0" />
         <PackageReference Include="TryAtSoftware.Extensions.Collections" Version="1.1.0" />
-        <PackageReference Include="TryAtSoftware.Extensions.Reflection" Version="1.1.1-alpha.6" />
+        <PackageReference Include="TryAtSoftware.Extensions.Reflection" Version="1.1.1" />
         <PackageReference Include="xunit" Version="2.4.2" />
     </ItemGroup>
 
