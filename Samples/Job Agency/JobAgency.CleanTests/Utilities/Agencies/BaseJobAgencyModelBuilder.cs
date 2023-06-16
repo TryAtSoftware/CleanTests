@@ -14,8 +14,8 @@ public abstract class BaseJobAgencyModelBuilder : BaseModelBuilder<IJobAgency>
     {
         var randomizer = new ComplexRandomizer<JobAgency>();
         randomizer.RegisterCommonIdentifiableRandomizationRules();
-        randomizer.AddRandomizationRule(x => x.Name, new StringRandomizer());
-        randomizer.AddRandomizationRule(x => x.OfferedJobTypes, this.GetOfferedJobTypes().AsConstantRandomizer());
+        randomizer.Randomize(x => x.Name, new StringRandomizer());
+        randomizer.Randomize(x => x.OfferedJobTypes, this.GetOfferedJobTypes().AsConstantRandomizer());
         return randomizer;
     }
 

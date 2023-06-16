@@ -25,7 +25,7 @@ public class BenefitsWithInsuranceModelBuilder : BaseModelBuilder<IEnumerable<IJ
     protected override IRandomizer<IEnumerable<IJobOfferBenefit>> ConstructRandomizer(Nothing options, IEnumerable<IJobOfferBenefit> setup)
     {
         var insuranceBenefitRandomizer = new ComplexRandomizer<CanUseInsurance>();
-        insuranceBenefitRandomizer.AddRandomizationRule(x => x.Description, new StringRandomizer());
+        insuranceBenefitRandomizer.Randomize(x => x.Description, new StringRandomizer());
         var insuranceBenefit = insuranceBenefitRandomizer.PrepareRandomValue();
 
         var allBenefits = new List<IJobOfferBenefit> { insuranceBenefit };
