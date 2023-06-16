@@ -15,7 +15,7 @@ public class ApiProvider : IApiProvider, IAsyncDisposable, IDisposable
 
     public ApiProvider()
     {
-        this._resourcesManager = new ResourcesManager<string, Nothing>(_ => "test_key", this.InitializeResourceAsync, this.CleanupResourceAsync);
+        this._resourcesManager = new ResourcesManager<string, Nothing>(_ => "test_key", this.InitializeResourceAsync, (_, _) => Task.CompletedTask);
     }
 
     public Task<int> GetResourceIdAsync(Nothing options, CancellationToken cancellationToken) => this._resourcesManager.GetResourceIdAsync(options, cancellationToken);
@@ -38,8 +38,6 @@ public class ApiProvider : IApiProvider, IAsyncDisposable, IDisposable
         this._accessorsMap[resourceId] = (webApplicationFactory, accessor);
     }
 
-    private Task CleanupResourceAsync(int resourceId, CancellationToken cancellationToken) => Task.CompletedTask;
-
     public async ValueTask DisposeAsync()
     {
         if (!this.IsFirstDisposalCall()) return;
@@ -49,6 +47,7 @@ public class ApiProvider : IApiProvider, IAsyncDisposable, IDisposable
             await webApplicationFactory.DisposeAsync();
             accessor.HttpClient.Dispose();
         }
+        GC.SuppressFinalize(this);
     }
 
     public void Dispose()
@@ -60,6 +59,8 @@ public class ApiProvider : IApiProvider, IAsyncDisposable, IDisposable
             webApplicationFactory.Dispose();
             accessor.HttpClient.Dispose();
         }
+        
+        GC.SuppressFinalize(this);
     }
 
     private bool IsFirstDisposalCall()

@@ -14,4 +14,6 @@ var app = builder.Build();
 app.MapControllers();
 app.Run();
 
+#pragma warning disable S1118 // This class is needed for API tests
 public partial class Program {}
+#pragma warning restore S1118

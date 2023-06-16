@@ -23,12 +23,12 @@ public abstract class ApiCleanTest : CleanTest
     protected ApiCleanTest(ITestOutputHelper testOutputHelper)
         : base(testOutputHelper)
     {
-        this.Equalizer = this.PrepareEqualizer();
+        this.Equalizer = PrepareEqualizer();
     }
-    
-    private IApiProvider ApiProvider { get; set; }
 
-    protected IApiAccessor ApiAccessor { get; private set; }
+    private IApiProvider ApiProvider { get; set; } = null!;
+
+    protected IApiAccessor ApiAccessor { get; private set; } = null!;
     protected IApiSpecification ApiSpecification => this.GetGlobalService<IApiSpecification>();
     protected IEqualizer Equalizer { get; }
 
@@ -69,7 +69,7 @@ public abstract class ApiCleanTest : CleanTest
     protected CancellationToken GetCancellationToken() => CancellationToken.None;
 #pragma warning restore CA1822
 
-    private IEqualizer PrepareEqualizer()
+    private static IEqualizer PrepareEqualizer()
     {
         var equalizer = new Equalizer();
         var profilesProvider = new DedicatedProfileProvider();
