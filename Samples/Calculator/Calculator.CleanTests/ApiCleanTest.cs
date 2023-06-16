@@ -37,7 +37,7 @@ public abstract class ApiCleanTest : CleanTest
         this.InitializeGlobalDependenciesProvider();
         
         this.ApiProvider = this.GetGlobalService<IApiProvider>();
-        this._apiAccessorId = await this.ApiProvider.GetResourceIdAsync(Nothing.Instance, this.GetCancellationToken());
+        this._apiAccessorId = await this.ApiProvider.GetResourceIdAsync(new object(), this.GetCancellationToken());
         this.TestOutputHelper.WriteLine("The API accessor id is: {0}", this._apiAccessorId);
         this.ApiAccessor = this.ApiProvider.GetApiAccessor(this._apiAccessorId);
         

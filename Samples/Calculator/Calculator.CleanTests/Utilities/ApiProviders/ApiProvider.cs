@@ -9,22 +9,22 @@ using TryAtSoftware.CleanTests.Core.Attributes;
 [CleanUtility(InitializationCategories.ApiProvider, "default_api_provider", IsGlobal = true)]
 public class ApiProvider : IApiProvider, IAsyncDisposable, IDisposable
 {
-    private readonly ResourcesManager<string, Nothing> _resourcesManager;
+    private readonly ResourcesManager<string, object> _resourcesManager;
     private readonly ConcurrentDictionary<int, (WebApplicationFactory<Program> WebApplicationFactory, IApiAccessor ApiAccessor)> _accessorsMap = new ();
     private bool _isDisposed;
 
     public ApiProvider()
     {
-        this._resourcesManager = new ResourcesManager<string, Nothing>(_ => "test_key", this.InitializeResourceAsync, (_, _) => Task.CompletedTask);
+        this._resourcesManager = new ResourcesManager<string, object>(_ => "test_key", (_, rid, ct) => this.InitializeResourceAsync(rid, ct), (_, _) => Task.CompletedTask);
     }
 
-    public Task<int> GetResourceIdAsync(Nothing options, CancellationToken cancellationToken) => this._resourcesManager.GetResourceIdAsync(options, cancellationToken);
+    public Task<int> GetResourceIdAsync(object options, CancellationToken cancellationToken) => this._resourcesManager.GetResourceIdAsync(options, cancellationToken);
 
     public Task ReleaseResourceAsync(int resourceId, CancellationToken cancellationToken) => this._resourcesManager.ReleaseResourceAsync(resourceId, cancellationToken);
 
     public IApiAccessor GetApiAccessor(int resourceId) => this._accessorsMap[resourceId].ApiAccessor;
 
-    private Task InitializeResourceAsync(Nothing options, int resourceId, CancellationToken cancellationToken)
+    private Task InitializeResourceAsync(int resourceId, CancellationToken cancellationToken)
     {
         this.InitializeResource(resourceId);
         return Task.CompletedTask;
