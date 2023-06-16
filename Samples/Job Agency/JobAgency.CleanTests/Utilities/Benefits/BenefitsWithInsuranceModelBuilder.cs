@@ -9,8 +9,8 @@ using TryAtSoftware.Randomizer.Core;
 using TryAtSoftware.Randomizer.Core.Interfaces;
 using TryAtSoftware.Randomizer.Core.Primitives;
 
-[CleanUtility(CleanUtilitiesCategories.Benefits, "with_insurance", IsGlobal = true)]
-[WithRequirements(CleanUtilitiesCategories.Benefits)]
+[CleanUtility(CleanUtilitiesCategories.JobOfferBenefits, "with_insurance", IsGlobal = true)]
+[WithRequirements(CleanUtilitiesCategories.JobOfferBenefits)]
 public class BenefitsWithInsuranceModelBuilder : BaseModelBuilder<IEnumerable<IJobOfferBenefit>, Nothing, IEnumerable<IJobOfferBenefit>>
 {
     private readonly IModelBuilder<IEnumerable<IJobOfferBenefit>, Nothing> _benefitsModelBuilder;

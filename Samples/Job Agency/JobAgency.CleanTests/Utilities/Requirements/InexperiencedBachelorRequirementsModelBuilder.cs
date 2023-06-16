@@ -8,7 +8,7 @@ using TryAtSoftware.CleanTests.Core.Attributes;
 using TryAtSoftware.Randomizer.Core;
 using TryAtSoftware.Randomizer.Core.Interfaces;
 
-[CleanUtility(CleanUtilitiesCategories.Requirements, "inexperienced_bachelor", RequirementsCharacteristics.Medium, RequirementsCharacteristics.DoesNotRequireExperience)]
+[CleanUtility(CleanUtilitiesCategories.JobOfferRequirements, "inexperienced_bachelor", RequirementsCharacteristics.Medium, RequirementsCharacteristics.DoesNotRequireExperience)]
 public class InexperiencedBachelorRequirementsModelBuilder : BaseModelBuilder<IEnumerable<IJobOfferRequirement>>
 {
     protected override IRandomizer<IEnumerable<IJobOfferRequirement>> ConstructRandomizer()
