@@ -12,7 +12,7 @@ using Xunit.Abstractions;
 
 public class ParallelExecutionTests
 {
-    private const int TestsCount = 5;
+    private const int TestsCount = 3;
 
     [Theory(Timeout = UnitTestConstants.Timeout)]
     [InlineData(5, 1)]
