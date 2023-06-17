@@ -168,29 +168,18 @@ public abstract class BaseTestCaseDiscoverer : IXunitTestCaseDiscoverer
             return new[] { node };
         }
 
-        var ans = new List<IndividualCleanUtilityDependencyNode[]>();
+        var ans = new List<IndividualCleanUtilityDependencyNode>();
         foreach (var constructionDescriptor in constructionGraph.ConstructionDescriptors)
         {
             var current = new IndividualCleanUtilityDependencyNode[constructionDescriptor.Count][];
             for (var i = 0; i < constructionDescriptor.Count; i++)
                 current[i] = FlattenConstructionGraph(constructionDescriptor[i]);
 
-            var union = IterateAllSequences(current, x => Union(constructionGraph.Id, x));
-            ans.Add(union);
+            var nodes = IterateAllSequences(current, x => Union(constructionGraph.Id, x)).Select(x => Union(constructionGraph.Id, x.Dependencies));
+            ans.AddRange(nodes);
         }
 
-        var result = new IndividualCleanUtilityDependencyNode[ans.Count];
-        for (var i = 0; i < ans.Count; i++)
-        {
-            var node = new IndividualCleanUtilityDependencyNode(constructionGraph.Id);
-            for (var j = 0; j < ans[i].Length; j++)
-                foreach (var dependency in ans[i][j].Dependencies)
-                    node.Dependencies.Add(dependency);
-
-            result[i] = node;
-        }
-
-        return result;
+        return ans.ToArray();
     }
 
     /// <summary>
@@ -229,10 +218,10 @@ public abstract class BaseTestCaseDiscoverer : IXunitTestCaseDiscoverer
     /// </remarks>
     private static IndividualCleanUtilityDependencyNode[][] Merge(IndividualCleanUtilityDependencyNode[][] nodes) => IterateAllSequences(nodes, Duplicate);
 
-    private static IndividualCleanUtilityDependencyNode Union(string id, IndividualCleanUtilityDependencyNode[] nodes)
+    private static IndividualCleanUtilityDependencyNode Union(string id, IEnumerable<IndividualCleanUtilityDependencyNode> nodes)
     {
         var node = new IndividualCleanUtilityDependencyNode(id);
-        foreach (var dependencyInSequence in nodes) node.Dependencies.Add(dependencyInSequence);
+        foreach (var dependencyInSequence in nodes.OrEmptyIfNull().IgnoreNullValues()) node.Dependencies.Add(dependencyInSequence);
         return node;
     }
 
