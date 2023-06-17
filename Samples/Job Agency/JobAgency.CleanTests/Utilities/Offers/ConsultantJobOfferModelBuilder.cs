@@ -9,10 +9,10 @@ using TryAtSoftware.CleanTests.Core.Attributes;
 [WithRequirements(CleanUtilitiesCategories.JobOfferRequirements, CleanUtilitiesCategories.JobOfferBenefits)]
 public class ConsultantJobOfferModelBuilder : BaseJobOfferModelBuilder
 {
-    public ConsultantJobOfferModelBuilder(IModelBuilder<IEnumerable<IJobOfferRequirement>, Nothing> requirementModelBuilder, IModelBuilder<IEnumerable<IJobOfferBenefit>, Nothing> benefitModelBuilder)
+    public ConsultantJobOfferModelBuilder(IModelBuilder<IEnumerable<IJobOfferRequirement>, Nothing> requirementModelBuilder = null, IModelBuilder<IEnumerable<IJobOfferBenefit>, Nothing> benefitModelBuilder = null)
         : base(requirementModelBuilder, benefitModelBuilder)
     {
     }
-    
+
     protected override string GetTitle() => "Consultant";
 }
