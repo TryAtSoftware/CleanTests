@@ -7,7 +7,7 @@ using TryAtSoftware.CleanTests.Core.Attributes;
 
 [CleanUtility(CleanUtilitiesCategories.JobOffer, "qa")]
 [ExternalDemands(CleanUtilitiesCategories.JobAgency, JobAgencyCharacteristics.SoftwareDevelopmentIndustry)]
-[WithRequirements(CleanUtilitiesCategories.Benefits)]
+[WithRequirements(CleanUtilitiesCategories.JobOfferBenefits)]
 public class QualityAssuranceJobOfferModelBuilder : BaseJobOfferModelBuilder
 {
     public QualityAssuranceJobOfferModelBuilder(IModelBuilder<IEnumerable<IJobOfferBenefit>, Nothing> benefitModelBuilder)

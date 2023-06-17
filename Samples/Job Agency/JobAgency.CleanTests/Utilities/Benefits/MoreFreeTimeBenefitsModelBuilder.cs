@@ -8,12 +8,12 @@ using TryAtSoftware.CleanTests.Core.Attributes;
 using TryAtSoftware.Randomizer.Core;
 using TryAtSoftware.Randomizer.Core.Interfaces;
 
-[CleanUtility(CleanUtilitiesCategories.JobOfferBenefits, "more_activity", IsGlobal = true)]
-public class MoreActivityBenefitsModelBuilder : BaseModelBuilder<IEnumerable<IJobOfferBenefit>>
+[CleanUtility(CleanUtilitiesCategories.JobOfferBenefits, "more_time", IsGlobal = true)]
+public class MoreFreeTimeBenefitsModelBuilder : BaseModelBuilder<IEnumerable<IJobOfferBenefit>>
 {
     protected override IRandomizer<IEnumerable<IJobOfferBenefit>> ConstructRandomizer()
     {
-        var benefits = new IJobOfferBenefit[] { new CanHaveMoreFreeDays { Days = 5 }, new CanUseMultiSportCard { Category = "lite" } };
+        var benefits = new IJobOfferBenefit[] { new CanHaveMoreFreeDays { Days = 10 } };
         return benefits.AsConstantRandomizer();
     }
 }

@@ -6,6 +6,7 @@
         <Nullable>enable</Nullable>
 
         <IsPackable>false</IsPackable>
+        <IsTestProject>true</IsTestProject>
     </PropertyGroup>
 
     <ItemGroup>
@@ -13,8 +14,9 @@
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
+        <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="7.0.7" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.6.2" />
-        <PackageReference Include="Moq" Version="4.18.4" />
+        <PackageReference Include="TryAtSoftware.Equalizer" Version="1.0.1" />
         <PackageReference Include="TryAtSoftware.Randomizer" Version="2.0.1" />
         <PackageReference Include="xunit" Version="2.4.2" />
         <PackageReference Include="xunit.runner.visualstudio" Version="2.4.5">
@@ -28,7 +30,8 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\TryAtSoftware.CleanTests.Core\TryAtSoftware.CleanTests.Core.csproj" />
+      <ProjectReference Include="..\..\..\TryAtSoftware.CleanTests.Core\TryAtSoftware.CleanTests.Core.csproj" />
+      <ProjectReference Include="..\Calculator.API\Calculator.API.csproj" />
     </ItemGroup>
 
 </Project>

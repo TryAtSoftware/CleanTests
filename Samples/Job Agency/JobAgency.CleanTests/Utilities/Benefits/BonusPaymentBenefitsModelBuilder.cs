@@ -1,4 +1,7 @@
-﻿namespace JobAgency.CleanTests.Utilities.Benefits;
+﻿
+#if DEBUG
+
+namespace JobAgency.CleanTests.Utilities.Benefits;
 
 using JobAgency.CleanTests.Utilities.Common;
 using JobAgency.CleanTests.Utilities.Constants;
@@ -8,12 +11,14 @@ using TryAtSoftware.CleanTests.Core.Attributes;
 using TryAtSoftware.Randomizer.Core;
 using TryAtSoftware.Randomizer.Core.Interfaces;
 
-[CleanUtility(CleanUtilitiesCategories.JobOfferBenefits, "more_activity", IsGlobal = true)]
-public class MoreActivityBenefitsModelBuilder : BaseModelBuilder<IEnumerable<IJobOfferBenefit>>
+[CleanUtility(CleanUtilitiesCategories.JobOfferBenefits, "bonus", IsGlobal = true)]
+public class BonusPaymentBenefitsModelBuilder : BaseModelBuilder<IEnumerable<IJobOfferBenefit>>
 {
     protected override IRandomizer<IEnumerable<IJobOfferBenefit>> ConstructRandomizer()
     {
-        var benefits = new IJobOfferBenefit[] { new CanHaveMoreFreeDays { Days = 5 }, new CanUseMultiSportCard { Category = "lite" } };
+        var benefits = new IJobOfferBenefit[] { new CanHavePerformanceBonus() };
         return benefits.AsConstantRandomizer();
     }
 }
+
+#endif
