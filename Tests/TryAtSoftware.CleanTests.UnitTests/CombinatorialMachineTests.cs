@@ -1,10 +1,11 @@
 ﻿namespace TryAtSoftware.CleanTests.UnitTests;
 
+using TryAtSoftware.CleanTests.UnitTests.Constants;
 using TryAtSoftware.CleanTests.UnitTests.Parametrization;
 
 public class CombinatorialMachineTests
 {
-    [Theory(Timeout = 2000)]
+    [Theory(Timeout = UnitTestConstants.Timeout)]
     [MemberData(nameof(GetCombinatorialMachineSetups))]
     public async Task CombinationsShouldBeGeneratedSuccessfully(CombinatorialMachineSetup setup)
     {
