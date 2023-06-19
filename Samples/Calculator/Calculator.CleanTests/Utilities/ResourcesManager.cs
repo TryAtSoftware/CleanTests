@@ -42,15 +42,15 @@ public class ResourcesManager<TKey, TOptions>
         return resourceId;
     }
 
-    public Task ReleaseResourceAsync(int resourceId, CancellationToken cancellationToken)
+    public async Task ReleaseResourceAsync(int resourceId, CancellationToken cancellationToken)
     {
+        await this._resourceCleanupFunc(resourceId, cancellationToken);
+        
         lock (this._lockObj)
         {
             var producer = this._producersMap[resourceId];
             this._freeResourceIdentifiersMap[producer].Enqueue(resourceId);
             this._producersMap.Remove(resourceId);
         }
-
-        return this._resourceCleanupFunc(resourceId, cancellationToken);
     }
 }

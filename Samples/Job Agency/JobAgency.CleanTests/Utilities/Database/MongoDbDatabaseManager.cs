@@ -37,10 +37,10 @@ public class MongoDbDatabaseManager : IDatabaseManager
         return Task.FromResult(databaseIdToEnsure);
     }
 
-    public Task ReleaseDatabaseAsync(int databaseId, CancellationToken cancellationToken)
+    public async Task ReleaseDatabaseAsync(int databaseId, CancellationToken cancellationToken)
     {
+        await this.CleanDatabaseAsync(databaseId, cancellationToken);
         this._freeDatabaseIdentifiers.Enqueue(databaseId);
-        return this.CleanDatabaseAsync(databaseId, cancellationToken);
     }
 
     public void RegisterDependencies(int databaseId, IServiceCollection serviceCollection)
