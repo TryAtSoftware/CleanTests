@@ -20,7 +20,8 @@ If applicable, add screenshots to help explain your problem.
 
 - OS: [e.g. Windows 11, Ubuntu 23.04]
 - IDE: [e.g. Visual Studio 2022, JetBrains Rider 2023.1]
-- Version: [e.g. 1.0.0]
+- .NET Version: [e.g. .NET 7, .NET Core 3.1]
+- Package Version: [e.g. 1.0.0]
 
 **Additional context**
 Add any other context about the problem here.
