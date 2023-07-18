@@ -237,3 +237,10 @@ public void WriteShouldSucceed()
 # Helpful Links
 
 For additional information on troubleshooting, migration guides, answers to Frequently asked questions (FAQ), and more, you can refer to the [Wiki pages](https://github.com/TryAtSoftware/CleanTests/wiki) of this project.
+
+# Acknowledgements
+
+We appreciate the effort of everyone who made valuable contributions to this project with their ideas, suggestions, opinions, and source code.
+
+Furthermore, special thanks to [JetBrains](https://www.jetbrains.com/) for supporting this project!
+![JetBrains Logo](https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.png)
