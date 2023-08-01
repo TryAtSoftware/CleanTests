@@ -32,6 +32,9 @@ public class CleanUtilityDescriptor : ICleanUtilityDescriptor
     public ICleanTestInitializationCollection<string> InternalDemands { get; } = new CleanTestInitializationCollection<string>();
 
     /// <inheritdoc />
+    public ICleanTestInitializationCollection<string> OuterDemands { get; } = new CleanTestInitializationCollection<string>();
+
+    /// <inheritdoc />
     public IReadOnlyCollection<string> InternalRequirements => this._internalRequirements.AsReadOnlyCollection();
 
     public CleanUtilityDescriptor(string initializationCategory, Type type, string displayName, bool isGlobal, IEnumerable<string>? characteristics = null, IEnumerable<string>? requirements = null)

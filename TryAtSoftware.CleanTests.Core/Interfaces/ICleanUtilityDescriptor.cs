@@ -27,6 +27,11 @@ public interface ICleanUtilityDescriptor
     /// Gets a collection of demands defining conditions towards utilities the represented one internally depends on in order to be instantiated.
     /// </summary>
     ICleanTestInitializationCollection<string> InternalDemands { get; }
+    
+    /// <summary>
+    /// Gets a collection of demands defining conditions towards utilities that depend on the represented one in order to be instantiated.
+    /// </summary>
+    ICleanTestInitializationCollection<string> OuterDemands { get; }
 
     /// <summary>
     /// Gets a collection of categories the represented utility depends on in order to be instantiated.
