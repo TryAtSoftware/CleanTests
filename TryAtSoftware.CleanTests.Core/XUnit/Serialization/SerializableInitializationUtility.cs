@@ -43,16 +43,18 @@ public class SerializableInitializationUtility : IXunitSerializable
         
         var characteristics = info.GetValue<string[]>("ch");
 
-        var deserializedGlobalDemands = info.GetValue<SerializableDemand[]>("gd");
-        var deserializedLocalDemands = info.GetValue<SerializableDemand[]>("ld");
+        var deserializedExternalDemands = info.GetValue<SerializableDemand[]>("gd");
+        var deserializedInternalDemands = info.GetValue<SerializableDemand[]>("ld");
+        var deserializedOuterDemands = info.GetValue<SerializableDemand[]>("od");
 
         var deserializedRequirements = info.GetValue<string[]>("r");
         var requirements = new HashSet<string>();
         foreach (var requirement in deserializedRequirements) requirements.Add(requirement);
 
         this.CleanUtilityDescriptor = new CleanUtilityDescriptor(initializationCategory, deserializedUtilityType, utilityName, isGlobal, characteristics, requirements);
-        DeserializeDemands(deserializedGlobalDemands, this.CleanUtilityDescriptor.ExternalDemands);
-        DeserializeDemands(deserializedLocalDemands, this.CleanUtilityDescriptor.InternalDemands);
+        DeserializeDemands(deserializedExternalDemands, this.CleanUtilityDescriptor.ExternalDemands);
+        DeserializeDemands(deserializedInternalDemands, this.CleanUtilityDescriptor.InternalDemands);
+        DeserializeDemands(deserializedOuterDemands, this.CleanUtilityDescriptor.OuterDemands);
     }
 
     /// <inheritdoc />
@@ -61,13 +63,14 @@ public class SerializableInitializationUtility : IXunitSerializable
         if (info is null) throw new ArgumentNullException(nameof(info));
 
         info.AddValue("c", this.CleanUtilityDescriptor.Category);
-        info.AddValue("id", this.CleanUtilityDescriptor.Id.ToString());
+        info.AddValue("id", this.CleanUtilityDescriptor.Id);
         info.AddValue("ut", this.CleanUtilityDescriptor.Type);
         info.AddValue("un", this.CleanUtilityDescriptor.Name);
         info.AddValue("ig", this.CleanUtilityDescriptor.IsGlobal);
 
         info.AddValue("gd", Serialize(this.CleanUtilityDescriptor.ExternalDemands));
         info.AddValue("ld", Serialize(this.CleanUtilityDescriptor.InternalDemands));
+        info.AddValue("od", Serialize(this.CleanUtilityDescriptor.OuterDemands));
 
         var characteristics = this.CleanUtilityDescriptor.Characteristics.ToArray();
         info.AddValue("ch", characteristics);
