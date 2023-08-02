@@ -18,12 +18,14 @@ public class CleanTestFrameworkDiscoverer : TestFrameworkDiscoverer
 {
     private readonly FallbackTestFrameworkDiscoverer _fallbackTestFrameworkDiscoverer;
     private readonly CleanTestAssemblyData _cleanTestAssemblyData;
+    private readonly ConstructionCache _constructionCache;
 
     public CleanTestFrameworkDiscoverer(IAssemblyInfo assemblyInfo, ISourceInformationProvider sourceProvider, IMessageSink diagnosticMessageSink, CleanTestAssemblyData assemblyData)
         : base(assemblyInfo, sourceProvider, diagnosticMessageSink)
     {
         this._cleanTestAssemblyData = assemblyData ?? throw new ArgumentNullException(nameof(assemblyData));
         this._fallbackTestFrameworkDiscoverer = new FallbackTestFrameworkDiscoverer(assemblyInfo, sourceProvider, diagnosticMessageSink);
+        this._constructionCache = new ConstructionCache();
         this.DisposalTracker.Add(this._fallbackTestFrameworkDiscoverer);
     }
 
@@ -99,7 +101,7 @@ public class CleanTestFrameworkDiscoverer : TestFrameworkDiscoverer
         if (testCaseDiscovererType is null) return;
 
         var customInitializationUtilitiesCollection = this.GetInitializationUtilities(methodAttributeContainer, options.GlobalRequirements);
-        var testCaseDiscoverer = Activator.CreateInstance(testCaseDiscovererType, this.DiagnosticMessageSink, options.TestCaseDiscoveryOptions, customInitializationUtilitiesCollection, this._cleanTestAssemblyData) as IXunitTestCaseDiscoverer;
+        var testCaseDiscoverer = Activator.CreateInstance(testCaseDiscovererType, this.DiagnosticMessageSink, options.TestCaseDiscoveryOptions, customInitializationUtilitiesCollection, this._cleanTestAssemblyData, this._constructionCache) as IXunitTestCaseDiscoverer;
 
         if (testCaseDiscoverer is null) return;
 

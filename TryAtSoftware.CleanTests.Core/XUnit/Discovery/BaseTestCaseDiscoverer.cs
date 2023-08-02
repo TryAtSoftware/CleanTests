@@ -18,13 +18,15 @@ public abstract class BaseTestCaseDiscoverer : IXunitTestCaseDiscoverer
     private readonly TestCaseDiscoveryOptions _testCaseDiscoveryOptions;
     private readonly ICleanTestInitializationCollection<ICleanUtilityDescriptor> _initializationUtilitiesCollection;
     private readonly CleanTestAssemblyData _cleanTestAssemblyData;
+    private readonly ConstructionCache _constructionCache;
 
-    protected BaseTestCaseDiscoverer(IMessageSink diagnosticMessageSink, TestCaseDiscoveryOptions testCaseDiscoveryOptions, ICleanTestInitializationCollection<ICleanUtilityDescriptor> initializationUtilitiesCollection, CleanTestAssemblyData cleanTestAssemblyData)
+    protected BaseTestCaseDiscoverer(IMessageSink diagnosticMessageSink, TestCaseDiscoveryOptions testCaseDiscoveryOptions, ICleanTestInitializationCollection<ICleanUtilityDescriptor> initializationUtilitiesCollection, CleanTestAssemblyData cleanTestAssemblyData, ConstructionCache constructionCache)
     {
         this._diagnosticMessageSink = diagnosticMessageSink ?? throw new ArgumentNullException(nameof(diagnosticMessageSink));
         this._testCaseDiscoveryOptions = testCaseDiscoveryOptions ?? throw new ArgumentNullException(nameof(testCaseDiscoveryOptions));
         this._initializationUtilitiesCollection = initializationUtilitiesCollection ?? throw new ArgumentNullException(nameof(initializationUtilitiesCollection));
         this._cleanTestAssemblyData = cleanTestAssemblyData ?? throw new ArgumentNullException(nameof(cleanTestAssemblyData));
+        this._constructionCache = constructionCache ?? throw new ArgumentNullException(nameof(constructionCache));
     }
 
     /// <inheritdoc />
@@ -38,7 +40,7 @@ public abstract class BaseTestCaseDiscoverer : IXunitTestCaseDiscoverer
         var testCases = new List<IXunitTestCase>();
         foreach (var variation in variations)
         {
-            var (isSuccessful, dependenciesSet) = GetDependencies(variation.Values, this._cleanTestAssemblyData);
+            var (isSuccessful, dependenciesSet) = this.GetDependencies(variation.Values);
             if (!isSuccessful) continue;
 
             foreach (var dependencies in dependenciesSet)
@@ -53,45 +55,63 @@ public abstract class BaseTestCaseDiscoverer : IXunitTestCaseDiscoverer
 
     protected abstract IEnumerable<object[]> GetTestMethodArguments(IMessageSink diagnosticMessageSink, ITestMethod testMethod);
 
-    private static (bool IsSuccessful, IndividualCleanUtilityDependencyNode[][] DependencyNodes) GetDependencies(IEnumerable<string> utilities, CleanTestAssemblyData assemblyData)
+    private (bool IsSuccessful, IndividualCleanUtilityDependencyNode[][] DependencyNodes) GetDependencies(IEnumerable<string> utilityCategories)
     {
         var dependenciesConstructionGraphs = new List<FullCleanUtilityConstructionGraph>();
-        foreach (var utilityId in utilities)
+        foreach (var utilityId in utilityCategories)
         {
-            var utility = assemblyData.CleanUtilitiesById[utilityId];
-            var (isSuccessful, constructionGraph) = BuildConstructionGraph(utility, assemblyData, new HashSet<string>());
-            if (!isSuccessful) return (IsSuccessful: false, DependencyNodes: Array.Empty<IndividualCleanUtilityDependencyNode[]>());
+            var constructionGraph = this.AccessConstructionGraph(utilityId);
+            if (constructionGraph is null) return (IsSuccessful: false, DependencyNodes: Array.Empty<IndividualCleanUtilityDependencyNode[]>());
 
-            if (constructionGraph is not null) dependenciesConstructionGraphs.Add(constructionGraph);
+            dependenciesConstructionGraphs.Add(constructionGraph);
         }
 
         var individualRepresentationsOfConstructionGraphs = dependenciesConstructionGraphs.Select(FlattenConstructionGraph).ToArray();
         return (IsSuccessful: true, DependencyNodes: Merge(individualRepresentationsOfConstructionGraphs));
     }
 
-    private static (bool IsSuccessful, FullCleanUtilityConstructionGraph? ConstructionGraph) BuildConstructionGraph(ICleanUtilityDescriptor? utility, CleanTestAssemblyData? assemblyData, HashSet<string> visited)
+    private FullCleanUtilityConstructionGraph? AccessConstructionGraph(string utilityId)
     {
-        if (utility is null || assemblyData is null) return (IsSuccessful: false, ConstructionGraph: null);
-        if (visited.Contains(utility.Id)) return (IsSuccessful: true, ConstructionGraph: null);
+        if (string.IsNullOrWhiteSpace(utilityId)) return null;
 
-        var graph = new FullCleanUtilityConstructionGraph(utility.Id);
-        if (utility.InternalRequirements.Count == 0) return (IsSuccessful: true, ConstructionGraph: graph);
+        if (this._constructionCache.ConstructionGraphsById.TryGetValue(utilityId, out var memoizedResult)) return memoizedResult;
 
-        visited.Add(utility.Id);
+        var graph = this.BuildConstructionGraph(utilityId, new HashSet<string>());
+        this._constructionCache.ConstructionGraphsById[utilityId] = graph;
+        return graph;
+    }
 
-        var dependentUtilitiesCollection = new CleanTestInitializationCollection<ICleanUtilityDescriptor>();
+    private FullCleanUtilityConstructionGraph? BuildConstructionGraph(string utilityId, ISet<string> usedUtilities)
+    {
+        var utility = this._cleanTestAssemblyData.CleanUtilitiesById[utilityId];
+        var graph = new FullCleanUtilityConstructionGraph(utilityId);
+        if (utility.InternalRequirements.Count == 0) return graph;
+
+        usedUtilities.Add(utilityId);
+        
+        var dependenciesCollection = new CleanTestInitializationCollection<ICleanUtilityDescriptor>();
         var dependencyGraphsById = new Dictionary<string, FullCleanUtilityConstructionGraph>();
         foreach (var requirement in utility.InternalRequirements)
         {
-            var currentDependencies = ExtractDependencies(utility, requirement, dependencyGraphsById, assemblyData, visited);
-            if (currentDependencies.Count == 0) return (IsSuccessful: false, ConstructionGraph: null);
+            var currentDependencies = this.ExtractDependencies(utility, requirement).ToArray();
 
-            foreach (var dependency in currentDependencies) dependentUtilitiesCollection.Register(requirement, dependency);
+            foreach (var dependency in currentDependencies)
+            {
+                if (usedUtilities.Contains(dependency.Id)) continue;
+
+                var dependencyGraph = this.BuildConstructionGraph(dependency.Id, usedUtilities);
+                if (dependencyGraph is null) continue;
+
+                dependenciesCollection.Register(requirement, dependency);
+                dependencyGraphsById[dependency.Id] = dependencyGraph;
+            }
+
+            if (dependenciesCollection.GetCount(requirement) == 0) return null;
         }
 
-        visited.Remove(utility.Id);
-
-        var graphIterator = new CombinatorialMachine(dependentUtilitiesCollection);
+        usedUtilities.Remove(utilityId);
+        
+        var graphIterator = new CombinatorialMachine(dependenciesCollection);
         var dependenciesVariations = graphIterator.GenerateAllCombinations();
         foreach (var variation in dependenciesVariations)
         {
@@ -99,26 +119,16 @@ public abstract class BaseTestCaseDiscoverer : IXunitTestCaseDiscoverer
             graph.ConstructionDescriptors.Add(variationDependenciesConstructionGraphs);
         }
 
-        return (IsSuccessful: true, ConstructionGraph: graph);
+        return graph;
     }
 
-    private static List<ICleanUtilityDescriptor> ExtractDependencies(ICleanUtilityDescriptor utilityDescriptor, string requirement, IDictionary<string, FullCleanUtilityConstructionGraph> dependencyGraphsById, CleanTestAssemblyData assemblyData, HashSet<string> visited)
+    private IEnumerable<ICleanUtilityDescriptor> ExtractDependencies(ICleanUtilityDescriptor utilityDescriptor, string requirement)
     {
         var localDemands = utilityDescriptor.InternalDemands.Get(requirement);
-        var currentDependencies = new List<ICleanUtilityDescriptor>();
 
         Func<ICleanUtilityDescriptor, bool>? predicate = null;
         if (utilityDescriptor.IsGlobal) predicate = x => x.IsGlobal;
-        foreach (var dependentUtility in assemblyData.CleanUtilities.Get(requirement, localDemands, predicate))
-        {
-            var (isSuccessful, dependentUtilityConstructionGraph) = BuildConstructionGraph(dependentUtility, assemblyData, visited);
-            if (!isSuccessful || dependentUtilityConstructionGraph is null) continue;
-
-            currentDependencies.Add(dependentUtility);
-            dependencyGraphsById[dependentUtility.Id] = dependentUtilityConstructionGraph;
-        }
-
-        return currentDependencies;
+        return this._cleanTestAssemblyData.CleanUtilities.Get(requirement, localDemands, predicate);
     }
 
     /// <summary>
