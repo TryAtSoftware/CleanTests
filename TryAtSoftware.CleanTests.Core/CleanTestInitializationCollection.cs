@@ -22,8 +22,8 @@ public class CleanTestInitializationCollection<TValue> : ICleanTestInitializatio
 
     public int GetCount(string category)
     {
-        if (this._data.TryGetValue(category, out var registeredValues)) return registeredValues.Count;
-        return 0;
+        this._data.TryGetValue(category, out var registeredValues);
+        return registeredValues?.Count ?? 0;
     }
 
     /// <inheritdoc />
