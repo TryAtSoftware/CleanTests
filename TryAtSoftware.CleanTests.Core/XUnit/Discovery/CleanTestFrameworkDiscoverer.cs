@@ -3,6 +3,7 @@ namespace TryAtSoftware.CleanTests.Core.XUnit.Discovery;
 using System;
 using System.Collections.Generic;
 using TryAtSoftware.CleanTests.Core.Attributes;
+using TryAtSoftware.CleanTests.Core.Dependencies;
 using TryAtSoftware.CleanTests.Core.Extensions;
 using TryAtSoftware.CleanTests.Core.Interfaces;
 using TryAtSoftware.CleanTests.Core.XUnit.Extensions;
@@ -101,7 +102,8 @@ public class CleanTestFrameworkDiscoverer : TestFrameworkDiscoverer
         if (testCaseDiscovererType is null) return;
 
         var customInitializationUtilitiesCollection = this.GetInitializationUtilities(methodAttributeContainer, options.GlobalRequirements);
-        var testCaseDiscoverer = Activator.CreateInstance(testCaseDiscovererType, this.DiagnosticMessageSink, options.TestCaseDiscoveryOptions, customInitializationUtilitiesCollection, this._cleanTestAssemblyData, this._constructionCache) as IXunitTestCaseDiscoverer;
+        var dependenciesManager = new DependenciesManager(this._cleanTestAssemblyData, this._constructionCache);
+        var testCaseDiscoverer = Activator.CreateInstance(testCaseDiscovererType, this.DiagnosticMessageSink, options.TestCaseDiscoveryOptions, customInitializationUtilitiesCollection, dependenciesManager, this._cleanTestAssemblyData) as IXunitTestCaseDiscoverer;
 
         if (testCaseDiscoverer is null) return;
 

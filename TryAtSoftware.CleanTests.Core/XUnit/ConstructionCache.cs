@@ -1,6 +1,7 @@
 ﻿namespace TryAtSoftware.CleanTests.Core.XUnit;
 
 using System.Collections.Generic;
+using TryAtSoftware.CleanTests.Core.Dependencies;
 
 /// <summary>
 /// This class has a significant role for optimizing the discovery phase.

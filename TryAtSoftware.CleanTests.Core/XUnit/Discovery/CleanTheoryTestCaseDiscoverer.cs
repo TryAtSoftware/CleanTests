@@ -8,8 +8,8 @@ using Xunit.Sdk;
 
 public class CleanTheoryTestCaseDiscoverer : BaseTestCaseDiscoverer
 {
-    public CleanTheoryTestCaseDiscoverer(IMessageSink diagnosticMessageSink, TestCaseDiscoveryOptions testCaseDiscoveryOptions, ICleanTestInitializationCollection<ICleanUtilityDescriptor> initializationUtilitiesCollection, CleanTestAssemblyData cleanTestAssemblyData, ConstructionCache constructionCache) 
-        : base(diagnosticMessageSink, testCaseDiscoveryOptions, initializationUtilitiesCollection, cleanTestAssemblyData, constructionCache)
+    public CleanTheoryTestCaseDiscoverer(IMessageSink diagnosticMessageSink, TestCaseDiscoveryOptions testCaseDiscoveryOptions, ICleanTestInitializationCollection<ICleanUtilityDescriptor> initializationUtilitiesCollection, IDependenciesManager dependenciesManager, CleanTestAssemblyData cleanTestAssemblyData) 
+        : base(diagnosticMessageSink, testCaseDiscoveryOptions, initializationUtilitiesCollection, dependenciesManager, cleanTestAssemblyData)
     {
     }
 

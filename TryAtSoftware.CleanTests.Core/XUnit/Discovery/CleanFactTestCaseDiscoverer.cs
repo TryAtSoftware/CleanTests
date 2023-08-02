@@ -7,8 +7,8 @@ using Xunit.Abstractions;
 
 public class CleanFactTestCaseDiscoverer : BaseTestCaseDiscoverer
 {
-    public CleanFactTestCaseDiscoverer(IMessageSink diagnosticMessageSink, TestCaseDiscoveryOptions testCaseDiscoveryOptions, ICleanTestInitializationCollection<ICleanUtilityDescriptor> initializationUtilitiesCollection, CleanTestAssemblyData cleanTestAssemblyData, ConstructionCache constructionCache) 
-        : base(diagnosticMessageSink, testCaseDiscoveryOptions, initializationUtilitiesCollection, cleanTestAssemblyData, constructionCache)
+    public CleanFactTestCaseDiscoverer(IMessageSink diagnosticMessageSink, TestCaseDiscoveryOptions testCaseDiscoveryOptions, ICleanTestInitializationCollection<ICleanUtilityDescriptor> initializationUtilitiesCollection, IDependenciesManager dependenciesManager, CleanTestAssemblyData cleanTestAssemblyData) 
+        : base(diagnosticMessageSink, testCaseDiscoveryOptions, initializationUtilitiesCollection, dependenciesManager, cleanTestAssemblyData)
     {
     }
 
