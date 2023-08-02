@@ -1,15 +1,16 @@
 ﻿namespace TryAtSoftware.CleanTests.UnitTests;
 
 using TryAtSoftware.CleanTests.UnitTests.Constants;
+using TryAtSoftware.CleanTests.UnitTests.Extensions;
 using TryAtSoftware.CleanTests.UnitTests.Parametrization;
 
 public class CombinatorialMachineTests
 {
     [Theory(Timeout = UnitTestConstants.Timeout)]
     [MemberData(nameof(GetCombinatorialMachineSetups))]
-    public async Task CombinationsShouldBeGeneratedSuccessfully(CombinatorialMachineSetup setup)
+    public async Task CombinationsShouldBeGeneratedSuccessfully(EnvironmentSetup setup)
     {
-        var machine = setup.Materialize();
+        var machine = setup.MaterializeAsCombinatorialMachine();
         var combinations = await Task.Run(() => machine.GenerateAllCombinations().ToArray());
         Assert.NotNull(combinations);
         Assert.Equal(setup.ExpectedCombinationsCount, combinations.Length);

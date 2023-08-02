@@ -12,12 +12,12 @@ using TryAtSoftware.Extensions.Collections;
 public class DependenciesManager : IDependenciesManager
 {
     private readonly CleanTestAssemblyData _cleanTestAssemblyData;
-    private readonly ConstructionCache _constructionCache;
+    private readonly Dictionary<string, FullCleanUtilityConstructionGraph?> _constructionGraphsById;
 
-    public DependenciesManager(CleanTestAssemblyData cleanTestAssemblyData, ConstructionCache constructionCache)
+    public DependenciesManager(CleanTestAssemblyData cleanTestAssemblyData)
     {
         this._cleanTestAssemblyData = cleanTestAssemblyData ?? throw new ArgumentNullException(nameof(cleanTestAssemblyData));
-        this._constructionCache = constructionCache ?? throw new ArgumentNullException(nameof(constructionCache));
+        this._constructionGraphsById = new Dictionary<string, FullCleanUtilityConstructionGraph?>();
     }
 
     public IndividualCleanUtilityDependencyNode[][] GetDependencies(IEnumerable<string> utilityIds)
@@ -37,12 +37,10 @@ public class DependenciesManager : IDependenciesManager
 
     private FullCleanUtilityConstructionGraph? AccessConstructionGraph(string utilityId)
     {
-        if (string.IsNullOrWhiteSpace(utilityId)) return null;
-
-        if (this._constructionCache.ConstructionGraphsById.TryGetValue(utilityId, out var memoizedResult)) return memoizedResult;
+        if (this._constructionGraphsById.TryGetValue(utilityId, out var memoizedResult)) return memoizedResult;
 
         var graph = this.BuildConstructionGraph(utilityId, new HashSet<string>());
-        this._constructionCache.ConstructionGraphsById[utilityId] = graph;
+        this._constructionGraphsById[utilityId] = graph;
         return graph;
     }
 
@@ -58,7 +56,7 @@ public class DependenciesManager : IDependenciesManager
         var dependencyGraphsById = new Dictionary<string, FullCleanUtilityConstructionGraph>();
         foreach (var requirement in utility.InternalRequirements)
         {
-            var currentDependencies = this.ExtractDependencies(utility, requirement).ToArray();
+            var currentDependencies = this.ExtractDependencies(utility, requirement);
 
             foreach (var dependency in currentDependencies)
             {
@@ -87,7 +85,7 @@ public class DependenciesManager : IDependenciesManager
         return graph;
     }
 
-    private IEnumerable<ICleanUtilityDescriptor> ExtractDependencies(ICleanUtilityDescriptor utilityDescriptor, string requirement)
+    private ICleanUtilityDescriptor[] ExtractDependencies(ICleanUtilityDescriptor utilityDescriptor, string requirement)
     {
         var localDemands = utilityDescriptor.InternalDemands.Get(requirement);
 

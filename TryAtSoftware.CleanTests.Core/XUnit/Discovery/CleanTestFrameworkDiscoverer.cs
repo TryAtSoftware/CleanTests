@@ -19,14 +19,14 @@ public class CleanTestFrameworkDiscoverer : TestFrameworkDiscoverer
 {
     private readonly FallbackTestFrameworkDiscoverer _fallbackTestFrameworkDiscoverer;
     private readonly CleanTestAssemblyData _cleanTestAssemblyData;
-    private readonly ConstructionCache _constructionCache;
+    private readonly IDependenciesManager _dependenciesManager;
 
     public CleanTestFrameworkDiscoverer(IAssemblyInfo assemblyInfo, ISourceInformationProvider sourceProvider, IMessageSink diagnosticMessageSink, CleanTestAssemblyData assemblyData)
         : base(assemblyInfo, sourceProvider, diagnosticMessageSink)
     {
         this._cleanTestAssemblyData = assemblyData ?? throw new ArgumentNullException(nameof(assemblyData));
         this._fallbackTestFrameworkDiscoverer = new FallbackTestFrameworkDiscoverer(assemblyInfo, sourceProvider, diagnosticMessageSink);
-        this._constructionCache = new ConstructionCache();
+        this._dependenciesManager = new DependenciesManager(this._cleanTestAssemblyData);
         this.DisposalTracker.Add(this._fallbackTestFrameworkDiscoverer);
     }
 
@@ -102,8 +102,7 @@ public class CleanTestFrameworkDiscoverer : TestFrameworkDiscoverer
         if (testCaseDiscovererType is null) return;
 
         var customInitializationUtilitiesCollection = this.GetInitializationUtilities(methodAttributeContainer, options.GlobalRequirements);
-        var dependenciesManager = new DependenciesManager(this._cleanTestAssemblyData, this._constructionCache);
-        var testCaseDiscoverer = Activator.CreateInstance(testCaseDiscovererType, this.DiagnosticMessageSink, options.TestCaseDiscoveryOptions, customInitializationUtilitiesCollection, dependenciesManager, this._cleanTestAssemblyData) as IXunitTestCaseDiscoverer;
+        var testCaseDiscoverer = Activator.CreateInstance(testCaseDiscovererType, this.DiagnosticMessageSink, options.TestCaseDiscoveryOptions, customInitializationUtilitiesCollection, this._dependenciesManager, this._cleanTestAssemblyData) as IXunitTestCaseDiscoverer;
 
         if (testCaseDiscoverer is null) return;
 
