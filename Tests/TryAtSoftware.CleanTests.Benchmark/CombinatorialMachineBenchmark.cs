@@ -34,5 +34,5 @@ public class CombinatorialMachineBenchmark
     [Benchmark]
     public void GenerateAllCombinations() => _ = this._machine.GenerateAllCombinations().ToArray();
 
-    public static IEnumerable<EnvironmentSetup> GetSetupValues() => TestParameters.ConstructObservableCombinatorialMachineSetups();
+    public static IEnumerable<EnvironmentSetup> GetSetupValues() => TestParameters.ConstructObservableCombinatorialMachineSetups().Select(x => x.EnvironmentSetup);
 }
