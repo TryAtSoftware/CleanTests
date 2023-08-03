@@ -18,15 +18,15 @@ public abstract class BaseTestCaseDiscoverer : IXunitTestCaseDiscoverer
     private readonly IMessageSink _diagnosticMessageSink;
     private readonly TestCaseDiscoveryOptions _testCaseDiscoveryOptions;
     private readonly ICleanTestInitializationCollection<ICleanUtilityDescriptor> _initializationUtilitiesCollection;
-    private readonly IDependenciesManager _dependenciesManager;
+    private readonly IConstructionManager _constructionManager;
     private readonly CleanTestAssemblyData _cleanTestAssemblyData;
 
-    protected BaseTestCaseDiscoverer(IMessageSink diagnosticMessageSink, TestCaseDiscoveryOptions testCaseDiscoveryOptions, ICleanTestInitializationCollection<ICleanUtilityDescriptor> initializationUtilitiesCollection, IDependenciesManager dependenciesManager, CleanTestAssemblyData cleanTestAssemblyData)
+    protected BaseTestCaseDiscoverer(IMessageSink diagnosticMessageSink, TestCaseDiscoveryOptions testCaseDiscoveryOptions, ICleanTestInitializationCollection<ICleanUtilityDescriptor> initializationUtilitiesCollection, IConstructionManager constructionManager, CleanTestAssemblyData cleanTestAssemblyData)
     {
         this._diagnosticMessageSink = diagnosticMessageSink ?? throw new ArgumentNullException(nameof(diagnosticMessageSink));
         this._testCaseDiscoveryOptions = testCaseDiscoveryOptions ?? throw new ArgumentNullException(nameof(testCaseDiscoveryOptions));
         this._initializationUtilitiesCollection = initializationUtilitiesCollection ?? throw new ArgumentNullException(nameof(initializationUtilitiesCollection));
-        this._dependenciesManager = dependenciesManager ?? throw new ArgumentNullException(nameof(dependenciesManager));
+        this._constructionManager = constructionManager ?? throw new ArgumentNullException(nameof(constructionManager));
         this._cleanTestAssemblyData = cleanTestAssemblyData ?? throw new ArgumentNullException(nameof(cleanTestAssemblyData));
     }
 
@@ -41,7 +41,7 @@ public abstract class BaseTestCaseDiscoverer : IXunitTestCaseDiscoverer
         var testCases = new List<IXunitTestCase>();
         foreach (var variation in variations)
         {
-            var dependenciesSet = this._dependenciesManager.GetDependencies(variation.Values);
+            var dependenciesSet = this._constructionManager.BuildIndividualConstructionGraphs(variation.Values);
 
             foreach (var dependencies in dependenciesSet)
             {
@@ -55,7 +55,7 @@ public abstract class BaseTestCaseDiscoverer : IXunitTestCaseDiscoverer
 
     protected abstract IEnumerable<object[]> GetTestMethodArguments(IMessageSink diagnosticMessageSink, ITestMethod testMethod);
 
-    private IEnumerable<IXunitTestCase> ExtractTestCases(ITestFrameworkDiscoveryOptions discoveryOptions, ITestMethod testMethod, IndividualCleanUtilityDependencyNode[] dependencies, object[][] argumentsCollection)
+    private IEnumerable<IXunitTestCase> ExtractTestCases(ITestFrameworkDiscoveryOptions discoveryOptions, ITestMethod testMethod, IndividualCleanUtilityConstructionGraph[] dependencies, object[][] argumentsCollection)
     {
         var result = new List<IXunitTestCase>();
 
@@ -74,7 +74,7 @@ public abstract class BaseTestCaseDiscoverer : IXunitTestCaseDiscoverer
         return result;
     }
 
-    private string ExtractDisplayNamePrefix(IDictionary<Type, Type> genericTypes, IndividualCleanUtilityDependencyNode[] dependencies)
+    private string ExtractDisplayNamePrefix(IDictionary<Type, Type> genericTypes, IndividualCleanUtilityConstructionGraph[] dependencies)
     {
         var segments = new List<string>(capacity: 2);
 

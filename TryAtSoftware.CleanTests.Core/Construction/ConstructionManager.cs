@@ -1,32 +1,33 @@
-﻿namespace TryAtSoftware.CleanTests.Core.Dependencies;
+﻿namespace TryAtSoftware.CleanTests.Core.Construction;
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using TryAtSoftware.CleanTests.Core.Dependencies;
 using TryAtSoftware.CleanTests.Core.Extensions;
 using TryAtSoftware.CleanTests.Core.Interfaces;
 using TryAtSoftware.CleanTests.Core.Utilities;
 using TryAtSoftware.CleanTests.Core.XUnit;
 using TryAtSoftware.Extensions.Collections;
 
-public class DependenciesManager : IDependenciesManager
+public class ConstructionManager : IConstructionManager
 {
     private readonly CleanTestAssemblyData _cleanTestAssemblyData;
     private readonly Dictionary<string, FullCleanUtilityConstructionGraph?> _constructionGraphsById;
 
-    public DependenciesManager(CleanTestAssemblyData cleanTestAssemblyData)
+    public ConstructionManager(CleanTestAssemblyData cleanTestAssemblyData)
     {
         this._cleanTestAssemblyData = cleanTestAssemblyData ?? throw new ArgumentNullException(nameof(cleanTestAssemblyData));
         this._constructionGraphsById = new Dictionary<string, FullCleanUtilityConstructionGraph?>();
     }
 
-    public IndividualCleanUtilityDependencyNode[][] GetDependencies(IEnumerable<string> utilityIds)
+    public IndividualCleanUtilityConstructionGraph[][] BuildIndividualConstructionGraphs(IEnumerable<string> utilityIds)
     {
         var dependenciesConstructionGraphs = new List<FullCleanUtilityConstructionGraph>();
         foreach (var utilityId in utilityIds)
         {
             var constructionGraph = this.AccessConstructionGraph(utilityId);
-            if (constructionGraph is null) return Array.Empty<IndividualCleanUtilityDependencyNode[]>();
+            if (constructionGraph is null) return Array.Empty<IndividualCleanUtilityConstructionGraph[]>();
 
             dependenciesConstructionGraphs.Add(constructionGraph);
         }
@@ -95,10 +96,10 @@ public class DependenciesManager : IDependenciesManager
     }
 
     /// <summary>
-    /// Use this method to transform a <see cref="FullCleanUtilityConstructionGraph"/> to a collection of <see cref="IndividualCleanUtilityDependencyNode"/> instances.
+    /// Use this method to transform a <see cref="FullCleanUtilityConstructionGraph"/> to a collection of <see cref="IndividualCleanUtilityConstructionGraph"/> instances.
     /// </summary>
     /// <param name="constructionGraph">The construction graph that should be transformed.</param>
-    /// <returns>Returns the collection of subsequently built <see cref="IndividualCleanUtilityDependencyNode"/> instances.</returns>
+    /// <returns>Returns the collection of subsequently built <see cref="IndividualCleanUtilityConstructionGraph"/> instances.</returns>
     /// <remarks>
     /// Let's assume that we have the following construction graph:
     /// | Service X |
@@ -133,18 +134,18 @@ public class DependenciesManager : IDependenciesManager
     ///         | Service 2.1B |
     ///     | Service 3A |
     /// </remarks>
-    private static IndividualCleanUtilityDependencyNode[] FlattenConstructionGraph(FullCleanUtilityConstructionGraph constructionGraph)
+    private static IndividualCleanUtilityConstructionGraph[] FlattenConstructionGraph(FullCleanUtilityConstructionGraph constructionGraph)
     {
         if (constructionGraph.ConstructionDescriptors.Count == 0)
         {
-            var node = new IndividualCleanUtilityDependencyNode(constructionGraph.Id);
+            var node = new IndividualCleanUtilityConstructionGraph(constructionGraph.Id);
             return new[] { node };
         }
 
-        var ans = new List<IndividualCleanUtilityDependencyNode>();
+        var ans = new List<IndividualCleanUtilityConstructionGraph>();
         foreach (var constructionDescriptor in constructionGraph.ConstructionDescriptors)
         {
-            var current = new IndividualCleanUtilityDependencyNode[constructionDescriptor.Count][];
+            var current = new IndividualCleanUtilityConstructionGraph[constructionDescriptor.Count][];
             for (var i = 0; i < constructionDescriptor.Count; i++)
                 current[i] = FlattenConstructionGraph(constructionDescriptor[i]);
 
@@ -156,7 +157,7 @@ public class DependenciesManager : IDependenciesManager
     }
 
     /// <summary>
-    /// Use this method to merge a two-dimensional collection of <see cref="IndividualCleanUtilityDependencyNode"/> instances.
+    /// Use this method to merge a two-dimensional collection of <see cref="IndividualCleanUtilityConstructionGraph"/> instances.
     /// </summary>
     /// <param name="nodes">The nodes to merge.</param>
     /// <returns>Returns the another matrix containing the results of merging the provided instances.</returns>
@@ -189,30 +190,30 @@ public class DependenciesManager : IDependenciesManager
     ///     | Service 4A |              | Service 4B |          | Service Y |               | Service Y |               | Service Y |               | Service Y |         
     ///                                                             | Service 4A |              | Service 4B |              | Service 4A |              | Service 4B |
     /// </remarks>
-    private static IndividualCleanUtilityDependencyNode[][] Merge(IndividualCleanUtilityDependencyNode[][] nodes) => IterateAllSequences(nodes, Duplicate);
+    private static IndividualCleanUtilityConstructionGraph[][] Merge(IndividualCleanUtilityConstructionGraph[][] nodes) => IterateAllSequences(nodes, Duplicate);
 
-    private static IndividualCleanUtilityDependencyNode Union(string id, IEnumerable<IndividualCleanUtilityDependencyNode> nodes)
+    private static IndividualCleanUtilityConstructionGraph Union(string id, IEnumerable<IndividualCleanUtilityConstructionGraph> nodes)
     {
-        var node = new IndividualCleanUtilityDependencyNode(id);
+        var node = new IndividualCleanUtilityConstructionGraph(id);
         foreach (var dependencyInSequence in nodes.OrEmptyIfNull().IgnoreNullValues()) node.Dependencies.Add(dependencyInSequence);
         return node;
     }
 
-    private static IndividualCleanUtilityDependencyNode[] Duplicate(IndividualCleanUtilityDependencyNode[] nodes)
+    private static IndividualCleanUtilityConstructionGraph[] Duplicate(IndividualCleanUtilityConstructionGraph[] nodes)
     {
-        var newSequence = new IndividualCleanUtilityDependencyNode[nodes.Length];
+        var newSequence = new IndividualCleanUtilityConstructionGraph[nodes.Length];
         Array.Copy(nodes, newSequence, nodes.Length);
         return newSequence;
     }
 
-    private static TResult[] IterateAllSequences<TResult>(IndividualCleanUtilityDependencyNode[][] nodes, Func<IndividualCleanUtilityDependencyNode[], TResult> resultGenerator)
+    private static TResult[] IterateAllSequences<TResult>(IndividualCleanUtilityConstructionGraph[][] nodes, Func<IndividualCleanUtilityConstructionGraph[], TResult> resultGenerator)
     {
         var ans = new List<TResult>();
-        IterateAllSequences(0, nodes, resultGenerator, new IndividualCleanUtilityDependencyNode[nodes.Length], ans);
+        IterateAllSequences(0, nodes, resultGenerator, new IndividualCleanUtilityConstructionGraph[nodes.Length], ans);
         return ans.ToArray();
     }
 
-    private static void IterateAllSequences<TResult>(int position, IndividualCleanUtilityDependencyNode[][] nodes, Func<IndividualCleanUtilityDependencyNode[], TResult> resultGenerator, IndividualCleanUtilityDependencyNode[] sequence, List<TResult> result)
+    private static void IterateAllSequences<TResult>(int position, IndividualCleanUtilityConstructionGraph[][] nodes, Func<IndividualCleanUtilityConstructionGraph[], TResult> resultGenerator, IndividualCleanUtilityConstructionGraph[] sequence, List<TResult> result)
     {
         if (position == nodes.Length)
         {

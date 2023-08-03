@@ -9,9 +9,9 @@ using Xunit.Abstractions;
 
 public class SerializableIndividualDependencyNode : IXunitSerializable
 {
-    private IndividualCleanUtilityDependencyNode? _dependencyNode;
+    private IndividualCleanUtilityConstructionGraph? _dependencyNode;
 
-    public IndividualCleanUtilityDependencyNode DependencyNode
+    public IndividualCleanUtilityConstructionGraph ConstructionGraph
     {
         get
         {
@@ -25,9 +25,9 @@ public class SerializableIndividualDependencyNode : IXunitSerializable
     {
     }
 
-    public SerializableIndividualDependencyNode(IndividualCleanUtilityDependencyNode dependencyNode)
+    public SerializableIndividualDependencyNode(IndividualCleanUtilityConstructionGraph constructionGraph)
     {
-        this.DependencyNode = dependencyNode ?? throw new ArgumentNullException(nameof(dependencyNode));
+        this.ConstructionGraph = constructionGraph ?? throw new ArgumentNullException(nameof(constructionGraph));
     }
 
     /// <inheritdoc />
@@ -36,11 +36,11 @@ public class SerializableIndividualDependencyNode : IXunitSerializable
         if (info is null) throw new ArgumentNullException(nameof(info));
 
         var id = info.GetValue<string>("id");
-        this.DependencyNode = new IndividualCleanUtilityDependencyNode(id);
+        this.ConstructionGraph = new IndividualCleanUtilityConstructionGraph(id);
 
         var deserializedDependencies = info.GetValue<SerializableIndividualDependencyNode[]>("d");
-        foreach (var dependency in deserializedDependencies.OrEmptyIfNull().Select(x => x?.DependencyNode).IgnoreNullValues())
-            this.DependencyNode.Dependencies.Add(dependency);
+        foreach (var dependency in deserializedDependencies.OrEmptyIfNull().Select(x => x?.ConstructionGraph).IgnoreNullValues())
+            this.ConstructionGraph.Dependencies.Add(dependency);
     }
 
     /// <inheritdoc />
@@ -48,9 +48,9 @@ public class SerializableIndividualDependencyNode : IXunitSerializable
     {
         if (info is null) throw new ArgumentNullException(nameof(info));
 
-        info.AddValue("id", this.DependencyNode.Id);
+        info.AddValue("id", this.ConstructionGraph.Id);
 
-        var serializableDependencies = this.DependencyNode.Dependencies.Select(x => new SerializableIndividualDependencyNode(x)).ToArray();
+        var serializableDependencies = this.ConstructionGraph.Dependencies.Select(x => new SerializableIndividualDependencyNode(x)).ToArray();
         info.AddValue("d", serializableDependencies);
     }
 }

@@ -86,7 +86,7 @@ public static class TestParameters
         yield return (setup9, 48);
     }
 
-    public static IEnumerable<(EnvironmentSetup EnvironmentSetup, string PathToExpectedResult)> ConstructObservableDependenciesManagerSetups()
+    public static IEnumerable<(EnvironmentSetup EnvironmentSetup, string PathToExpectedResult)> ConstructObservableConstructionManagerSetups()
     {
         // 10 categories; 3 utilities in each; no demands
         // The utilities in every even category depend on utilities from the next one

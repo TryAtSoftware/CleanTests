@@ -1,6 +1,7 @@
 ﻿namespace TryAtSoftware.CleanTests.UnitTests;
 
 using System.Text.Json;
+using TryAtSoftware.CleanTests.Core.Construction;
 using TryAtSoftware.CleanTests.Core.Dependencies;
 using TryAtSoftware.CleanTests.UnitTests.Constants;
 using TryAtSoftware.CleanTests.UnitTests.Extensions;
@@ -13,7 +14,7 @@ public class DependenciesManagerTests
     public void DependencyGraphsShouldBeConstructedSuccessfully(EnvironmentSetup setup, string pathToExpectedResult)
     {
         var assemblyTestData = setup.MaterializeAsAssemblyData();
-        var manager = new DependenciesManager(assemblyTestData);
+        var manager = new ConstructionManager(assemblyTestData);
 
         var allUtilities = assemblyTestData.CleanUtilities.GetAllValues().ToArray();
         var expectedOutput = File.ReadLines(pathToExpectedResult).ToArray();
@@ -21,13 +22,13 @@ public class DependenciesManagerTests
 
         for (var i = 0; i < allUtilities.Length; i++)
         {
-            var constructionPaths = manager.GetDependencies(new[] { allUtilities[i].Id });
+            var constructionPaths = manager.BuildIndividualConstructionGraphs(new[] { allUtilities[i].Id });
             var output = JsonSerializer.Serialize(constructionPaths);
             Assert.Equal(expectedOutput[i], output);
         }
     }
 
     public static IEnumerable<object[]> GetDependenciesManagerSetups()
-        => TestParameters.ConstructObservableDependenciesManagerSetups()
+        => TestParameters.ConstructObservableConstructionManagerSetups()
             .Select(dependenciesManagerSetup => new object[] { dependenciesManagerSetup.EnvironmentSetup, dependenciesManagerSetup.PathToExpectedResult });
 }
