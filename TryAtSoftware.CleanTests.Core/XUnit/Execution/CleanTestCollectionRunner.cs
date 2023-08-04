@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
+using TryAtSoftware.CleanTests.Core.Dependencies;
 using TryAtSoftware.CleanTests.Core.Extensions;
 using TryAtSoftware.CleanTests.Core.Interfaces;
 using TryAtSoftware.CleanTests.Core.Utilities;
@@ -83,12 +84,12 @@ public sealed class CleanTestCollectionRunner : XunitTestCollectionRunner, IDisp
     /// <remarks>
     /// This method can be called with non-global utilities as well because some of them may depend on global utilities that should be registered.
     /// </remarks>
-    private object? RegisterGlobalUtility(IndividualCleanUtilityDependencyNode dependencyNode, CleanTestCaseData testCaseData)
+    private object? RegisterGlobalUtility(IndividualCleanUtilityConstructionGraph constructionGraph, CleanTestCaseData testCaseData)
     {
-        var (utilityDescriptor, implementationType) = dependencyNode.Materialize(this._assemblyData.CleanUtilitiesById, testCaseData.GenericTypesMap);
+        var (utilityDescriptor, implementationType) = constructionGraph.Materialize(this._assemblyData.CleanUtilitiesById, testCaseData.GenericTypesMap);
         
-        var subDependencies = new List<object>(capacity: utilityDescriptor.IsGlobal ? dependencyNode.Dependencies.Count : 0);
-        foreach (var subDependency in dependencyNode.Dependencies)
+        var subDependencies = new List<object>(capacity: utilityDescriptor.IsGlobal ? constructionGraph.Dependencies.Count : 0);
+        foreach (var subDependency in constructionGraph.Dependencies)
         {
             var subDependencyInstance = this.RegisterGlobalUtility(subDependency, testCaseData);
 
@@ -101,7 +102,7 @@ public sealed class CleanTestCollectionRunner : XunitTestCollectionRunner, IDisp
         
         if (!utilityDescriptor.IsGlobal) return null;
             
-        var uniqueId = dependencyNode.GetUniqueId();
+        var uniqueId = constructionGraph.GetUniqueId();
         var registeredInstance = this._globalUtilitiesProvider.GetUtility(uniqueId);
         if (registeredInstance is not null) return registeredInstance;
 

@@ -1,4 +1,4 @@
-﻿namespace TryAtSoftware.CleanTests.Core.XUnit;
+﻿namespace TryAtSoftware.CleanTests.Core.Dependencies;
 
 using System.Collections.Generic;
 
@@ -9,6 +9,7 @@ using System.Collections.Generic;
 /// | Service 1A |   | Service 2A |   | Service 3A |         | Service 1A |   | Service 2B |   | Service 3A |
 /// </summary>
 /// <param name="Id">The value that should be set to the <see cref="Id"/> property.</param>
+/// <remarks>If a full construction graph has no construction descriptors, this means that there are no required dependencies.</remarks>
 public record FullCleanUtilityConstructionGraph(string Id)
 {
     public string Id { get; } = Id;
@@ -28,8 +29,8 @@ public record FullCleanUtilityConstructionGraph(string Id)
 /// | Service 1A |   | Service 2B |   | Service 3A |
 /// </summary>
 /// <param name="Id">The value that should be set to the <see cref="Id"/> property.</param>
-public record IndividualCleanUtilityDependencyNode(string Id)
+public record IndividualCleanUtilityConstructionGraph(string Id)
 {
     public string Id { get; } = Id;
-    public List<IndividualCleanUtilityDependencyNode> Dependencies { get; } = new ();
+    public List<IndividualCleanUtilityConstructionGraph> Dependencies { get; } = new ();
 }

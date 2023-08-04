@@ -2,27 +2,25 @@
 
 using TryAtSoftware.CleanTests.Core;
 using TryAtSoftware.CleanTests.Core.Interfaces;
-using TryAtSoftware.CleanTests.Core.Utilities;
 using TryAtSoftware.Extensions.Collections;
 
-public class CombinatorialMachineSetup
+public class EnvironmentSetup
 {
     private readonly Dictionary<string, int> _numberOfUtilitiesPerCategory = new ();
     private readonly Dictionary<string, Dictionary<string, List<string>>> _demandsPerUtility = new ();
     private readonly Dictionary<string, List<string>> _characteristics = new ();
+    private readonly Dictionary<string, List<string>> _requirements = new ();
 
-    public CombinatorialMachineSetup(string name, int expectedCombinationsCount)
+    public EnvironmentSetup(string name)
     {
         if (string.IsNullOrWhiteSpace(name)) throw new ArgumentNullException(nameof(name));
         this.Name = name;
-        this.ExpectedCombinationsCount = expectedCombinationsCount;
     }
 
     public string Name { get; }
-    public int ExpectedCombinationsCount { get; }
     public int CategoriesCount => this._numberOfUtilitiesPerCategory.Count;
     
-    public CombinatorialMachineSetup WithCategory(string category, int utilitiesCount)
+    public EnvironmentSetup WithCategory(string category, int utilitiesCount)
     {
         if (string.IsNullOrWhiteSpace(category)) throw new ArgumentNullException(nameof(category));
         if (utilitiesCount <= 0) throw new ArgumentException("The number of utilities for each category must be at least 1", nameof(utilitiesCount));
@@ -32,7 +30,7 @@ public class CombinatorialMachineSetup
         return this;
     }
 
-    public CombinatorialMachineSetup WithCharacteristics(string category, int utilityId, params string[] characteristics)
+    public EnvironmentSetup WithCharacteristics(string category, int utilityId, params string[] characteristics)
     {
         this.ValidateUtilityExists(category, utilityId);
 
@@ -43,7 +41,18 @@ public class CombinatorialMachineSetup
         return this;
     }
 
-    public CombinatorialMachineSetup WithDemands(string utilityCategory, int utilityId, string demandsCategory, params string[] demands)
+    public EnvironmentSetup WithRequirements(string category, int utilityId, params string[] requirements)
+    {
+        this.ValidateUtilityExists(category, utilityId);
+
+        var universalId = ComposeUniversalUtilityId(category, utilityId);
+        if (!this._requirements.ContainsKey(universalId)) this._requirements[universalId] = new List<string>();
+        foreach (var characteristic in requirements.OrEmptyIfNull().IgnoreNullOrWhitespaceValues()) this._requirements[universalId].Add(characteristic);
+
+        return this;
+    }
+
+    public EnvironmentSetup WithDemands(string utilityCategory, int utilityId, string demandsCategory, params string[] demands)
     {
         this.ValidateUtilityExists(utilityCategory, utilityId);
         
@@ -55,7 +64,7 @@ public class CombinatorialMachineSetup
         return this;
     }
 
-    public CombinatorialMachine Materialize()
+    public ICleanTestInitializationCollection<ICleanUtilityDescriptor> Materialize()
     {
         var utilitiesCollection = new CleanTestInitializationCollection<ICleanUtilityDescriptor>();
 
@@ -66,7 +75,8 @@ public class CombinatorialMachineSetup
                 var universalId = ComposeUniversalUtilityId(category, j);
 
                 this._characteristics.TryGetValue(universalId, out var characteristics);
-                ICleanUtilityDescriptor utility = new CleanUtilityDescriptor(category, typeof(int), universalId, isGlobal: false, characteristics);
+                this._requirements.TryGetValue(universalId, out var requirements);
+                ICleanUtilityDescriptor utility = new CleanUtilityDescriptor(category, typeof(int), universalId, isGlobal: false, characteristics, requirements);
 
                 this._demandsPerUtility.TryGetValue(universalId, out var demandsByCategory);
                 foreach (var (demandCategory, demands) in demandsByCategory.OrEmptyIfNull())
@@ -78,7 +88,7 @@ public class CombinatorialMachineSetup
             }
         }
 
-        return new CombinatorialMachine(utilitiesCollection);
+        return utilitiesCollection;
     }
 
     private void ValidateUtilityExists(string category, int utilityId)
