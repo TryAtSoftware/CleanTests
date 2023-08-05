@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using BenchmarkDotNet.Attributes;
 using TryAtSoftware.CleanTests.Core.Construction;
-using TryAtSoftware.CleanTests.Core.Dependencies;
 using TryAtSoftware.CleanTests.Core.XUnit;
 using TryAtSoftware.CleanTests.UnitTests.Extensions;
 using TryAtSoftware.CleanTests.UnitTests.Parametrization;
@@ -13,12 +12,12 @@ using TryAtSoftware.CleanTests.UnitTests.Parametrization;
 03/08/2023:
 |                  Method |    Setup |         Mean |      Error |     StdDev |      Gen0 |     Gen1 |     Gen2 |   Allocated |
 |------------------------ |--------- |-------------:|-----------:|-----------:|----------:|---------:|---------:|------------:|
-| BuildConstructionGraphs | Setup #1 |    103.72 us |   1.757 us |   1.468 us |   21.9727 |   1.2207 |        - |   180.41 KB |
-| BuildConstructionGraphs | Setup #2 |     88.17 us |   0.608 us |   0.569 us |   20.6299 |   0.9766 |        - |   168.82 KB |
-| BuildConstructionGraphs | Setup #3 |    162.57 us |   1.282 us |   1.199 us |   39.3066 |   3.6621 |        - |   322.26 KB |
-| BuildConstructionGraphs | Setup #4 | 15,354.25 us | 227.311 us | 201.505 us | 2625.0000 | 906.2500 | 453.1250 | 21453.33 KB |
-| BuildConstructionGraphs | Setup #5 |    444.63 us |   4.150 us |   3.679 us |  106.4453 |  21.4844 |        - |   870.04 KB |
-| BuildConstructionGraphs | Setup #6 |     24.87 us |   0.223 us |   0.208 us |    6.0425 |   0.1221 |        - |    49.47 KB |
+| BuildConstructionGraphs | Setup #1 |     94.47 us |   1.825 us |   2.308 us |   21.9727 |   1.2207 |        - |   180.41 KB |
+| BuildConstructionGraphs | Setup #2 |     86.35 us |   0.873 us |   0.729 us |   20.6299 |   0.9766 |        - |   168.82 KB |
+| BuildConstructionGraphs | Setup #3 |    295.10 us |   2.822 us |   2.640 us |   69.8242 |   7.8125 |        - |   573.04 KB |
+| BuildConstructionGraphs | Setup #4 | 31,409.16 us | 118.546 us | 105.088 us | 5625.0000 | 906.2500 | 593.7500 | 45980.18 KB |
+| BuildConstructionGraphs | Setup #5 |    639.69 us |   5.587 us |   4.953 us |  144.5313 |  27.3438 |        - |  1185.68 KB |
+| BuildConstructionGraphs | Setup #6 |     24.91 us |   0.175 us |   0.164 us |    6.0425 |   0.1221 |        - |    49.47 KB |
  */
 [MemoryDiagnoser]
 public class ConstructionManagerBenchmark
