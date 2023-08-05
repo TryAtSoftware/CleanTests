@@ -82,7 +82,6 @@ public class ConstructionManager : IConstructionManager
         foreach (var combination in dependenciesCombinations)
         {
             var index = 0;
-            var outerDemandsArePresent = false;
             foreach (var dependencyId in combination.Values)
             {
                 constructionGraphsPerCombination[index] = dependencyGraphsById[dependencyId];
@@ -90,18 +89,10 @@ public class ConstructionManager : IConstructionManager
                 var dependency = this._cleanTestAssemblyData.CleanUtilitiesById[dependencyId];
                 utilitiesByCategoryPerCombination[dependency.Category] = dependency;
                 
-                outerDemandsArePresent = outerDemandsArePresent || dependency.OuterDemands.Categories.Count > 0;
                 index++;
             }
 
-            FullCleanUtilityConstructionGraph[]? dependenciesConstructionGraphs;
-            if (outerDemandsArePresent) dependenciesConstructionGraphs = this.NormalizeDependenciesConstructionGraphs(constructionGraphsPerCombination, utilitiesByCategoryPerCombination);
-            else
-            {
-                dependenciesConstructionGraphs = new FullCleanUtilityConstructionGraph[constructionGraphsPerCombination.Length];
-                constructionGraphsPerCombination.CopyTo(dependenciesConstructionGraphs.AsSpan());
-            }
-
+            var dependenciesConstructionGraphs = this.NormalizeDependenciesConstructionGraphs(constructionGraphsPerCombination, utilitiesByCategoryPerCombination);
             if (dependenciesConstructionGraphs is not null) graph.ConstructionDescriptors.Add(dependenciesConstructionGraphs);
         }
 
