@@ -1,4 +1,4 @@
-﻿namespace TryAtSoftware.CleanTests.Core.Dependencies;
+﻿namespace TryAtSoftware.CleanTests.Core.Construction;
 
 using System.Collections.Generic;
 
@@ -13,7 +13,7 @@ using System.Collections.Generic;
 public record FullCleanUtilityConstructionGraph(string Id)
 {
     public string Id { get; } = Id;
-    public List<List<FullCleanUtilityConstructionGraph>> ConstructionDescriptors { get; } = new ();
+    public List<FullCleanUtilityConstructionGraph[]> ConstructionDescriptors { get; } = new ();
 }
 
 

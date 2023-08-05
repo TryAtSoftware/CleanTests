@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using BenchmarkDotNet.Attributes;
 using TryAtSoftware.CleanTests.Core.Construction;
-using TryAtSoftware.CleanTests.Core.Dependencies;
 using TryAtSoftware.CleanTests.Core.XUnit;
 using TryAtSoftware.CleanTests.UnitTests.Extensions;
 using TryAtSoftware.CleanTests.UnitTests.Parametrization;

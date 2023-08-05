@@ -10,4 +10,5 @@ public interface ICleanTestInitializationCollection<TValue> : IEnumerable<KeyVal
     bool ContainsCategory(string category);
     void Register(string category, TValue value);
     IEnumerable<TValue> GetAllValues();
+    void Clear();
 }

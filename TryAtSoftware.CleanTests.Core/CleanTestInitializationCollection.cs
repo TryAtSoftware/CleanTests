@@ -42,6 +42,9 @@ public class CleanTestInitializationCollection<TValue> : ICleanTestInitializatio
     public IEnumerable<TValue> GetAllValues() => this._data.Values.SelectMany(x => x.OrEmptyIfNull().IgnoreNullValues());
 
     /// <inheritdoc />
+    public void Clear() => this._data.Clear();
+
+    /// <inheritdoc />
     public IEnumerator<KeyValuePair<string, IEnumerable<TValue>>> GetEnumerator()
     {
         foreach (var (category, utilities) in this._data)

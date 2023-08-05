@@ -3,7 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using TryAtSoftware.CleanTests.Core.Dependencies;
+using TryAtSoftware.CleanTests.Core.Construction;
 using TryAtSoftware.CleanTests.Core.Enums;
 using TryAtSoftware.CleanTests.Core.Extensions;
 using TryAtSoftware.CleanTests.Core.Interfaces;
