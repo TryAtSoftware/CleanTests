@@ -77,6 +77,7 @@ public class ConstructionManager : IConstructionManager
 
         var graphIterator = new CombinatorialMachine(dependenciesCollection);
         var dependenciesVariations = graphIterator.GenerateAllCombinations();
+
         foreach (var variation in dependenciesVariations)
         {
             var variationDependenciesConstructionGraphs = variation.Values.Select(x => dependencyGraphsById[x]).ToList();
@@ -93,6 +94,24 @@ public class ConstructionManager : IConstructionManager
         Func<ICleanUtilityDescriptor, bool>? predicate = null;
         if (utilityDescriptor.IsGlobal) predicate = x => x.IsGlobal;
         return this._cleanTestAssemblyData.CleanUtilities.Get(requirement, localDemands, predicate);
+    }
+
+    private static FullCleanUtilityConstructionGraph Copy(FullCleanUtilityConstructionGraph graph)
+    {
+        var graphCopy = new FullCleanUtilityConstructionGraph(graph.Id);
+        foreach (var descriptor in graph.ConstructionDescriptors)
+        {
+            var descriptorCopy = new List<FullCleanUtilityConstructionGraph>(capacity: descriptor.Count);
+            foreach (var dependencyGraph in descriptor)
+            {
+                var dependencyGraphCopy = Copy(dependencyGraph);
+                descriptorCopy.Add(dependencyGraphCopy);
+            }
+
+            graphCopy.ConstructionDescriptors.Add(descriptorCopy);
+        }
+
+        return graphCopy;
     }
 
     /// <summary>
