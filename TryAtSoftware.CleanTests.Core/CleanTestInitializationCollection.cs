@@ -16,8 +16,14 @@ public class CleanTestInitializationCollection<TValue> : ICleanTestInitializatio
     /// <inheritdoc />
     public IEnumerable<TValue> Get(string category)
     {
-        this._data.TryGetValue(category, out var registeredUtilities);
-        return registeredUtilities.OrEmptyIfNull();
+        this._data.TryGetValue(category, out var registeredValues);
+        return registeredValues.OrEmptyIfNull();
+    }
+
+    public int GetCount(string category)
+    {
+        this._data.TryGetValue(category, out var registeredValues);
+        return registeredValues?.Count ?? 0;
     }
 
     /// <inheritdoc />

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using BenchmarkDotNet.Attributes;
 using TryAtSoftware.CleanTests.Core.Utilities;
+using TryAtSoftware.CleanTests.UnitTests.Extensions;
 using TryAtSoftware.CleanTests.UnitTests.Parametrization;
 
 /*
@@ -25,13 +26,13 @@ public class CombinatorialMachineBenchmark
     private CombinatorialMachine _machine;
 
     [ParamsSource(nameof(GetSetupValues))]
-    public CombinatorialMachineSetup Setup { get; set; }
+    public EnvironmentSetup Setup { get; set; }
     
     [GlobalSetup]
-    public void SetupCombinatorialMachine() => this._machine = this.Setup.Materialize();
+    public void SetupCombinatorialMachine() => this._machine = this.Setup.MaterializeAsCombinatorialMachine();
 
     [Benchmark]
     public void GenerateAllCombinations() => _ = this._machine.GenerateAllCombinations().ToArray();
 
-    public static IEnumerable<CombinatorialMachineSetup> GetSetupValues() => TestParameters.ConstructObservableCombinatorialMachineSetups();
+    public static IEnumerable<EnvironmentSetup> GetSetupValues() => TestParameters.ConstructObservableCombinatorialMachineSetups().Select(x => x.EnvironmentSetup);
 }

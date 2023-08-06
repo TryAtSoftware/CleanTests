@@ -40,7 +40,7 @@ public class SerializableCleanTestCaseData : IXunitSerializable
         foreach (var genericTypesArray in deserializedGenericTypes) genericTypesMap[genericTypesArray[0]] = genericTypesArray[1];
 
         var deserializedInitializationUtilities = info.GetValue<SerializableIndividualDependencyNode[]>("iu");
-        var initializationUtilities = deserializedInitializationUtilities.OrEmptyIfNull().Select(x => x?.DependencyNode).IgnoreNullValues();
+        var initializationUtilities = deserializedInitializationUtilities.OrEmptyIfNull().Select(x => x?.ConstructionGraph).IgnoreNullValues();
         var displayNamePrefix = info.GetValue<string?>("dnp");
         
         this.CleanTestData = new CleanTestCaseData(genericTypesMap, initializationUtilities, displayNamePrefix);

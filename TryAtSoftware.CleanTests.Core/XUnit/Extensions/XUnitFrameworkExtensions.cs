@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using TryAtSoftware.CleanTests.Core.Dependencies;
 using TryAtSoftware.CleanTests.Core.Interfaces;
 using TryAtSoftware.CleanTests.Core.XUnit.Interfaces;
 using TryAtSoftware.Extensions.Collections;
@@ -26,9 +27,9 @@ public static class XUnitFrameworkExtensions
         return true;
     }
 
-    public static (ICleanUtilityDescriptor InitializationUtility, Type ImplementationType) Materialize(this IndividualCleanUtilityDependencyNode dependencyNode, IDictionary<string, ICleanUtilityDescriptor> cleanUtilitiesById, IDictionary<Type, Type> genericTypesMap)
+    public static (ICleanUtilityDescriptor InitializationUtility, Type ImplementationType) Materialize(this IndividualCleanUtilityConstructionGraph constructionGraph, IDictionary<string, ICleanUtilityDescriptor> cleanUtilitiesById, IDictionary<Type, Type> genericTypesMap)
     {
-        var initializationUtility = cleanUtilitiesById[dependencyNode.Id];
+        var initializationUtility = cleanUtilitiesById[constructionGraph.Id];
 
         var genericTypesSetup = initializationUtility.Type.ExtractGenericParametersSetup(genericTypesMap);
         var implementationType = initializationUtility.Type.MakeGenericType(genericTypesSetup);
@@ -36,7 +37,7 @@ public static class XUnitFrameworkExtensions
         return (initializationUtility, implementationType);
     }
 
-    public static string GetUniqueId(this IndividualCleanUtilityDependencyNode node)
+    public static string GetUniqueId(this IndividualCleanUtilityConstructionGraph node)
     {
         var value = node.Id;
         if (node.Dependencies.Count == 0) return value;

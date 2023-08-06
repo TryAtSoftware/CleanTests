@@ -3,6 +3,8 @@ namespace TryAtSoftware.CleanTests.Core.XUnit.Discovery;
 using System;
 using System.Collections.Generic;
 using TryAtSoftware.CleanTests.Core.Attributes;
+using TryAtSoftware.CleanTests.Core.Construction;
+using TryAtSoftware.CleanTests.Core.Dependencies;
 using TryAtSoftware.CleanTests.Core.Extensions;
 using TryAtSoftware.CleanTests.Core.Interfaces;
 using TryAtSoftware.CleanTests.Core.XUnit.Extensions;
@@ -18,12 +20,14 @@ public class CleanTestFrameworkDiscoverer : TestFrameworkDiscoverer
 {
     private readonly FallbackTestFrameworkDiscoverer _fallbackTestFrameworkDiscoverer;
     private readonly CleanTestAssemblyData _cleanTestAssemblyData;
+    private readonly IConstructionManager _constructionManager;
 
     public CleanTestFrameworkDiscoverer(IAssemblyInfo assemblyInfo, ISourceInformationProvider sourceProvider, IMessageSink diagnosticMessageSink, CleanTestAssemblyData assemblyData)
         : base(assemblyInfo, sourceProvider, diagnosticMessageSink)
     {
         this._cleanTestAssemblyData = assemblyData ?? throw new ArgumentNullException(nameof(assemblyData));
         this._fallbackTestFrameworkDiscoverer = new FallbackTestFrameworkDiscoverer(assemblyInfo, sourceProvider, diagnosticMessageSink);
+        this._constructionManager = new ConstructionManager(this._cleanTestAssemblyData);
         this.DisposalTracker.Add(this._fallbackTestFrameworkDiscoverer);
     }
 
@@ -99,7 +103,7 @@ public class CleanTestFrameworkDiscoverer : TestFrameworkDiscoverer
         if (testCaseDiscovererType is null) return;
 
         var customInitializationUtilitiesCollection = this.GetInitializationUtilities(methodAttributeContainer, options.GlobalRequirements);
-        var testCaseDiscoverer = Activator.CreateInstance(testCaseDiscovererType, this.DiagnosticMessageSink, options.TestCaseDiscoveryOptions, customInitializationUtilitiesCollection, this._cleanTestAssemblyData) as IXunitTestCaseDiscoverer;
+        var testCaseDiscoverer = Activator.CreateInstance(testCaseDiscovererType, this.DiagnosticMessageSink, options.TestCaseDiscoveryOptions, customInitializationUtilitiesCollection, this._constructionManager, this._cleanTestAssemblyData) as IXunitTestCaseDiscoverer;
 
         if (testCaseDiscoverer is null) return;
 
