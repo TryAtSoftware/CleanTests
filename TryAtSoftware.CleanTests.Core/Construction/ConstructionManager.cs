@@ -72,6 +72,7 @@ public class ConstructionManager : IConstructionManager
                 dependencyGraphsById[dependency.Id] = dependencyGraph;
             }
 
+            // Construction graph for the current utility should not be built if none of the dependencies can be constructed successfully within the given context.
             if (dependenciesCollection.GetCount(requirement) == 0) return null;
         }
 
@@ -91,6 +92,8 @@ public class ConstructionManager : IConstructionManager
             if (dependenciesConstructionGraphs is not null) graph.ConstructionDescriptors.Add(dependenciesConstructionGraphs);
         }
 
+        // Construction graph for the current utility should not be built if there are no construction descriptors left after the normalization stage. 
+        if (graph.ConstructionDescriptors.Count == 0) return null;
         return graph;
     }
 
