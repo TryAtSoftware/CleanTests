@@ -34,14 +34,14 @@ public abstract class BaseTestCaseDiscoverer : IXunitTestCaseDiscoverer
     public IEnumerable<IXunitTestCase> Discover(ITestFrameworkDiscoveryOptions discoveryOptions, ITestMethod testMethod, IAttributeInfo factAttribute)
     {
         var graphIterator = new CombinatorialMachine(this._initializationUtilitiesCollection);
-        var variations = graphIterator.GenerateAllCombinations();
+        var combinations = graphIterator.GenerateAllCombinations();
 
         var argumentsCollection = this.GetTestMethodArguments(this._diagnosticMessageSink, testMethod).ToArray();
 
         var testCases = new List<IXunitTestCase>();
-        foreach (var variation in variations)
+        foreach (var combination in combinations)
         {
-            var dependenciesSet = this._constructionManager.BuildIndividualConstructionGraphs(variation.Values);
+            var dependenciesSet = this._constructionManager.BuildIndividualConstructionGraphs(combination.Values);
 
             foreach (var dependencies in dependenciesSet)
             {

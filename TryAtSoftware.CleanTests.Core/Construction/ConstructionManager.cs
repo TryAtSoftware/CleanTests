@@ -22,16 +22,19 @@ public class ConstructionManager : IConstructionManager
 
     public IndividualCleanUtilityConstructionGraph[][] BuildIndividualConstructionGraphs(IEnumerable<string> utilityIds)
     {
-        var dependenciesConstructionGraphs = new List<FullCleanUtilityConstructionGraph>();
+        var constructionGraphs = new List<FullCleanUtilityConstructionGraph>();
+        var utilitiesByCategory = new Dictionary<string, ICleanUtilityDescriptor>();
         foreach (var utilityId in utilityIds)
         {
             var constructionGraph = this.AccessConstructionGraph(utilityId);
             if (constructionGraph is null) return Array.Empty<IndividualCleanUtilityConstructionGraph[]>();
 
-            dependenciesConstructionGraphs.Add(constructionGraph);
+            constructionGraphs.Add(constructionGraph);
+            this.ExtractUtilityByCategory(utilityId, utilitiesByCategory);
         }
 
-        var individualRepresentationsOfConstructionGraphs = dependenciesConstructionGraphs.Select(FlattenConstructionGraph).ToArray();
+        var individualRepresentationsOfConstructionGraphs = new IndividualCleanUtilityConstructionGraph[constructionGraphs.Count][];
+        for (var i = 0; i < constructionGraphs.Count; i++) individualRepresentationsOfConstructionGraphs[i] = FlattenConstructionGraph(constructionGraphs[i], x => this.OuterDemandsAreFulfilled(x, utilitiesByCategory));
         return Merge(individualRepresentationsOfConstructionGraphs);
     }
 
@@ -79,10 +82,10 @@ public class ConstructionManager : IConstructionManager
 
         var constructionGraphsPerCombination = new FullCleanUtilityConstructionGraph[utility.InternalRequirements.Count];
         var utilitiesByCategoryPerCombination = new Dictionary<string, ICleanUtilityDescriptor>();
-        foreach (var combination in dependenciesCombinations)
+        foreach (var combination in dependenciesCombinations.Select(x => x.Values))
         {
-            this.ExtractUtilitiesByCategory(combination.Values, utilitiesByCategoryPerCombination);
-            this.ExtractConstructionGraphs(combination.Values, dependencyGraphsById, constructionGraphsPerCombination);
+            this.ExtractUtilitiesByCategory(combination, utilitiesByCategoryPerCombination);
+            ExtractConstructionGraphs(combination, dependencyGraphsById, constructionGraphsPerCombination);
 
             var dependenciesConstructionGraphs = this.NormalizeDependenciesConstructionGraphs(constructionGraphsPerCombination, utilitiesByCategoryPerCombination);
             if (dependenciesConstructionGraphs is not null) graph.ConstructionDescriptors.Add(dependenciesConstructionGraphs);
@@ -94,7 +97,7 @@ public class ConstructionManager : IConstructionManager
     private FullCleanUtilityConstructionGraph[]? NormalizeDependenciesConstructionGraphs(FullCleanUtilityConstructionGraph[] constructionGraphs, IDictionary<string, ICleanUtilityDescriptor> outerUtilitiesByCategory)
     {
         var result = new FullCleanUtilityConstructionGraph[constructionGraphs.Length];
-        
+
         for (var i = 0; i < constructionGraphs.Length; i++)
         {
             var graphCopy = constructionGraphs[i].Copy();
@@ -109,7 +112,7 @@ public class ConstructionManager : IConstructionManager
 
                 if (!useAny) return null;
             }
-            
+
             result[i] = graphCopy;
         }
 
@@ -134,13 +137,16 @@ public class ConstructionManager : IConstructionManager
     private void ExtractUtilitiesByCategory(IEnumerable<string> utilityIds, IDictionary<string, ICleanUtilityDescriptor> destination)
     {
         foreach (var utilityId in utilityIds)
-        {
-            var utility = this._cleanTestAssemblyData.CleanUtilitiesById[utilityId];
-            destination[utility.Category] = utility;
-        }
+            this.ExtractUtilityByCategory(utilityId, destination);
     }
 
-    private void ExtractConstructionGraphs(IEnumerable<string> utilityIds, IDictionary<string, FullCleanUtilityConstructionGraph> constructionGraphsById, FullCleanUtilityConstructionGraph[] destination)
+    private void ExtractUtilityByCategory(string utilityId, IDictionary<string, ICleanUtilityDescriptor> destination)
+    {
+        var utility = this._cleanTestAssemblyData.CleanUtilitiesById[utilityId];
+        destination[utility.Category] = utility;
+    }
+
+    private static void ExtractConstructionGraphs(IEnumerable<string> utilityIds, IDictionary<string, FullCleanUtilityConstructionGraph> constructionGraphsById, FullCleanUtilityConstructionGraph[] destination)
     {
         var index = 0;
         foreach (var utilityId in utilityIds)
@@ -163,6 +169,7 @@ public class ConstructionManager : IConstructionManager
     /// Use this method to transform a <see cref="FullCleanUtilityConstructionGraph"/> to a collection of <see cref="IndividualCleanUtilityConstructionGraph"/> instances.
     /// </summary>
     /// <param name="constructionGraph">The construction graph that should be transformed.</param>
+    /// <param name="rootConstructionDescriptorPredicate">A filter that should be applied to the root construction descriptors.</param>
     /// <returns>Returns the collection of subsequently built <see cref="IndividualCleanUtilityConstructionGraph"/> instances.</returns>
     /// <remarks>
     /// Let's assume that we have the following construction graph:
@@ -198,7 +205,7 @@ public class ConstructionManager : IConstructionManager
     ///         | Service 2.1B |
     ///     | Service 3A |
     /// </remarks>
-    private static IndividualCleanUtilityConstructionGraph[] FlattenConstructionGraph(FullCleanUtilityConstructionGraph constructionGraph)
+    private static IndividualCleanUtilityConstructionGraph[] FlattenConstructionGraph(FullCleanUtilityConstructionGraph constructionGraph, Func<IEnumerable<FullCleanUtilityConstructionGraph>, bool>? rootConstructionDescriptorPredicate = null)
     {
         if (constructionGraph.ConstructionDescriptors.Count == 0)
         {
@@ -209,6 +216,8 @@ public class ConstructionManager : IConstructionManager
         var ans = new List<IndividualCleanUtilityConstructionGraph>();
         foreach (var constructionDescriptor in constructionGraph.ConstructionDescriptors)
         {
+            if (rootConstructionDescriptorPredicate is not null && !rootConstructionDescriptorPredicate(constructionDescriptor)) continue;
+
             var current = new IndividualCleanUtilityConstructionGraph[constructionDescriptor.Length][];
             for (var i = 0; i < constructionDescriptor.Length; i++)
                 current[i] = FlattenConstructionGraph(constructionDescriptor[i]);
