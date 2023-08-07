@@ -59,18 +59,7 @@ public class ConstructionManager : IConstructionManager
         var dependencyGraphsById = new Dictionary<string, FullCleanUtilityConstructionGraph>();
         foreach (var requirement in utility.InternalRequirements)
         {
-            var currentDependencies = this.ExtractDependencies(utility, requirement);
-
-            foreach (var dependency in currentDependencies)
-            {
-                if (usedUtilities.Contains(dependency.Id)) continue;
-
-                var dependencyGraph = this.BuildConstructionGraph(dependency.Id, usedUtilities);
-                if (dependencyGraph is null) continue;
-
-                dependenciesCollection.Register(requirement, dependency);
-                dependencyGraphsById[dependency.Id] = dependencyGraph;
-            }
+            this.ExtractDependencies(utility, requirement, usedUtilities, dependenciesCollection, dependencyGraphsById);
 
             // Construction graph for the current utility should not be built if none of the dependencies can be constructed successfully within the given context.
             if (dependenciesCollection.GetCount(requirement) == 0) return null;
@@ -159,13 +148,24 @@ public class ConstructionManager : IConstructionManager
         }
     }
 
-    private ICleanUtilityDescriptor[] ExtractDependencies(ICleanUtilityDescriptor utilityDescriptor, string requirement)
+    private void ExtractDependencies(ICleanUtilityDescriptor utilityDescriptor, string requirement, ISet<string> usedUtilities, ICleanTestInitializationCollection<ICleanUtilityDescriptor> dependenciesCollection, IDictionary<string, FullCleanUtilityConstructionGraph> dependencyGraphsById)
     {
         var localDemands = utilityDescriptor.InternalDemands.Get(requirement);
 
         Func<ICleanUtilityDescriptor, bool>? predicate = null;
         if (utilityDescriptor.IsGlobal) predicate = x => x.IsGlobal;
-        return this._cleanTestAssemblyData.CleanUtilities.Get(requirement, localDemands, predicate);
+        var dependencies = this._cleanTestAssemblyData.CleanUtilities.Get(requirement, localDemands, predicate);
+        
+        foreach (var dependency in dependencies)
+        {
+            if (usedUtilities.Contains(dependency.Id)) continue;
+
+            var dependencyGraph = this.BuildConstructionGraph(dependency.Id, usedUtilities);
+            if (dependencyGraph is null) continue;
+
+            dependenciesCollection.Register(requirement, dependency);
+            dependencyGraphsById[dependency.Id] = dependencyGraph;
+        }
     }
 
     /// <summary>
