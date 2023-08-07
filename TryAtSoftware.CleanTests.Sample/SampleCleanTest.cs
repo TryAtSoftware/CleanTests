@@ -73,7 +73,7 @@ public class SampleCleanTest : CleanTest
 
     [CleanFact]
     [WithRequirements(Categories.People)]
-    [TestDemands(Categories.People, Characteristics.KnownPerson)]
+    [TestDemands(Categories.People, Characteristics.People.KnownPerson)]
     public void TestUtilityDistributionWithDemands()
     {
         var person = this.GetService<IPerson>();

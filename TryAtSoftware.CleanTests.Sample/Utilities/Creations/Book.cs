@@ -5,7 +5,7 @@ using TryAtSoftware.CleanTests.Sample.Utilities.People;
 
 [CleanUtility(Categories.Creations, "Book")]
 [WithRequirements(Categories.People)]
-[InternalDemands(Categories.People, Characteristics.LiteraryWorkAuthor)]
+[InternalDemands(Categories.People, Characteristics.People.LiteraryWorkAuthor)]
 public class Book : ICreation
 {
     private readonly IPerson _author;
