@@ -81,16 +81,8 @@ public class ConstructionManager : IConstructionManager
         var utilitiesByCategoryPerCombination = new Dictionary<string, ICleanUtilityDescriptor>();
         foreach (var combination in dependenciesCombinations)
         {
-            var index = 0;
-            foreach (var dependencyId in combination.Values)
-            {
-                constructionGraphsPerCombination[index] = dependencyGraphsById[dependencyId];
-
-                var dependency = this._cleanTestAssemblyData.CleanUtilitiesById[dependencyId];
-                utilitiesByCategoryPerCombination[dependency.Category] = dependency;
-                
-                index++;
-            }
+            this.ExtractUtilitiesByCategory(combination.Values, utilitiesByCategoryPerCombination);
+            this.ExtractConstructionGraphs(combination.Values, dependencyGraphsById, constructionGraphsPerCombination);
 
             var dependenciesConstructionGraphs = this.NormalizeDependenciesConstructionGraphs(constructionGraphsPerCombination, utilitiesByCategoryPerCombination);
             if (dependenciesConstructionGraphs is not null) graph.ConstructionDescriptors.Add(dependenciesConstructionGraphs);
@@ -137,6 +129,25 @@ public class ConstructionManager : IConstructionManager
         }
 
         return true;
+    }
+
+    private void ExtractUtilitiesByCategory(IEnumerable<string> utilityIds, IDictionary<string, ICleanUtilityDescriptor> destination)
+    {
+        foreach (var utilityId in utilityIds)
+        {
+            var utility = this._cleanTestAssemblyData.CleanUtilitiesById[utilityId];
+            destination[utility.Category] = utility;
+        }
+    }
+
+    private void ExtractConstructionGraphs(IEnumerable<string> utilityIds, IDictionary<string, FullCleanUtilityConstructionGraph> constructionGraphsById, FullCleanUtilityConstructionGraph[] destination)
+    {
+        var index = 0;
+        foreach (var utilityId in utilityIds)
+        {
+            destination[index] = constructionGraphsById[utilityId];
+            index++;
+        }
     }
 
     private ICleanUtilityDescriptor[] ExtractDependencies(ICleanUtilityDescriptor utilityDescriptor, string requirement)
