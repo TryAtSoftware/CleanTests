@@ -8,7 +8,7 @@
         <SonarQubeTestProject>false</SonarQubeTestProject>
 
         <PackageId>TryAtSoftware.CleanTests</PackageId>
-        <Version>1.0.2</Version>
+        <Version>1.1.0-alpha.1</Version>
         <Authors>Tony Troeff</Authors>
         <RepositoryUrl>https://github.com/TryAtSoftware/CleanTests</RepositoryUrl>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
