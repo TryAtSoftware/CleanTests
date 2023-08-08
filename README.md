@@ -39,10 +39,11 @@ And if we had to do the same for every new functionality that is coming, that wo
 
 The main goals that have been accomplished are:
 
-- Automatic generation of test cases using all proper variations of registered `clean utilities`
-- Every `clean utility` can define external demands that represent conditions about what other `clean utilities` should be present within a variation in order to generate a test case with it
+- Automatic generation of test cases using all proper combinations of registered `clean utilities`
+- Every `clean utility` can define external demands that represent conditions about what other `clean utilities` should be present within a combination in order to generate a test case with it
 - Every `clean utility` can depend internally on other `clean utilities`
 - Every `clean utility` can define internal demands that represent conditions about what `clean utilities` should be injected upon initialization
+- Every `clean utility` can define outer demands that represent conditions oriented towards the superior utilities
 - Global and local `clean utilities` - local `clean utilities` are instantiated for every test case; global `clean utilities` are instantiated only once and can be used to share common context between similar test cases
 - Parallel execution of tests cases
 
@@ -125,7 +126,9 @@ _Enabling test metadata presentation methods often has performance impact over t
 ## What are the `clean utilities`?
 
 The `clean utility` is a key component for our library. Every `clean utility` has a `category` and a `name` that are required.
-One test may require many `clean utilities` and whenever there are two or more utilities from the same category that can be used for its execution, then a test case will be generated for each possible variation of utilities.
+
+> One test may require utilities from many categories.
+> The corresponding test cases will be generated using **unique** combination of utilities from the required categories.
 
 Every `clean utility` can me marked as `local` or `global`.
 `Local clean utilities` will be instantiated at least once for every test case requiring their participation.
@@ -165,11 +168,18 @@ If this is not possible, the test assembly should be explicitly decorated with a
 ```C#
 [assembly: TryAtSoftware.CleanTests.Core.Attributes.SharesUtilitiesWith("Assembly.With.Shared.CleanUtilities")]
 ```
+### Dependencies
+
+Every `clean utility` can depend on other `clean utiliites`.
+This relationship can be modelled throughout the `WithRequirements` attribute.
+
+When generating test cases, each unique instantiation procedure (i.e. the resolution of dependencies) for a given `clean utility` will be presumed as a separate member of the combinatorial set.
+For example, if the dependencies of a given utility can be resolved in **N** different ways, the generation process will use all **N** different instantiation procedures as if they were different utilities.
 
 ### External demands
 
-Every `clean utility` can define `external demands` throughout the `ExternalDemands` attribute. With its help for each `category` a set of demanded `characteristics` can be defined.
-These demanded characteristics will alter the way variations of `clean utilities` are generated - all external demands should be satisfied for all utilities participating in the variation.
+Every `clean utility` can define `external demands` throughout the `ExternalDemands` attribute.
+These demanded characteristics will alter the way combinations of `clean utilities` are generated - all external demands should be satisfied for all utilities participating in the combination.
 
 Example:
 ```C#
@@ -181,12 +191,10 @@ public class ConsoleReader : IReader
 }
 ```
 
-### Internal requirements and demands
+### Internal demands
 
-Every `clean utility` can depend on other `clean utiliites`. This relationship can be modelled throughout the `WithRequirements` attribute.
-When such `clean utility` participates in a variation, that same variation will be reused as many times as the number of possible instantiation procedures there are (according to the registered `clean utilities` of the required categories). 
-
-Moreover, internal `demands` can be applied (throughout the `InternalDemands` attribute) to filter out the dependent `clean utilities` according to a predefined set of characteristics. 
+Every `clean utility` can define `internal demands` throughout the `InternalDemands` attribute.
+This type of demanded characteristics can be used to filter out the dependent `clean utilities`. 
 
 Example:
 ```C#
@@ -207,6 +215,12 @@ public class Engine : IEngine
     /* further implementation of the `IEngine` interface... */
 }
 ```
+
+### Outer demands
+
+Every `clean utility` can define `outer demands` throughout the `OuterDemands` attribute.
+This type of demanded characteristics can be used to model conditions oriented towards utilities in the outer scope (also known as _superior_ utilities).
+
 ## How to use clean tests?
 
 This library is built atop [XUnit](https://xunit.net/) so if you are familiar with the way this framework operates, you are most likely ready to use `clean tests`.
