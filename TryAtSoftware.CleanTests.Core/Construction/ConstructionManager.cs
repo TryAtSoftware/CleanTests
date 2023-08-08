@@ -3,7 +3,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using TryAtSoftware.CleanTests.Core.Dependencies;
 using TryAtSoftware.CleanTests.Core.Extensions;
 using TryAtSoftware.CleanTests.Core.Interfaces;
 using TryAtSoftware.CleanTests.Core.Utilities;
@@ -23,16 +22,19 @@ public class ConstructionManager : IConstructionManager
 
     public IndividualCleanUtilityConstructionGraph[][] BuildIndividualConstructionGraphs(IEnumerable<string> utilityIds)
     {
-        var dependenciesConstructionGraphs = new List<FullCleanUtilityConstructionGraph>();
+        var constructionGraphs = new List<FullCleanUtilityConstructionGraph>();
+        var utilitiesByCategory = new Dictionary<string, ICleanUtilityDescriptor>();
         foreach (var utilityId in utilityIds)
         {
             var constructionGraph = this.AccessConstructionGraph(utilityId);
             if (constructionGraph is null) return Array.Empty<IndividualCleanUtilityConstructionGraph[]>();
 
-            dependenciesConstructionGraphs.Add(constructionGraph);
+            constructionGraphs.Add(constructionGraph);
+            this.ExtractUtilityByCategory(utilityId, utilitiesByCategory);
         }
 
-        var individualRepresentationsOfConstructionGraphs = dependenciesConstructionGraphs.Select(FlattenConstructionGraph).ToArray();
+        var individualRepresentationsOfConstructionGraphs = new IndividualCleanUtilityConstructionGraph[constructionGraphs.Count][];
+        for (var i = 0; i < constructionGraphs.Count; i++) individualRepresentationsOfConstructionGraphs[i] = FlattenConstructionGraph(constructionGraphs[i], x => this.OuterDemandsAreFulfilled(x, utilitiesByCategory));
         return Merge(individualRepresentationsOfConstructionGraphs);
     }
 
@@ -57,48 +59,120 @@ public class ConstructionManager : IConstructionManager
         var dependencyGraphsById = new Dictionary<string, FullCleanUtilityConstructionGraph>();
         foreach (var requirement in utility.InternalRequirements)
         {
-            var currentDependencies = this.ExtractDependencies(utility, requirement);
+            this.ExtractDependencies(utility, requirement, usedUtilities, dependenciesCollection, dependencyGraphsById);
 
-            foreach (var dependency in currentDependencies)
-            {
-                if (usedUtilities.Contains(dependency.Id)) continue;
-
-                var dependencyGraph = this.BuildConstructionGraph(dependency.Id, usedUtilities);
-                if (dependencyGraph is null) continue;
-
-                dependenciesCollection.Register(requirement, dependency);
-                dependencyGraphsById[dependency.Id] = dependencyGraph;
-            }
-
+            // Construction graph for the current utility should not be built if none of the dependencies can be constructed successfully within the given context.
             if (dependenciesCollection.GetCount(requirement) == 0) return null;
         }
 
         usedUtilities.Remove(utilityId);
 
-        var graphIterator = new CombinatorialMachine(dependenciesCollection);
-        var dependenciesVariations = graphIterator.GenerateAllCombinations();
-        foreach (var variation in dependenciesVariations)
+        var combinatorialMachine = new CombinatorialMachine(dependenciesCollection);
+        var dependenciesCombinations = combinatorialMachine.GenerateAllCombinations();
+
+        var constructionGraphsPerCombination = new FullCleanUtilityConstructionGraph[utility.InternalRequirements.Count];
+        var utilitiesByCategoryPerCombination = new Dictionary<string, ICleanUtilityDescriptor>();
+        foreach (var combination in dependenciesCombinations.Select(x => x.Values))
         {
-            var variationDependenciesConstructionGraphs = variation.Values.Select(x => dependencyGraphsById[x]).ToList();
-            graph.ConstructionDescriptors.Add(variationDependenciesConstructionGraphs);
+            this.ExtractUtilitiesByCategory(combination, utilitiesByCategoryPerCombination);
+            ExtractConstructionGraphs(combination, dependencyGraphsById, constructionGraphsPerCombination);
+
+            var dependenciesConstructionGraphs = this.NormalizeDependenciesConstructionGraphs(constructionGraphsPerCombination, utilitiesByCategoryPerCombination);
+            if (dependenciesConstructionGraphs is not null) graph.ConstructionDescriptors.Add(dependenciesConstructionGraphs);
         }
 
+        // Construction graph for the current utility should not be built if there are no construction descriptors left after the normalization stage. 
+        if (graph.ConstructionDescriptors.Count == 0) return null;
         return graph;
     }
 
-    private ICleanUtilityDescriptor[] ExtractDependencies(ICleanUtilityDescriptor utilityDescriptor, string requirement)
+    private FullCleanUtilityConstructionGraph[]? NormalizeDependenciesConstructionGraphs(FullCleanUtilityConstructionGraph[] constructionGraphs, IDictionary<string, ICleanUtilityDescriptor> outerUtilitiesByCategory)
+    {
+        var result = new FullCleanUtilityConstructionGraph[constructionGraphs.Length];
+
+        for (var i = 0; i < constructionGraphs.Length; i++)
+        {
+            var graphCopy = constructionGraphs[i].Copy();
+            if (graphCopy.ConstructionDescriptors.Count > 0)
+            {
+                var useAny = false;
+                for (var j = graphCopy.ConstructionDescriptors.Count - 1; j >= 0; j--)
+                {
+                    if (this.OuterDemandsAreFulfilled(graphCopy.ConstructionDescriptors[j], outerUtilitiesByCategory)) useAny = true;
+                    else graphCopy.ConstructionDescriptors.RemoveAt(j);
+                }
+
+                if (!useAny) return null;
+            }
+
+            result[i] = graphCopy;
+        }
+
+        return result;
+    }
+
+    private bool OuterDemandsAreFulfilled(IEnumerable<FullCleanUtilityConstructionGraph> constructionDescriptor, IDictionary<string, ICleanUtilityDescriptor> outerUtilitiesByCategory)
+    {
+        foreach (var dependencyConstructionGraph in constructionDescriptor)
+        {
+            var dependencyUtility = this._cleanTestAssemblyData.CleanUtilitiesById[dependencyConstructionGraph.Id];
+            foreach (var (category, demands) in dependencyUtility.OuterDemands)
+            {
+                if (outerUtilitiesByCategory.TryGetValue(category, out var outerUtilityForCategory) && !outerUtilityForCategory.FulfillsAllDemands(demands))
+                    return false;
+            }
+        }
+
+        return true;
+    }
+
+    private void ExtractUtilitiesByCategory(IEnumerable<string> utilityIds, IDictionary<string, ICleanUtilityDescriptor> destination)
+    {
+        foreach (var utilityId in utilityIds)
+            this.ExtractUtilityByCategory(utilityId, destination);
+    }
+
+    private void ExtractUtilityByCategory(string utilityId, IDictionary<string, ICleanUtilityDescriptor> destination)
+    {
+        var utility = this._cleanTestAssemblyData.CleanUtilitiesById[utilityId];
+        destination[utility.Category] = utility;
+    }
+
+    private static void ExtractConstructionGraphs(IEnumerable<string> utilityIds, IDictionary<string, FullCleanUtilityConstructionGraph> constructionGraphsById, FullCleanUtilityConstructionGraph[] destination)
+    {
+        var index = 0;
+        foreach (var utilityId in utilityIds)
+        {
+            destination[index] = constructionGraphsById[utilityId];
+            index++;
+        }
+    }
+
+    private void ExtractDependencies(ICleanUtilityDescriptor utilityDescriptor, string requirement, ISet<string> usedUtilities, ICleanTestInitializationCollection<ICleanUtilityDescriptor> dependenciesCollection, IDictionary<string, FullCleanUtilityConstructionGraph> dependencyGraphsById)
     {
         var localDemands = utilityDescriptor.InternalDemands.Get(requirement);
 
         Func<ICleanUtilityDescriptor, bool>? predicate = null;
         if (utilityDescriptor.IsGlobal) predicate = x => x.IsGlobal;
-        return this._cleanTestAssemblyData.CleanUtilities.Get(requirement, localDemands, predicate);
+        var dependencies = this._cleanTestAssemblyData.CleanUtilities.Get(requirement, localDemands, predicate);
+        
+        foreach (var dependency in dependencies)
+        {
+            if (usedUtilities.Contains(dependency.Id)) continue;
+
+            var dependencyGraph = this.BuildConstructionGraph(dependency.Id, usedUtilities);
+            if (dependencyGraph is null) continue;
+
+            dependenciesCollection.Register(requirement, dependency);
+            dependencyGraphsById[dependency.Id] = dependencyGraph;
+        }
     }
 
     /// <summary>
     /// Use this method to transform a <see cref="FullCleanUtilityConstructionGraph"/> to a collection of <see cref="IndividualCleanUtilityConstructionGraph"/> instances.
     /// </summary>
     /// <param name="constructionGraph">The construction graph that should be transformed.</param>
+    /// <param name="rootConstructionDescriptorPredicate">A filter that should be applied to the root construction descriptors.</param>
     /// <returns>Returns the collection of subsequently built <see cref="IndividualCleanUtilityConstructionGraph"/> instances.</returns>
     /// <remarks>
     /// Let's assume that we have the following construction graph:
@@ -134,7 +208,7 @@ public class ConstructionManager : IConstructionManager
     ///         | Service 2.1B |
     ///     | Service 3A |
     /// </remarks>
-    private static IndividualCleanUtilityConstructionGraph[] FlattenConstructionGraph(FullCleanUtilityConstructionGraph constructionGraph)
+    private static IndividualCleanUtilityConstructionGraph[] FlattenConstructionGraph(FullCleanUtilityConstructionGraph constructionGraph, Func<IEnumerable<FullCleanUtilityConstructionGraph>, bool>? rootConstructionDescriptorPredicate = null)
     {
         if (constructionGraph.ConstructionDescriptors.Count == 0)
         {
@@ -145,8 +219,10 @@ public class ConstructionManager : IConstructionManager
         var ans = new List<IndividualCleanUtilityConstructionGraph>();
         foreach (var constructionDescriptor in constructionGraph.ConstructionDescriptors)
         {
-            var current = new IndividualCleanUtilityConstructionGraph[constructionDescriptor.Count][];
-            for (var i = 0; i < constructionDescriptor.Count; i++)
+            if (rootConstructionDescriptorPredicate is not null && !rootConstructionDescriptorPredicate(constructionDescriptor)) continue;
+
+            var current = new IndividualCleanUtilityConstructionGraph[constructionDescriptor.Length][];
+            for (var i = 0; i < constructionDescriptor.Length; i++)
                 current[i] = FlattenConstructionGraph(constructionDescriptor[i]);
 
             var nodes = IterateAllSequences(current, x => Union(constructionGraph.Id, x)).Select(x => Union(constructionGraph.Id, x.Dependencies));

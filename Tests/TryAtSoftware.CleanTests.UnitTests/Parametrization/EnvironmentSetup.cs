@@ -7,7 +7,8 @@ using TryAtSoftware.Extensions.Collections;
 public class EnvironmentSetup
 {
     private readonly Dictionary<string, int> _numberOfUtilitiesPerCategory = new ();
-    private readonly Dictionary<string, Dictionary<string, List<string>>> _demandsPerUtility = new ();
+    private readonly Dictionary<string, Dictionary<string, List<string>>> _externalDemandsPerUtility = new ();
+    private readonly Dictionary<string, Dictionary<string, List<string>>> _outerDemandsPerUtility = new ();
     private readonly Dictionary<string, List<string>> _characteristics = new ();
     private readonly Dictionary<string, List<string>> _requirements = new ();
 
@@ -52,14 +53,26 @@ public class EnvironmentSetup
         return this;
     }
 
-    public EnvironmentSetup WithDemands(string utilityCategory, int utilityId, string demandsCategory, params string[] demands)
+    public EnvironmentSetup WithExternalDemands(string utilityCategory, int utilityId, string demandsCategory, params string[] demands)
     {
         this.ValidateUtilityExists(utilityCategory, utilityId);
         
         var universalId = ComposeUniversalUtilityId(utilityCategory, utilityId);
-        if (!this._demandsPerUtility.ContainsKey(universalId)) this._demandsPerUtility[universalId] = new Dictionary<string, List<string>>();
-        if (!this._demandsPerUtility[universalId].ContainsKey(demandsCategory)) this._demandsPerUtility[universalId][demandsCategory] = new List<string>();
-        foreach (var demand in demands.OrEmptyIfNull().IgnoreNullOrWhitespaceValues()) this._demandsPerUtility[universalId][demandsCategory].Add(demand);
+        if (!this._externalDemandsPerUtility.ContainsKey(universalId)) this._externalDemandsPerUtility[universalId] = new Dictionary<string, List<string>>();
+        if (!this._externalDemandsPerUtility[universalId].ContainsKey(demandsCategory)) this._externalDemandsPerUtility[universalId][demandsCategory] = new List<string>();
+        foreach (var demand in demands.OrEmptyIfNull().IgnoreNullOrWhitespaceValues()) this._externalDemandsPerUtility[universalId][demandsCategory].Add(demand);
+
+        return this;
+    }
+
+    public EnvironmentSetup WithOuterDemands(string utilityCategory, int utilityId, string demandsCategory, params string[] demands)
+    {
+        this.ValidateUtilityExists(utilityCategory, utilityId);
+        
+        var universalId = ComposeUniversalUtilityId(utilityCategory, utilityId);
+        if (!this._outerDemandsPerUtility.ContainsKey(universalId)) this._outerDemandsPerUtility[universalId] = new Dictionary<string, List<string>>();
+        if (!this._outerDemandsPerUtility[universalId].ContainsKey(demandsCategory)) this._outerDemandsPerUtility[universalId][demandsCategory] = new List<string>();
+        foreach (var demand in demands.OrEmptyIfNull().IgnoreNullOrWhitespaceValues()) this._outerDemandsPerUtility[universalId][demandsCategory].Add(demand);
 
         return this;
     }
@@ -78,10 +91,16 @@ public class EnvironmentSetup
                 this._requirements.TryGetValue(universalId, out var requirements);
                 ICleanUtilityDescriptor utility = new CleanUtilityDescriptor(category, typeof(int), universalId, isGlobal: false, characteristics, requirements);
 
-                this._demandsPerUtility.TryGetValue(universalId, out var demandsByCategory);
-                foreach (var (demandCategory, demands) in demandsByCategory.OrEmptyIfNull())
+                this._externalDemandsPerUtility.TryGetValue(universalId, out var externalDemandsByCategory);
+                foreach (var (demandCategory, demands) in externalDemandsByCategory.OrEmptyIfNull())
                 {
                     foreach (var demand in demands) utility.ExternalDemands.Register(demandCategory, demand);
+                }
+                
+                this._outerDemandsPerUtility.TryGetValue(universalId, out var outerDemandsByCategory);
+                foreach (var (demandCategory, demands) in outerDemandsByCategory.OrEmptyIfNull())
+                {
+                    foreach (var demand in demands) utility.OuterDemands.Register(demandCategory, demand);
                 }
 
                 utilitiesCollection.Register(category, utility);

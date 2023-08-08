@@ -15,12 +15,12 @@ public static class TestParameters
     {
         var setup1 = new EnvironmentSetup("Setup #1").WithCategory("A", 3).WithCategory("B", 2).WithCategory("C", 3).WithCategory("D", 3);
         setup1.WithCharacteristics("C", 1, "exec_A2").WithCharacteristics("C", 3, "exec_A2").WithCharacteristics("D", 1, "exec_C3").WithCharacteristics("D", 2, "exec_B1", "exec_B2", "exec_C3").WithCharacteristics("D", 3, "exec_B1", "exec_B2");
-        setup1.WithDemands("A", 2, "C", "exec_A2").WithDemands("B", 1, "D", "exec_B1").WithDemands("B", 2, "D", "exec_B2").WithDemands("C", 3, "D", "exec_C3");
+        setup1.WithExternalDemands("A", 2, "C", "exec_A2").WithExternalDemands("B", 1, "D", "exec_B1").WithExternalDemands("B", 2, "D", "exec_B2").WithExternalDemands("C", 3, "D", "exec_C3");
         yield return (setup1, 26);
 
         var setup2 = new EnvironmentSetup("Setup #2").WithCategory("A", 2).WithCategory("B", 2).WithCategory("C", 2).WithCategory("D", 2).WithCategory("E", 2);
         setup2.WithCharacteristics("B", 2, "exec_A1").WithCharacteristics("C", 1, "exec_B2").WithCharacteristics("D", 2, "exec_C1").WithCharacteristics("E", 1, "exec_D2");
-        setup2.WithDemands("A", 1, "B", "exec_A1").WithDemands("B", 2, "C", "exec_B2").WithDemands("C", 1, "D", "exec_C1").WithDemands("D", 2, "E", "exec_D2");
+        setup2.WithExternalDemands("A", 1, "B", "exec_A1").WithExternalDemands("B", 2, "C", "exec_B2").WithExternalDemands("C", 1, "D", "exec_C1").WithExternalDemands("D", 2, "E", "exec_D2");
         yield return (setup2, 6);
 
         // 5 categories; 10 utilities in each; no demands
@@ -47,7 +47,7 @@ public static class TestParameters
 
         for (var i = 0; i < 9; i++)
         {
-            for (var j = 1; j <= 5; j++) setup5.WithDemands(ConstructCategoryName(i), j, ConstructCategoryName(i + 1), $"exec_{ConstructCategoryName(i)}{j}");
+            for (var j = 1; j <= 5; j++) setup5.WithExternalDemands(ConstructCategoryName(i), j, ConstructCategoryName(i + 1), $"exec_{ConstructCategoryName(i)}{j}");
         }
 
         yield return (setup5, 98415);
@@ -62,7 +62,7 @@ public static class TestParameters
 
         for (var i = 0; i < 99; i++)
         {
-            for (var j = 1; j <= 10; j++) setup6.WithDemands(ConstructCategoryName(i), j, ConstructCategoryName(i + 1), $"exec_{ConstructCategoryName(i)}{j}");
+            for (var j = 1; j <= 10; j++) setup6.WithExternalDemands(ConstructCategoryName(i), j, ConstructCategoryName(i + 1), $"exec_{ConstructCategoryName(i)}{j}");
         }
 
         yield return (setup6, 10);
@@ -70,19 +70,19 @@ public static class TestParameters
         // 1000 categories; 100 utilities in each; all utilities in the first category are incompatible with all utilities in the last category.
         var setup7 = new EnvironmentSetup("Setup #7");
         for (var i = 0; i < 1000; i++) setup7.WithCategory(ConstructCategoryName(i), 100);
-        for (var i = 1; i <= 100; i++) setup7.WithDemands(ConstructCategoryName(0), i, ConstructCategoryName(999), "q");
+        for (var i = 1; i <= 100; i++) setup7.WithExternalDemands(ConstructCategoryName(0), i, ConstructCategoryName(999), "q");
         yield return (setup7, 0);
 
         // 3 categories; 2 utilities in each; Inapplicable demands
         var setup8 = new EnvironmentSetup("Setup #8");
         for (var i = 0; i < 5; i++) setup8.WithCategory(ConstructCategoryName(i), 2);
         for (var i = 0; i < 5; i++)
-            setup8.WithDemands(ConstructCategoryName(i), 1, "non-existing demand category", "demand1", "demand2");
+            setup8.WithExternalDemands(ConstructCategoryName(i), 1, "non-existing demand category", "demand1", "demand2");
         yield return (setup8, 32);
 
         var setup9 = new EnvironmentSetup("Setup #9");
         for (var i = 0; i < 5; i++) setup9.WithCategory(ConstructCategoryName(i), 3);
-        for (var i = 0; i < 4; i++) setup9.WithDemands(ConstructCategoryName(i), 1, ConstructCategoryName(4), $"exec_{ConstructCategoryName(i)}{1}");
+        for (var i = 0; i < 4; i++) setup9.WithExternalDemands(ConstructCategoryName(i), 1, ConstructCategoryName(4), $"exec_{ConstructCategoryName(i)}{1}");
         yield return (setup9, 48);
     }
 

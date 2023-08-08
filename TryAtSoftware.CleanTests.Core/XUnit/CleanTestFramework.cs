@@ -76,8 +76,9 @@ public class CleanTestFramework : XunitTestFramework
             if (initializationUtilityAttributes.Length == 0) continue;
 
             var decoratedType = new DecoratedType(type);
-            var internalDemands = decoratedType.ExtractDemands<InternalDemandsAttribute>();
             var externalDemands = decoratedType.ExtractDemands<ExternalDemandsAttribute>();
+            var internalDemands = decoratedType.ExtractDemands<InternalDemandsAttribute>();
+            var outerDemands = decoratedType.ExtractDemands<OuterDemandsAttribute>();
             var requirements = ExtractRequirements(type);
 
             foreach (var utilityAttribute in initializationUtilityAttributes.OrEmptyIfNull().IgnoreNullValues())
@@ -88,8 +89,9 @@ public class CleanTestFramework : XunitTestFramework
                 var characteristicsArgument = utilityAttribute.GetNamedArgument<IEnumerable<string>>(nameof(CleanUtilityAttribute.Characteristics));
 
                 var initializationUtility = new CleanUtilityDescriptor(categoryArgument, type.ToRuntimeType(), nameArgument, isGlobalArgument, characteristicsArgument, requirements);
-                internalDemands.CopyTo(initializationUtility.InternalDemands);
                 externalDemands.CopyTo(initializationUtility.ExternalDemands);
+                internalDemands.CopyTo(initializationUtility.InternalDemands);
+                outerDemands.CopyTo(initializationUtility.OuterDemands);
 
                 utilitiesCollection.Add(initializationUtility);
             }

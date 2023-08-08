@@ -2,7 +2,7 @@
 
 using System;
 using System.Linq;
-using TryAtSoftware.CleanTests.Core.Dependencies;
+using TryAtSoftware.CleanTests.Core.Construction;
 using TryAtSoftware.CleanTests.Core.Extensions;
 using TryAtSoftware.Extensions.Collections;
 using Xunit.Abstractions;

@@ -2,7 +2,7 @@
 
 using System;
 using System.Collections.Generic;
-using TryAtSoftware.CleanTests.Core.Dependencies;
+using TryAtSoftware.CleanTests.Core.Construction;
 using TryAtSoftware.Extensions.Collections;
 
 public class CleanTestCaseData
