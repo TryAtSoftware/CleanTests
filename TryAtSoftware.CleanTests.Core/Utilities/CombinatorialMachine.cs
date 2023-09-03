@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using TryAtSoftware.CleanTests.Core.Interfaces;
 using TryAtSoftware.Extensions.Collections;
 
@@ -17,91 +16,108 @@ public class CombinatorialMachine
 
     public IEnumerable<IDictionary<string, string>> GenerateAllCombinations()
     {
-        var (incompatibleUtilitiesMap, incompatibilityEnforcersByCategory, incompatibilityFactorByCategory) = this.DiscoverIncompatibleUtilities();
-        var categories = this._utilities.Categories.OrderByDescending(x => incompatibilityEnforcersByCategory[x]).ThenByDescending(x => incompatibilityFactorByCategory[x]).ToArray();
+        Dictionary<string, int> utilityIndexById = new ();
+        foreach (var utility in this._utilities.GetAllValues()) utilityIndexById[utility.Id] = utilityIndexById.Count;
 
-        Dictionary<string, int> incompatibilityFactorByUtilityId = new ();
-        foreach (var utility in this._utilities.GetAllValues()) incompatibilityFactorByUtilityId[utility.Id] = 0;
+        var utilitiesCount = utilityIndexById.Count;
 
-        var slots = new string[categories.Length];
-        return this.Dfs(slotIndex: 0, categories, slots, incompatibleUtilitiesMap, incompatibilityFactorByUtilityId);
-    }
+        Dictionary<string, Bitmask> bitmasksByCategory = new ();
+        var bitmaskByUtilityIndex = new Bitmask[utilitiesCount];
 
-    private IEnumerable<IDictionary<string, string>> Dfs(int slotIndex, string[] categories, string[] slots, Dictionary<string, HashSet<string>> incompatibleUtilitiesMap, Dictionary<string, int> incompatibilityFactorByUtilityId)
-    {
-        if (slotIndex == slots.Length)
+        var characteristicsRegister = new Dictionary<string, Dictionary<string, Bitmask>>();
+
+        foreach (var (category, utilitiesForCategory) in this._utilities)
         {
-            var result = new Dictionary<string, string>();
-            for (var i = 0; i < slots.Length; i++) result[categories[i]] = slots[i];
+            var categoryBitmask = new Bitmask(utilitiesCount, initializeWithZeros: true);
+            var categoryCharacteristicRegister = new Dictionary<string, Bitmask>();
 
-            yield return result;
-            yield break;
-        }
-
-        var currentCategory = categories[slotIndex];
-
-        foreach (var utilityId in this._utilities.Get(currentCategory).Select(x => x.Id))
-        {
-            if (incompatibilityFactorByUtilityId[utilityId] > 0) continue;
-
-            foreach (var iu in incompatibleUtilitiesMap[utilityId]) incompatibilityFactorByUtilityId[iu]++;
-                
-            slots[slotIndex] = utilityId;
-            var combinations = this.Dfs(slotIndex + 1, categories, slots, incompatibleUtilitiesMap, incompatibilityFactorByUtilityId);
-            foreach (var combination in combinations) yield return combination;
-
-            foreach (var iu in incompatibleUtilitiesMap[utilityId]) incompatibilityFactorByUtilityId[iu]--;
-        }
-    }
-
-    private (Dictionary<string, HashSet<string>> IncompatibleUtilitiesMap, Dictionary<string, int> IncompatibilityEnforcersByCategory, Dictionary<string, int> incompatibilityFactorByCategory) DiscoverIncompatibleUtilities()
-    {
-        Dictionary<string, int> incompatibilityEnforcersByCategory = new (), incompatibilityFactorByCategory = new ();
-        Dictionary<string, Dictionary<string, HashSet<string>>> characteristicsRegister = new ();
-        foreach (var category in this._utilities.Categories)
-        {
-            incompatibilityEnforcersByCategory[category] = 0;
-            incompatibilityFactorByCategory[category] = 0;
-            characteristicsRegister[category] = new Dictionary<string, HashSet<string>>();
-        }
-
-        Dictionary<string, HashSet<string>> incompatibleUtilitiesMap = new ();
-        foreach (var utility in this._utilities.GetAllValues())
-        {
-            incompatibleUtilitiesMap[utility.Id] = new HashSet<string>();
-
-            foreach (var characteristic in utility.Characteristics)
+            foreach (var utility in utilitiesForCategory)
             {
-                if (!characteristicsRegister[utility.Category].ContainsKey(characteristic)) characteristicsRegister[utility.Category][characteristic] = new HashSet<string>();
-                characteristicsRegister[utility.Category][characteristic].Add(utility.Id);
-            }
-        }
+                var utilityIndex = utilityIndexById[utility.Id];
+                categoryBitmask.Set(utilityIndex);
+                bitmaskByUtilityIndex[utilityIndex] = new Bitmask(utilitiesCount, initializeWithZeros: false);
 
-        foreach (var utility in this._utilities.GetAllValues())
-        {
-            foreach (var (demandCategory, demandsForCategory) in utility.ExternalDemands)
-            {
-                if (!this._utilities.ContainsCategory(demandCategory)) continue;
-                
-                foreach (var demand in demandsForCategory)
+                foreach (var characteristic in utility.Characteristics)
                 {
-                    Func<ICleanUtilityDescriptor, bool>? predicate = null;
-                    if (characteristicsRegister[demandCategory].ContainsKey(demand)) predicate = x => !characteristicsRegister[demandCategory][demand].Contains(x.Id);
+                    if (!categoryCharacteristicRegister.ContainsKey(characteristic)) categoryCharacteristicRegister[characteristic] = new Bitmask(utilitiesCount, initializeWithZeros: true);
+                    categoryCharacteristicRegister[characteristic].Set(utilityIndex);
+                }
+            }
 
-                    foreach (var incompatibleUtilityId in this._utilities.Get(demandCategory).SafeWhere(predicate).Select(x => x.Id))
+            bitmasksByCategory[category] = categoryBitmask;
+            characteristicsRegister[category] = categoryCharacteristicRegister;
+        }
+
+        foreach (var (category, utilitiesForCategory) in this._utilities)
+        {
+            var u = ~bitmasksByCategory[category];
+            
+            foreach (var utility in utilitiesForCategory)
+            {
+                var utilityIndex = utilityIndexById[utility.Id];
+
+                bitmaskByUtilityIndex[utilityIndex] &= u;
+                foreach (var (demandCategory, demandsForCategory) in utility.ExternalDemands)
+                {
+                    var v = ~bitmasksByCategory[demandCategory];
+                    foreach (var demand in demandsForCategory)
                     {
-                        if (incompatibleUtilitiesMap[utility.Id].Add(incompatibleUtilityId))
-                        {
-                            incompatibilityEnforcersByCategory[utility.Category]++;
-                            incompatibilityFactorByCategory[utility.Category]++;
-                        }
+                        if (!characteristicsRegister.ContainsKey(demandCategory)) continue;
 
-                        if (incompatibleUtilitiesMap[incompatibleUtilityId].Add(utility.Id)) incompatibilityFactorByCategory[demandCategory]++;
+                        var complement = v;
+                        if (characteristicsRegister[demandCategory].TryGetValue(demand, out var demandBitmask)) complement |= demandBitmask;
+                        bitmaskByUtilityIndex[utilityIndex] &= complement;
+                    }
+
+                    var test = bitmaskByUtilityIndex[utilityIndex] & v;
+
+                    // if (test.SetBitsCount() == 0)
+                    if (test.FindMostSignificantSetBit() == -1)
+                    {
+                        // bitmaskByUtilityIndex[utilityIndex].Clear();
+                        bitmaskByUtilityIndex[utilityIndex] = new Bitmask(utilitiesCount, initializeWithZeros: true);
                     }
                 }
             }
         }
 
-        return (incompatibleUtilitiesMap, incompatibilityEnforcersByCategory, incompatibilityFactorByCategory);
+        // Sort by set bits count and refresh the `utilityIndexById` dictionary values.
+        var virtuallyIndexedUtilities = new ICleanUtilityDescriptor[utilitiesCount];
+        foreach (var utility in this._utilities.GetAllValues()) virtuallyIndexedUtilities[utilityIndexById[utility.Id]] = utility;
+
+        var slots = new int[this._utilities.Categories.Count];
+        return this.Dfs(slotIndex: 0, slots, new Bitmask(utilitiesCount, initializeWithZeros: false), bitmaskByUtilityIndex, BuildTransformationFunction(virtuallyIndexedUtilities));
     }
+
+    // TODO: Extract an array where each index is mapped to the number of unique categories that are succeeding
+    private IEnumerable<T> Dfs<T>(int slotIndex, int[] slots, Bitmask accumulatedBitmask, Bitmask[] bitmasks, Func<int[], T> transform)
+    {
+        if (slotIndex == slots.Length) yield return transform(slots);
+        else
+        {
+            var utilityIndex = accumulatedBitmask.FindMostSignificantSetBit();
+            while (utilityIndex != -1)
+            {
+                slots[slotIndex] = utilityIndex;
+                foreach (var combination in this.Dfs(slotIndex + 1, slots, accumulatedBitmask & bitmasks[utilityIndex], bitmasks, transform))
+                    yield return combination;
+
+                accumulatedBitmask.Unset(utilityIndex);
+                utilityIndex = accumulatedBitmask.FindMostSignificantSetBit();
+            }
+        }
+    }
+
+    private static Func<int[], IDictionary<string, string>> BuildTransformationFunction(ICleanUtilityDescriptor[] virtuallyIndexedUtilities)
+        => slots =>
+        {
+            Dictionary<string, string> ans = new ();
+            for (var i = 0; i < slots.Length; i++)
+            {
+                var utility = virtuallyIndexedUtilities[i];
+                ans[utility.Category] = utility.Id;
+            }
+
+            return ans;
+        };
 }

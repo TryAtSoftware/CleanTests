@@ -20,6 +20,7 @@ public class CleanTestInitializationCollection<TValue> : ICleanTestInitializatio
         return registeredValues.OrEmptyIfNull();
     }
 
+    /// <inheritdoc />
     public int GetCount(string category)
     {
         this._data.TryGetValue(category, out var registeredValues);
