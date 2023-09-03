@@ -59,11 +59,11 @@ public class CombinatorialMachine
                 bitmaskByUtilityIndex[utilityIndex] &= u;
                 foreach (var (demandCategory, demandsForCategory) in utility.ExternalDemands)
                 {
+                    if (!characteristicsRegister.ContainsKey(demandCategory)) continue;
+                    
                     var v = ~bitmasksByCategory[demandCategory];
                     foreach (var demand in demandsForCategory)
                     {
-                        if (!characteristicsRegister.ContainsKey(demandCategory)) continue;
-
                         var complement = v;
                         if (characteristicsRegister[demandCategory].TryGetValue(demand, out var demandBitmask)) complement |= demandBitmask;
                         bitmaskByUtilityIndex[utilityIndex] &= complement;
@@ -112,9 +112,9 @@ public class CombinatorialMachine
         => slots =>
         {
             Dictionary<string, string> ans = new ();
-            for (var i = 0; i < slots.Length; i++)
+            foreach (var utilityIndex in slots)
             {
-                var utility = virtuallyIndexedUtilities[i];
+                var utility = virtuallyIndexedUtilities[utilityIndex];
                 ans[utility.Category] = utility.Id;
             }
 
