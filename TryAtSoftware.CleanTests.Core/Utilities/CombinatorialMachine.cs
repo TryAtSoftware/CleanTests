@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using TryAtSoftware.CleanTests.Core.Interfaces;
 using TryAtSoftware.Extensions.Collections;
 
@@ -21,92 +22,108 @@ public class CombinatorialMachine
 
         var utilitiesCount = utilityIndexById.Count;
 
-        Dictionary<string, Bitmask> bitmasksByCategory = new ();
-        var bitmaskByUtilityIndex = new Bitmask[utilitiesCount];
-
-        var characteristicsRegister = new Dictionary<string, Dictionary<string, Bitmask>>();
-
-        foreach (var (category, utilitiesForCategory) in this._utilities)
-        {
-            var categoryBitmask = new Bitmask(utilitiesCount, initializeWithZeros: true);
-            var categoryCharacteristicRegister = new Dictionary<string, Bitmask>();
-
-            foreach (var utility in utilitiesForCategory)
-            {
-                var utilityIndex = utilityIndexById[utility.Id];
-                categoryBitmask.Set(utilityIndex);
-                bitmaskByUtilityIndex[utilityIndex] = new Bitmask(utilitiesCount, initializeWithZeros: false);
-
-                foreach (var characteristic in utility.Characteristics)
-                {
-                    if (!categoryCharacteristicRegister.ContainsKey(characteristic)) categoryCharacteristicRegister[characteristic] = new Bitmask(utilitiesCount, initializeWithZeros: true);
-                    categoryCharacteristicRegister[characteristic].Set(utilityIndex);
-                }
-            }
-
-            bitmasksByCategory[category] = categoryBitmask;
-            characteristicsRegister[category] = categoryCharacteristicRegister;
-        }
-
-        foreach (var (category, utilitiesForCategory) in this._utilities)
-        {
-            var u = ~bitmasksByCategory[category];
-            
-            foreach (var utility in utilitiesForCategory)
-            {
-                var utilityIndex = utilityIndexById[utility.Id];
-
-                bitmaskByUtilityIndex[utilityIndex] &= u;
-                foreach (var (demandCategory, demandsForCategory) in utility.ExternalDemands)
-                {
-                    if (!characteristicsRegister.ContainsKey(demandCategory)) continue;
-                    
-                    var v = ~bitmasksByCategory[demandCategory];
-                    foreach (var demand in demandsForCategory)
-                    {
-                        var complement = v;
-                        if (characteristicsRegister[demandCategory].TryGetValue(demand, out var demandBitmask)) complement |= demandBitmask;
-                        bitmaskByUtilityIndex[utilityIndex] &= complement;
-                    }
-
-                    var test = bitmaskByUtilityIndex[utilityIndex] & v;
-
-                    // if (test.SetBitsCount() == 0)
-                    if (test.FindMostSignificantSetBit() == -1)
-                    {
-                        // bitmaskByUtilityIndex[utilityIndex].Clear();
-                        bitmaskByUtilityIndex[utilityIndex] = new Bitmask(utilitiesCount, initializeWithZeros: true);
-                    }
-                }
-            }
-        }
+        var virtuallyIndexedUtilities = this.VirtuallyIndexUtilities(utilityIndexById);
+        var bitmaskByCategory = ExtractCategoryBitmasks(virtuallyIndexedUtilities);
+        var bitmaskByCategoryAndCharacteristic = ExtractCharacteristicBitmasks(virtuallyIndexedUtilities);
+        var bitmaskByUtility = ExtractUtilityBitmasks(virtuallyIndexedUtilities, bitmaskByCategory, bitmaskByCategoryAndCharacteristic);
 
         // Sort by set bits count and refresh the `utilityIndexById` dictionary values.
-        var virtuallyIndexedUtilities = new ICleanUtilityDescriptor[utilitiesCount];
-        foreach (var utility in this._utilities.GetAllValues()) virtuallyIndexedUtilities[utilityIndexById[utility.Id]] = utility;
+        var order = Enumerable.Range(0, utilitiesCount).OrderBy(x => bitmaskByUtility[x].CountSetBits()).ToArray();
+
+        var orderedVirtuallyIndexedUtilities = new ICleanUtilityDescriptor[utilitiesCount];
+        for (var i = 0; i < utilitiesCount; i++) orderedVirtuallyIndexedUtilities[i] = virtuallyIndexedUtilities[order[i]];
+
+        bitmaskByCategory = ExtractCategoryBitmasks(orderedVirtuallyIndexedUtilities);
+        bitmaskByCategoryAndCharacteristic = ExtractCharacteristicBitmasks(orderedVirtuallyIndexedUtilities);
+        bitmaskByUtility = ExtractUtilityBitmasks(orderedVirtuallyIndexedUtilities, bitmaskByCategory, bitmaskByCategoryAndCharacteristic);
 
         var slots = new int[this._utilities.Categories.Count];
-        return this.Dfs(slotIndex: 0, slots, new Bitmask(utilitiesCount, initializeWithZeros: false), bitmaskByUtilityIndex, BuildTransformationFunction(virtuallyIndexedUtilities));
+        return this.Dfs(slotIndex: 0, slots, new Bitmask(utilitiesCount, initializeWithZeros: false), bitmaskByUtility, BuildTransformationFunction(orderedVirtuallyIndexedUtilities), BuildContinuationCheck(orderedVirtuallyIndexedUtilities, bitmaskByCategory));
     }
 
-    // TODO: Extract an array where each index is mapped to the number of unique categories that are succeeding
-    private IEnumerable<T> Dfs<T>(int slotIndex, int[] slots, Bitmask accumulatedBitmask, Bitmask[] bitmasks, Func<int[], T> transform)
+    private ICleanUtilityDescriptor[] VirtuallyIndexUtilities(IDictionary<string, int> utilityIndexById)
     {
-        if (slotIndex == slots.Length) yield return transform(slots);
-        else
+        var utilitiesCount = utilityIndexById.Count;
+        var result = new ICleanUtilityDescriptor[utilitiesCount];
+        foreach (var utility in this._utilities.GetAllValues())
         {
-            var utilityIndex = accumulatedBitmask.FindMostSignificantSetBit();
-            while (utilityIndex != -1)
-            {
-                slots[slotIndex] = utilityIndex;
-                foreach (var combination in this.Dfs(slotIndex + 1, slots, accumulatedBitmask & bitmasks[utilityIndex], bitmasks, transform))
-                    yield return combination;
+            var index = utilityIndexById[utility.Id];
+            result[index] = utility;
+        }
 
-                accumulatedBitmask.Unset(utilityIndex);
-                utilityIndex = accumulatedBitmask.FindMostSignificantSetBit();
+        return result;
+    }
+
+    private static IDictionary<string, Bitmask> ExtractCategoryBitmasks(ICleanUtilityDescriptor[] virtuallyIndexedUtilities)
+    {
+        Dictionary<string, Bitmask> bitmasksByCategory = new ();
+
+        var utilitiesCount = virtuallyIndexedUtilities.Length;
+        for (var i = 0; i < utilitiesCount; i++)
+        {
+            var category = virtuallyIndexedUtilities[i].Category;
+            if (!bitmasksByCategory.ContainsKey(category)) bitmasksByCategory[category] = new Bitmask(utilitiesCount, initializeWithZeros: true);
+            bitmasksByCategory[category].Set(i);
+        }
+
+        return bitmasksByCategory;
+    }
+
+    private static IDictionary<string, IDictionary<string, Bitmask>> ExtractCharacteristicBitmasks(ICleanUtilityDescriptor[] virtuallyIndexedUtilities)
+    {
+        Dictionary<string, IDictionary<string, Bitmask>> bitmasksByCategory = new ();
+
+        var utilitiesCount = virtuallyIndexedUtilities.Length;
+        for (var i = 0; i < utilitiesCount; i++)
+        {
+            var category = virtuallyIndexedUtilities[i].Category;
+            if (!bitmasksByCategory.ContainsKey(category)) bitmasksByCategory[category] = new Dictionary<string, Bitmask>();
+
+            foreach (var characteristic in virtuallyIndexedUtilities[i].Characteristics)
+            {
+                if (!bitmasksByCategory[category].ContainsKey(characteristic)) bitmasksByCategory[category][characteristic] = new Bitmask(utilitiesCount, initializeWithZeros: true);
+                bitmasksByCategory[category][characteristic].Set(i);
             }
         }
+
+        return bitmasksByCategory;
     }
+
+    private static Bitmask[] ExtractUtilityBitmasks(ICleanUtilityDescriptor[] virtuallyIndexedUtilities, IDictionary<string, Bitmask> bitmaskByCategory, IDictionary<string, IDictionary<string, Bitmask>> bitmaskByCategoryAndCharacteristic)
+    {
+        var utilitiesCount = virtuallyIndexedUtilities.Length;
+        var result = new Bitmask[utilitiesCount];
+
+        for (var i = 0; i < virtuallyIndexedUtilities.Length; i++)
+        {
+            var category = virtuallyIndexedUtilities[i].Category;
+            result[i] = ~bitmaskByCategory[category];
+
+            foreach (var (demandCategory, demandsForCategory) in virtuallyIndexedUtilities[i].ExternalDemands)
+            {
+                if (!bitmaskByCategoryAndCharacteristic.ContainsKey(demandCategory)) continue;
+
+                var baseCompatibilityBitmask = ~bitmaskByCategory[demandCategory];
+                foreach (var demand in demandsForCategory)
+                {
+                    var compatibilityBitmask = baseCompatibilityBitmask;
+                    if (bitmaskByCategoryAndCharacteristic[demandCategory].TryGetValue(demand, out var demandBitmask)) compatibilityBitmask |= demandBitmask;
+                    result[i] &= compatibilityBitmask;
+                }
+            }
+        }
+
+        return result;
+    }
+
+    private static Func<ArraySegment<int>, Bitmask, bool> BuildContinuationCheck(ICleanUtilityDescriptor[] virtuallyIndexedUtilities, IDictionary<string, Bitmask> bitmaskByCategory) 
+        => (usedUtilityIndices, accumulatedBitmask) =>
+        {
+            var categoriesToIgnore = new HashSet<string>();
+            foreach (var utilityId in usedUtilityIndices) categoriesToIgnore.Add(virtuallyIndexedUtilities[utilityId].Category);
+
+            return bitmaskByCategory.All(x => categoriesToIgnore.Contains(x.Key) || (accumulatedBitmask & x.Value).CountSetBits() > 0);
+        };
 
     private static Func<int[], IDictionary<string, string>> BuildTransformationFunction(ICleanUtilityDescriptor[] virtuallyIndexedUtilities)
         => slots =>
@@ -120,4 +137,22 @@ public class CombinatorialMachine
 
             return ans;
         };
+
+    private IEnumerable<T> Dfs<T>(int slotIndex, int[] slots, Bitmask accumulatedBitmask, Bitmask[] bitmasks, Func<int[], T> transform, Func<ArraySegment<int>, Bitmask, bool>? continuationCheck = null)
+    {
+        if (slotIndex == slots.Length) yield return transform(slots);
+        else if (continuationCheck is null || continuationCheck(new ArraySegment<int>(slots, 0, slotIndex), accumulatedBitmask))
+        {
+            var utilityIndex = accumulatedBitmask.FindMostSignificantSetBit();
+            while (utilityIndex != -1)
+            {
+                slots[slotIndex] = utilityIndex;
+                foreach (var combination in this.Dfs(slotIndex + 1, slots, accumulatedBitmask & bitmasks[utilityIndex], bitmasks, transform, continuationCheck))
+                    yield return combination;
+
+                accumulatedBitmask.Unset(utilityIndex);
+                utilityIndex = accumulatedBitmask.FindMostSignificantSetBit();
+            }
+        }
+    }
 }
