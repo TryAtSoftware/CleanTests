@@ -24,7 +24,7 @@ public class CombinatorialMachine
 
         var virtuallyIndexedUtilities = this.VirtuallyIndexUtilities(utilityIndexById);
         var bitmaskByCategory = ExtractCategoryBitmasks(virtuallyIndexedUtilities);
-        var bitmaskByCategoryAndCharacteristic = ExtractCharacteristicBitmasks(virtuallyIndexedUtilities);
+        var bitmaskByCategoryAndCharacteristic = ExtractDemandBitmasks(virtuallyIndexedUtilities, bitmaskByCategory);
         var bitmaskByUtility = ExtractUtilityBitmasks(virtuallyIndexedUtilities, bitmaskByCategory, bitmaskByCategoryAndCharacteristic);
 
         // Sort by set bits count and refresh the `utilityIndexById` dictionary values.
@@ -34,11 +34,18 @@ public class CombinatorialMachine
         for (var i = 0; i < utilitiesCount; i++) orderedVirtuallyIndexedUtilities[i] = virtuallyIndexedUtilities[order[i]];
 
         bitmaskByCategory = ExtractCategoryBitmasks(orderedVirtuallyIndexedUtilities);
-        bitmaskByCategoryAndCharacteristic = ExtractCharacteristicBitmasks(orderedVirtuallyIndexedUtilities);
+        bitmaskByCategoryAndCharacteristic = ExtractDemandBitmasks(orderedVirtuallyIndexedUtilities, bitmaskByCategory);
         bitmaskByUtility = ExtractUtilityBitmasks(orderedVirtuallyIndexedUtilities, bitmaskByCategory, bitmaskByCategoryAndCharacteristic);
 
-        var slots = new int[this._utilities.Categories.Count];
-        return this.Dfs(slotIndex: 0, slots, new Bitmask(utilitiesCount, initializeWithZeros: false), bitmaskByUtility, BuildTransformationFunction(orderedVirtuallyIndexedUtilities), BuildContinuationCheck(orderedVirtuallyIndexedUtilities, bitmaskByCategory));
+        var categoriesCount = this._utilities.Categories.Count;
+        var slots = new int[categoriesCount];
+        
+        var changeTrackers = new Bitmask[categoriesCount];
+        for (var i = 0; i < categoriesCount; i++) changeTrackers[i] = new Bitmask(utilitiesCount, initializeWithZeros: true);
+
+        var accumulator = new Bitmask(utilitiesCount, initializeWithZeros: false);
+        
+        return this.Dfs(slotIndex: 0, slots, changeTrackers, accumulator, bitmaskByUtility, BuildTransformationFunction(orderedVirtuallyIndexedUtilities), BuildContinuationCheck(orderedVirtuallyIndexedUtilities, bitmaskByCategory));
     }
 
     private ICleanUtilityDescriptor[] VirtuallyIndexUtilities(IDictionary<string, int> utilityIndexById)
@@ -69,7 +76,7 @@ public class CombinatorialMachine
         return bitmasksByCategory;
     }
 
-    private static IDictionary<string, IDictionary<string, Bitmask>> ExtractCharacteristicBitmasks(ICleanUtilityDescriptor[] virtuallyIndexedUtilities)
+    private static IDictionary<string, IDictionary<string, Bitmask>> ExtractDemandBitmasks(ICleanUtilityDescriptor[] virtuallyIndexedUtilities, IDictionary<string, Bitmask> categoryBitmask)
     {
         Dictionary<string, IDictionary<string, Bitmask>> bitmasksByCategory = new ();
 
@@ -81,7 +88,7 @@ public class CombinatorialMachine
 
             foreach (var characteristic in virtuallyIndexedUtilities[i].Characteristics)
             {
-                if (!bitmasksByCategory[category].ContainsKey(characteristic)) bitmasksByCategory[category][characteristic] = new Bitmask(utilitiesCount, initializeWithZeros: true);
+                if (!bitmasksByCategory[category].ContainsKey(characteristic)) bitmasksByCategory[category][characteristic] = ~categoryBitmask[category];
                 bitmasksByCategory[category][characteristic].Set(i);
             }
         }
@@ -103,13 +110,20 @@ public class CombinatorialMachine
             {
                 if (!bitmaskByCategoryAndCharacteristic.ContainsKey(demandCategory)) continue;
 
-                var baseCompatibilityBitmask = ~bitmaskByCategory[demandCategory];
+                var proceed = true;
                 foreach (var demand in demandsForCategory)
                 {
-                    var compatibilityBitmask = baseCompatibilityBitmask;
-                    if (bitmaskByCategoryAndCharacteristic[demandCategory].TryGetValue(demand, out var demandBitmask)) compatibilityBitmask |= demandBitmask;
-                    result[i] &= compatibilityBitmask;
+                    if (!bitmaskByCategoryAndCharacteristic[demandCategory].TryGetValue(demand, out var demandBitmask)) 
+                    {
+                        result[i].UnsetAll();
+                        proceed = false;
+                        break;
+                    }
+                    
+                    result[i].InPlaceAnd(demandBitmask);
                 }
+                
+                if (!proceed) break;
             }
         }
 
@@ -122,7 +136,7 @@ public class CombinatorialMachine
             var categoriesToIgnore = new HashSet<string>();
             foreach (var utilityId in usedUtilityIndices) categoriesToIgnore.Add(virtuallyIndexedUtilities[utilityId].Category);
 
-            return bitmaskByCategory.All(x => categoriesToIgnore.Contains(x.Key) || (accumulatedBitmask & x.Value).CountSetBits() > 0);
+            return bitmaskByCategory.All(x => categoriesToIgnore.Contains(x.Key) || (accumulatedBitmask.HasCommonSetBitsWith(x.Value)));
         };
 
     private static Func<int[], IDictionary<string, string>> BuildTransformationFunction(ICleanUtilityDescriptor[] virtuallyIndexedUtilities)
@@ -138,20 +152,30 @@ public class CombinatorialMachine
             return ans;
         };
 
-    private IEnumerable<T> Dfs<T>(int slotIndex, int[] slots, Bitmask accumulatedBitmask, Bitmask[] bitmasks, Func<int[], T> transform, Func<ArraySegment<int>, Bitmask, bool>? continuationCheck = null)
+    private IEnumerable<T> Dfs<T>(int slotIndex, int[] slots, Bitmask[] changeTrackers, Bitmask accumulator, Bitmask[] bitmasks, Func<int[], T> transform, Func<ArraySegment<int>, Bitmask, bool>? continuationCheck = null)
     {
         if (slotIndex == slots.Length) yield return transform(slots);
-        else if (continuationCheck is null || continuationCheck(new ArraySegment<int>(slots, 0, slotIndex), accumulatedBitmask))
+        else if (continuationCheck is null || continuationCheck(new ArraySegment<int>(slots, 0, slotIndex), accumulator))
         {
-            var utilityIndex = accumulatedBitmask.FindMostSignificantSetBit();
+            var utilityIndex = accumulator.FindMostSignificantSetBit();
             while (utilityIndex != -1)
             {
+                changeTrackers[slotIndex].UnsetAll();
+                changeTrackers[slotIndex].InPlaceOr(accumulator);
+                changeTrackers[slotIndex].InPlaceXor(bitmasks[utilityIndex]);
+
                 slots[slotIndex] = utilityIndex;
-                foreach (var combination in this.Dfs(slotIndex + 1, slots, accumulatedBitmask & bitmasks[utilityIndex], bitmasks, transform, continuationCheck))
+                
+                accumulator.InPlaceAnd(bitmasks[utilityIndex]);
+                foreach (var combination in this.Dfs(slotIndex + 1, slots, changeTrackers, accumulator, bitmasks, transform, continuationCheck))
                     yield return combination;
 
-                accumulatedBitmask.Unset(utilityIndex);
-                utilityIndex = accumulatedBitmask.FindMostSignificantSetBit();
+                accumulator.UnsetAll();
+                accumulator.InPlaceOr(changeTrackers[slotIndex]);
+                accumulator.InPlaceXor(bitmasks[utilityIndex]);
+                accumulator.Unset(utilityIndex);
+
+                utilityIndex = accumulator.FindMostSignificantSetBit();
             }
         }
     }
