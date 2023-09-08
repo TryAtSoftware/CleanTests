@@ -120,7 +120,7 @@ public class CombinatorialMachine
                         break;
                     }
                     
-                    result[i].InPlaceAnd(demandBitmask);
+                    result[i].InPlaceAnd(result[i], demandBitmask);
                 }
                 
                 if (!proceed) break;
@@ -160,19 +160,16 @@ public class CombinatorialMachine
             var utilityIndex = accumulator.FindMostSignificantSetBit();
             while (utilityIndex != -1)
             {
-                changeTrackers[slotIndex].UnsetAll();
-                changeTrackers[slotIndex].InPlaceOr(accumulator);
-                changeTrackers[slotIndex].InPlaceXor(bitmasks[utilityIndex]);
+                changeTrackers[slotIndex].InPlaceXor(accumulator, bitmasks[utilityIndex]);
 
                 slots[slotIndex] = utilityIndex;
                 
-                accumulator.InPlaceAnd(bitmasks[utilityIndex]);
+                accumulator.InPlaceAnd(accumulator, bitmasks[utilityIndex]);
                 foreach (var combination in this.Dfs(slotIndex + 1, slots, changeTrackers, accumulator, bitmasks, transform, continuationCheck))
                     yield return combination;
 
                 accumulator.UnsetAll();
-                accumulator.InPlaceOr(changeTrackers[slotIndex]);
-                accumulator.InPlaceXor(bitmasks[utilityIndex]);
+                accumulator.InPlaceXor(changeTrackers[slotIndex], bitmasks[utilityIndex]);
                 accumulator.Unset(utilityIndex);
 
                 utilityIndex = accumulator.FindMostSignificantSetBit();
