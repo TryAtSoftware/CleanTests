@@ -47,7 +47,7 @@ public abstract class BaseTestCaseDiscoverer(IMessageSink diagnosticMessageSink,
 
     protected abstract IEnumerable<object[]> GetTestMethodArguments(IMessageSink diagnosticMessageSink, ITestMethod testMethod);
 
-    private IEnumerable<IXunitTestCase> ExtractTestCases(ITestFrameworkDiscoveryOptions discoveryOptions, ITestMethod testMethod, IndividualCleanUtilityConstructionGraph[] dependencies, object[][] argumentsCollection)
+    private List<IXunitTestCase> ExtractTestCases(ITestFrameworkDiscoveryOptions discoveryOptions, ITestMethod testMethod, IndividualCleanUtilityConstructionGraph[] dependencies, object[][] argumentsCollection)
     {
         var result = new List<IXunitTestCase>();
 

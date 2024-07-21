@@ -61,7 +61,7 @@ public class CleanTestFramework(IMessageSink messageSink) : XunitTestFramework(m
         return assemblyData;
     } 
 
-    private static void RegisterUtilitiesFromAssembly(IAssemblyInfo assemblyInfo, ICollection<ICleanUtilityDescriptor> utilitiesCollection)
+    private static void RegisterUtilitiesFromAssembly(IAssemblyInfo assemblyInfo, List<ICleanUtilityDescriptor> utilitiesCollection)
     {
         foreach (var type in assemblyInfo.GetTypes(includePrivateTypes: false).OrEmptyIfNull().IgnoreNullValues())
         {

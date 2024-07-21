@@ -66,10 +66,7 @@ public class CombinatorialMachine(ICleanTestInitializationCollection<ICleanUtili
             incompatibleUtilitiesMap[utility.Id] = new HashSet<string>();
 
             foreach (var characteristic in utility.Characteristics)
-            {
-                if (!characteristicsRegister[utility.Category].ContainsKey(characteristic)) characteristicsRegister[utility.Category][characteristic] = new HashSet<string>();
-                characteristicsRegister[utility.Category][characteristic].Add(utility.Id);
-            }
+                characteristicsRegister[utility.Category].EnsureValue(characteristic).Add(utility.Id);
         }
 
         foreach (var utility in this._utilities.GetAllValues())
@@ -81,7 +78,7 @@ public class CombinatorialMachine(ICleanTestInitializationCollection<ICleanUtili
                 foreach (var demand in demandsForCategory)
                 {
                     Func<ICleanUtilityDescriptor, bool>? predicate = null;
-                    if (characteristicsRegister[demandCategory].ContainsKey(demand)) predicate = x => !characteristicsRegister[demandCategory][demand].Contains(x.Id);
+                    if (characteristicsRegister[demandCategory].TryGetValue(demand, out var relevantUtilities)) predicate = x => !relevantUtilities.Contains(x.Id);
 
                     foreach (var incompatibleUtilityId in this._utilities.Get(demandCategory).SafeWhere(predicate).Select(x => x.Id))
                     {

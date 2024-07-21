@@ -4,5 +4,7 @@ using Xunit.Sdk;
 
 internal class TestOutputHelperPlaceholder
 {
-    internal TestOutputHelper Build() => new();
+    private TestOutputHelper? _instance;
+    
+    internal TestOutputHelper Build() => this._instance ??= new TestOutputHelper();
 }
