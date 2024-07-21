@@ -11,7 +11,7 @@ public class ConstructionManagerTests
 {
     [Theory(Timeout = UnitTestConstants.Timeout)]
     [MemberData(nameof(GetDependenciesManagerSetups))]
-    public void DependencyGraphsShouldBeConstructedSuccessfully(EnvironmentSetup setup, string pathToExpectedResult)
+    public Task DependencyGraphsShouldBeConstructedSuccessfully(EnvironmentSetup setup, string pathToExpectedResult)
     {
         var assemblyTestData = setup.MaterializeAsAssemblyData();
         var manager = new ConstructionManager(assemblyTestData);
@@ -26,6 +26,8 @@ public class ConstructionManagerTests
             var output = JsonSerializer.Serialize(constructionPaths);
             Assert.Equal(expectedOutput[i], output);
         }
+
+        return Task.CompletedTask;
     }
 
     [Fact]

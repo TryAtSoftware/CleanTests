@@ -8,9 +8,8 @@ public class TestSuiteGenericTypeMappingAttributeUnitTests
     [InlineData(null, null)]
     [InlineData(null, typeof(string))]
     [InlineData(typeof(string), null)]
-    public void AttributeShouldNotBeInstantiatedWithIncorrectData(Type attributeType, Type parameterType)
-        => Assert.Throws<ArgumentNullException>(
-            () => new TestSuiteGenericTypeMappingAttribute(attributeType, parameterType));
+    public void AttributeShouldNotBeInstantiatedWithIncorrectData(Type? attributeType, Type? parameterType)
+        => Assert.Throws<ArgumentNullException>(() => new TestSuiteGenericTypeMappingAttribute(attributeType!, parameterType!));
 
     [Fact]
     public void AttributeShouldBeInstantiatedWithCorrectData()
