@@ -1,6 +1,7 @@
 ﻿namespace TryAtSoftware.CleanTests.Core.XUnit;
 
-using System;using Xunit;
+using System;
+using Xunit;
 using Xunit.Abstractions;
 
 public class CleanXunitTest(ITestCase testCase) : LongLivedMarshalByRefObject, ITest

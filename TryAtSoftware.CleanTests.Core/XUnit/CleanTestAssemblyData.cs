@@ -30,10 +30,8 @@ public class CleanTestAssemblyData
     {
         foreach (var cleanUtility in cleanUtilities.OrEmptyIfNull().IgnoreNullValues())
         {
+            if (!this.CleanUtilitiesById.TryAdd(cleanUtility.Id, cleanUtility)) throw new InvalidOperationException("Two clean utilities with the same identifier cannot co-exist.");
             this.CleanUtilities.Register(cleanUtility.Category, cleanUtility);
-
-            if (this.CleanUtilitiesById.ContainsKey(cleanUtility.Id)) throw new InvalidOperationException("Two clean utilities with the same identifier cannot co-exist.");
-            this.CleanUtilitiesById[cleanUtility.Id] = cleanUtility;
         }
     }
 }

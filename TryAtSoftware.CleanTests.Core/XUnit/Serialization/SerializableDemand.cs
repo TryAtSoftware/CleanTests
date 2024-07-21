@@ -4,7 +4,7 @@ using System;
 using TryAtSoftware.CleanTests.Core.Extensions;
 using Xunit.Abstractions;
 
-public class SerializableDemand : IXunitSerializable
+internal class SerializableDemand : IXunitSerializable
 {
     private string? _initializationCategory;
     private string? _demand;

@@ -7,7 +7,7 @@ using TryAtSoftware.CleanTests.Core.Extensions;
 using TryAtSoftware.Extensions.Collections;
 using Xunit.Abstractions;
 
-public class SerializableIndividualDependencyNode : IXunitSerializable
+internal class SerializableIndividualDependencyNode : IXunitSerializable
 {
     private IndividualCleanUtilityConstructionGraph? _dependencyNode;
 

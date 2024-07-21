@@ -5,16 +5,9 @@ using System.Collections.Generic;
 using TryAtSoftware.CleanTests.Core.Construction;
 using TryAtSoftware.Extensions.Collections;
 
-public class CleanTestCaseData
+public class CleanTestCaseData(IDictionary<Type, Type>? genericTypesMap, IEnumerable<IndividualCleanUtilityConstructionGraph>? cleanUtilities, string? displayNamePrefix)
 {
-    public IDictionary<Type, Type> GenericTypesMap { get; }
-    public IReadOnlyCollection<IndividualCleanUtilityConstructionGraph> CleanUtilities { get; }
-    public string? DisplayNamePrefix { get; }
-
-    public CleanTestCaseData(IDictionary<Type, Type>? genericTypesMap, IEnumerable<IndividualCleanUtilityConstructionGraph>? cleanUtilities, string? displayNamePrefix)
-    {
-        this.GenericTypesMap = genericTypesMap.OrEmptyIfNull();
-        this.CleanUtilities = cleanUtilities.OrEmptyIfNull().IgnoreNullValues().AsReadOnlyCollection();
-        this.DisplayNamePrefix = displayNamePrefix;
-    }
+    public IDictionary<Type, Type> GenericTypesMap { get; } = genericTypesMap.OrEmptyIfNull();
+    public IReadOnlyCollection<IndividualCleanUtilityConstructionGraph> CleanUtilities { get; } = cleanUtilities.OrEmptyIfNull().IgnoreNullValues().AsReadOnlyCollection();
+    public string? DisplayNamePrefix { get; } = displayNamePrefix;
 }

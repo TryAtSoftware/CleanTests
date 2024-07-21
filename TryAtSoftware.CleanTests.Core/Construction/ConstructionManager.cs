@@ -9,16 +9,10 @@ using TryAtSoftware.CleanTests.Core.Utilities;
 using TryAtSoftware.CleanTests.Core.XUnit;
 using TryAtSoftware.Extensions.Collections;
 
-public class ConstructionManager : IConstructionManager
+public class ConstructionManager(CleanTestAssemblyData cleanTestAssemblyData) : IConstructionManager
 {
-    private readonly CleanTestAssemblyData _cleanTestAssemblyData;
-    private readonly Dictionary<string, FullCleanUtilityConstructionGraph?> _constructionGraphsById;
-
-    public ConstructionManager(CleanTestAssemblyData cleanTestAssemblyData)
-    {
-        this._cleanTestAssemblyData = cleanTestAssemblyData ?? throw new ArgumentNullException(nameof(cleanTestAssemblyData));
-        this._constructionGraphsById = new Dictionary<string, FullCleanUtilityConstructionGraph?>();
-    }
+    private readonly CleanTestAssemblyData _cleanTestAssemblyData = cleanTestAssemblyData ?? throw new ArgumentNullException(nameof(cleanTestAssemblyData));
+    private readonly Dictionary<string, FullCleanUtilityConstructionGraph?> _constructionGraphsById = new();
 
     public IndividualCleanUtilityConstructionGraph[][] BuildIndividualConstructionGraphs(IEnumerable<string> utilityIds)
     {
@@ -27,7 +21,7 @@ public class ConstructionManager : IConstructionManager
         foreach (var utilityId in utilityIds)
         {
             var constructionGraph = this.AccessConstructionGraph(utilityId);
-            if (constructionGraph is null) return Array.Empty<IndividualCleanUtilityConstructionGraph[]>();
+            if (constructionGraph is null) return [];
 
             constructionGraphs.Add(constructionGraph);
             this.ExtractUtilityByCategory(utilityId, utilitiesByCategory);

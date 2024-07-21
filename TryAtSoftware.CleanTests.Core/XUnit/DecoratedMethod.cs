@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using TryAtSoftware.CleanTests.Core.XUnit.Interfaces;
 using Xunit.Abstractions;
 
-public class DecoratedMethod(IMethodInfo methodInfo) : IDecoratedComponent
+internal class DecoratedMethod(IMethodInfo methodInfo) : IDecoratedComponent
 {
     private readonly IMethodInfo _methodInfo = methodInfo ?? throw new ArgumentNullException(nameof(methodInfo));
 

@@ -18,11 +18,7 @@ public class GlobalUtilitiesProvider : IGlobalUtilitiesProvider
 
     public bool IsRegistered(string uniqueId) => this._utilities.ContainsKey(uniqueId);
 
-    public object? GetUtility(string uniqueId)
-    {
-        if (!this._utilities.ContainsKey(uniqueId)) return null;
-        return this._utilities[uniqueId];
-    }
+    public object? GetUtility(string uniqueId) => this._utilities.GetValueOrDefault(uniqueId);
 
     public IEnumerable<T> GetUtilities<T>()
     {

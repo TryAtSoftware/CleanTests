@@ -5,14 +5,9 @@ using System.Collections.Generic;
 using TryAtSoftware.CleanTests.Core.XUnit.Interfaces;
 using Xunit.Abstractions;
 
-public class DecoratedAttribute : IDecoratedComponent
+internal class DecoratedAttribute(IAttributeInfo attributeInfo) : IDecoratedComponent
 {
-    private readonly IAttributeInfo _attributeInfo;
-
-    public DecoratedAttribute(IAttributeInfo attributeInfo)
-    {
-        this._attributeInfo = attributeInfo ?? throw new ArgumentNullException(nameof(attributeInfo));
-    }
+    private readonly IAttributeInfo _attributeInfo = attributeInfo ?? throw new ArgumentNullException(nameof(attributeInfo));
 
     public IEnumerable<IAttributeInfo> GetCustomAttributes(Type attributeType) => this._attributeInfo.GetCustomAttributes(attributeType);
 }

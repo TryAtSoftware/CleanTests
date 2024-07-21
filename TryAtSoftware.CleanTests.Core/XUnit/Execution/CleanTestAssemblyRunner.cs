@@ -7,15 +7,10 @@ using System.Threading.Tasks;
 using Xunit.Abstractions;
 using Xunit.Sdk;
 
-public class CleanTestAssemblyRunner : XunitTestAssemblyRunner
+public class CleanTestAssemblyRunner(ITestAssembly testAssembly, IEnumerable<IXunitTestCase> testCases, IMessageSink diagnosticMessageSink, IMessageSink executionMessageSink, ITestFrameworkExecutionOptions executionOptions, CleanTestAssemblyData assemblyData)
+    : XunitTestAssemblyRunner(testAssembly, testCases, diagnosticMessageSink, executionMessageSink, executionOptions)
 {
-    private readonly CleanTestAssemblyData _assemblyData;
-    
-    public CleanTestAssemblyRunner(ITestAssembly testAssembly, IEnumerable<IXunitTestCase> testCases, IMessageSink diagnosticMessageSink, IMessageSink executionMessageSink, ITestFrameworkExecutionOptions executionOptions, CleanTestAssemblyData assemblyData)
-        : base(testAssembly, testCases, diagnosticMessageSink, executionMessageSink, executionOptions)
-    {
-        this._assemblyData = assemblyData ?? throw new ArgumentNullException(nameof(assemblyData));
-    }
+    private readonly CleanTestAssemblyData _assemblyData = assemblyData ?? throw new ArgumentNullException(nameof(assemblyData));
 
     protected override async Task<RunSummary> RunTestCollectionAsync(IMessageBus messageBus, ITestCollection testCollection, IEnumerable<IXunitTestCase> testCases, CancellationTokenSource cancellationTokenSource)
     {

@@ -6,14 +6,9 @@ using System.Linq;
 using TryAtSoftware.CleanTests.Core.Interfaces;
 using TryAtSoftware.Extensions.Collections;
 
-public class CombinatorialMachine
+public class CombinatorialMachine(ICleanTestInitializationCollection<ICleanUtilityDescriptor> utilities)
 {
-    private readonly ICleanTestInitializationCollection<ICleanUtilityDescriptor> _utilities;
-
-    public CombinatorialMachine(ICleanTestInitializationCollection<ICleanUtilityDescriptor> utilities)
-    {
-        this._utilities = utilities ?? throw new ArgumentNullException(nameof(utilities));
-    }
+    private readonly ICleanTestInitializationCollection<ICleanUtilityDescriptor> _utilities = utilities ?? throw new ArgumentNullException(nameof(utilities));
 
     public IEnumerable<IDictionary<string, string>> GenerateAllCombinations()
     {

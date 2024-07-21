@@ -11,7 +11,7 @@ using TryAtSoftware.Extensions.Collections;
 using TryAtSoftware.Extensions.Reflection;
 using Xunit.Abstractions;
 
-public static class XUnitFrameworkExtensions
+internal static class XUnitFrameworkExtensions
 {
     public static bool TryGetSingleAttribute(this IDecoratedComponent? decoratedComponent, Type? attributeType, [NotNullWhen(true)] out IAttributeInfo? attribute)
     {

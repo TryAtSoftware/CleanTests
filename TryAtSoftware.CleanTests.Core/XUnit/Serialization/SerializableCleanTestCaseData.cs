@@ -7,7 +7,7 @@ using TryAtSoftware.CleanTests.Core.Extensions;
 using TryAtSoftware.Extensions.Collections;
 using Xunit.Abstractions;
 
-public class SerializableCleanTestCaseData : IXunitSerializable
+internal class SerializableCleanTestCaseData : IXunitSerializable
 {
     private CleanTestCaseData? _cleanTestData;
 
