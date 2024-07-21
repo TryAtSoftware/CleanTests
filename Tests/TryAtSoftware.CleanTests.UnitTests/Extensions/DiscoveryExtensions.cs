@@ -1,6 +1,6 @@
 ﻿namespace TryAtSoftware.CleanTests.UnitTests.Extensions;
 
-using Moq;
+using NSubstitute;
 using TryAtSoftware.CleanTests.Core.XUnit;
 using TryAtSoftware.CleanTests.Core.XUnit.Discovery;
 using TryAtSoftware.CleanTests.UnitTests.Mocks;
@@ -21,19 +21,19 @@ public static class DiscoveryExtensions
         var discoveryIsOver = false;
         var discoveredTestCases = new List<IXunitTestCase>();
         
-        var discoveryMessageSinkMock = new Mock<IMessageSink>();
-        discoveryMessageSinkMock.Setup(x => x.OnMessage(It.IsAny<IMessageSinkMessage>())).Returns<IMessageSinkMessage>(_ => true);
-        discoveryMessageSinkMock.Setup(x => x.OnMessage(It.IsAny<ITestCaseDiscoveryMessage>()))
-            .Callback<IMessageSinkMessage>(x =>
+        var discoveryMessageSink = Substitute.For<IMessageSink>();
+        discoveryMessageSink.OnMessage(Arg.Any<IMessageSinkMessage>()).Returns(true);
+        discoveryMessageSink.OnMessage(Arg.Any<ITestCaseDiscoveryMessage>()).Returns(true)
+            .AndDoes(x =>
             {
-                var discoveryMessage = Assert.IsAssignableFrom<ITestCaseDiscoveryMessage>(x);
+                var discoveryMessage = Assert.IsAssignableFrom<ITestCaseDiscoveryMessage>(x.ArgAt<IMessageSinkMessage>(0));
                 discoveredTestCases.AddRange(discoveryMessage.TestCases.OfType<IXunitTestCase>());
-            })
-            .Returns<IMessageSinkMessage>(_ => true);
-        discoveryMessageSinkMock.Setup(x => x.OnMessage(It.IsAny<IDiscoveryCompleteMessage>())).Callback<IMessageSinkMessage>(_ => discoveryIsOver = true).Returns<IMessageSinkMessage>(_ => false);
+            });
+        discoveryMessageSink.OnMessage(Arg.Any<IDiscoveryCompleteMessage>()).Returns(true)
+            .AndDoes(_ => discoveryIsOver = true);
 
         var testFrameworkDiscoverer = new CleanTestFrameworkDiscoverer(assembly, testComponentMocks.SourceInformationProvider, testComponentMocks.DiagnosticMessageSink, assemblyData);
-        testFrameworkDiscoverer.Find(includeSourceInformation: true, discoveryMessageSinkMock.Object, testComponentMocks.TestFrameworkDiscoveryOptions);
+        testFrameworkDiscoverer.Find(includeSourceInformation: true, discoveryMessageSink, testComponentMocks.TestFrameworkDiscoveryOptions);
 
         var retryId = 0;
         while (!discoveryIsOver && retryId < MaxDiscoveryRetries)
