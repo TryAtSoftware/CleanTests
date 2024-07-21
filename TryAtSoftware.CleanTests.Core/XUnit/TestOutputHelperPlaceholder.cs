@@ -2,7 +2,7 @@
 
 using Xunit.Sdk;
 
-public class TestOutputHelperPlaceholder
+internal class TestOutputHelperPlaceholder
 {
-    public TestOutputHelper Build() => new();
+    internal TestOutputHelper Build() => new();
 }

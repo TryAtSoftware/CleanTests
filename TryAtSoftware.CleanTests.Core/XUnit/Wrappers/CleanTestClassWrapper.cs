@@ -1,11 +1,11 @@
 ﻿namespace TryAtSoftware.CleanTests.Core.XUnit.Wrappers;
 
 using System;
-using TryAtSoftware.CleanTests.Core.Extensions;
+using TryAtSoftware.CleanTests.Core.Extensions;using Xunit;
 using Xunit.Abstractions;
 using Xunit.Sdk;
 
-public class CleanTestClassWrapper : ITestClass
+internal class CleanTestClassWrapper : LongLivedMarshalByRefObject, ITestClass
 {
     private ITestCollection? _testCollection;
     private ITypeInfo? _class;

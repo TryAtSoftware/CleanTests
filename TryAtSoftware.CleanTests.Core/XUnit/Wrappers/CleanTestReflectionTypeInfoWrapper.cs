@@ -2,13 +2,13 @@
 
 using System;
 using System.Collections.Generic;
-using TryAtSoftware.Extensions.Reflection;
+using TryAtSoftware.Extensions.Reflection;using Xunit;
 using Xunit.Abstractions;
 
 /// <summary>
 /// An implementation of the <see cref="IReflectionTypeInfo"/> interface responsible for beautifying the name of generated generic test classes.
 /// </summary>
-public class CleanTestReflectionTypeInfoWrapper : IReflectionTypeInfo
+internal class CleanTestReflectionTypeInfoWrapper : LongLivedMarshalByRefObject, IReflectionTypeInfo
 {
     private readonly ITypeInfo _wrapped;
 
