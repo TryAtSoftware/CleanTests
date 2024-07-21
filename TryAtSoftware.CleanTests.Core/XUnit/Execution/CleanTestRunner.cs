@@ -56,7 +56,7 @@ public class CleanTestRunner(ITest test, IMessageBus messageBus, Type testClass,
         testOutputHelper = this.ConstructorArguments[index] switch
         {
             TestOutputHelper t => t,
-            TestOutputHelperPlaceholder p => p.Build(),
+            TestOutputHelperPlaceholder => new TestOutputHelper(),
             _ => null
         };
         return testOutputHelper != null;

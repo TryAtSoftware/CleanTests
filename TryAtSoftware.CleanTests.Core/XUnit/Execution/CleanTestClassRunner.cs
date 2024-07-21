@@ -30,7 +30,7 @@ public class CleanTestClassRunner(ITestClass testClass, IReflectionTypeInfo @cla
     {
         if (parameter.ParameterType == typeof(ITestOutputHelper))
         {
-            argumentValue = new TestOutputHelperPlaceholder();
+            argumentValue = TestOutputHelperPlaceholder.Instance;
             return true;
         }
 

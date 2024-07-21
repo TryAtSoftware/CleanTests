@@ -1,10 +1,10 @@
 ﻿namespace TryAtSoftware.CleanTests.Core.XUnit;
 
-using Xunit.Sdk;
-
 internal class TestOutputHelperPlaceholder
 {
-    private TestOutputHelper? _instance;
-    
-    internal TestOutputHelper Build() => this._instance ??= new TestOutputHelper();
+    private static TestOutputHelperPlaceholder? _instance;
+
+    public static TestOutputHelperPlaceholder Instance => _instance ??= new TestOutputHelperPlaceholder();
+
+    private TestOutputHelperPlaceholder() { }
 }
