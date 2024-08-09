@@ -6,7 +6,7 @@ using System.Linq;
 using TryAtSoftware.CleanTests.Core.Interfaces;
 using TryAtSoftware.Extensions.Collections;
 
-public class CombinatorialMachine(ICleanTestInitializationCollection<ICleanUtilityDescriptor> utilities)
+internal class CombinatorialMachine(ICleanTestInitializationCollection<ICleanUtilityDescriptor> utilities)
 {
     private readonly ICleanTestInitializationCollection<ICleanUtilityDescriptor> _utilities = utilities ?? throw new ArgumentNullException(nameof(utilities));
 

@@ -10,6 +10,10 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <InternalsVisibleTo Include="TryAtSoftware.CleanTests.Benchmark" />
+    </ItemGroup>
+
+    <ItemGroup>
         <PackageReference Include="coverlet.msbuild" Version="6.0.2">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

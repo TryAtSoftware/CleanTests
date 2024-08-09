@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using TryAtSoftware.CleanTests.Core.Interfaces;
 using TryAtSoftware.Extensions.Collections;
 
-public class CleanUtilityDescriptor : ICleanUtilityDescriptor
+internal class CleanUtilityDescriptor : ICleanUtilityDescriptor
 {
     private readonly HashSet<string> _characteristics = new();
     private readonly HashSet<string> _internalRequirements = new ();

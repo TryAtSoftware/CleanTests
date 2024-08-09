@@ -18,6 +18,11 @@
         <PackageTags>tryatsoftware testing combinatorics</PackageTags>
         <PackageReadmeFile>README.md</PackageReadmeFile>
     </PropertyGroup>
+    
+    <ItemGroup>
+        <InternalsVisibleTo Include="TryAtSoftware.CleanTests.Benchmark" />
+        <InternalsVisibleTo Include="TryAtSoftware.CleanTests.UnitTests" />
+    </ItemGroup>
 
     <ItemGroup>
         <PackageReference Include="SonarAnalyzer.CSharp" Version="9.29.0.95321">

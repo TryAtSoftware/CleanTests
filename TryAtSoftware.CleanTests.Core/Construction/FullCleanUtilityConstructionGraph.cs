@@ -10,7 +10,7 @@ using System.Collections.Generic;
 /// </summary>
 /// <param name="Id">The value that should be set to the <see cref="Id"/> property.</param>
 /// <remarks>If a full construction graph has no construction descriptors, this means that there are no required dependencies.</remarks>
-public record FullCleanUtilityConstructionGraph(string Id)
+internal record FullCleanUtilityConstructionGraph(string Id)
 {
     public string Id { get; } = Id;
     public List<FullCleanUtilityConstructionGraph[]> ConstructionDescriptors { get; } = new ();

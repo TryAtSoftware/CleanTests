@@ -2,7 +2,7 @@
 
 using System.Collections.Generic;
 
-public interface ICleanTestInitializationCollection<TValue> : IEnumerable<KeyValuePair<string, IEnumerable<TValue>>>
+internal interface ICleanTestInitializationCollection<TValue> : IEnumerable<KeyValuePair<string, IEnumerable<TValue>>>
 {
     IReadOnlyCollection<string> Categories { get; }
     IEnumerable<TValue> Get(string category);

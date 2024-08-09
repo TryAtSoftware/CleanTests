@@ -4,7 +4,7 @@ using TryAtSoftware.CleanTests.Core.Utilities;
 using TryAtSoftware.CleanTests.Core.XUnit;
 using TryAtSoftware.CleanTests.UnitTests.Parametrization;
 
-public static class ParametrizationExtensions
+internal static class ParametrizationExtensions
 {
     public static CombinatorialMachine MaterializeAsCombinatorialMachine(this EnvironmentSetup environmentSetup)
     {

@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using TryAtSoftware.CleanTests.Core.Construction;
 using TryAtSoftware.CleanTests.Core.Enums;
@@ -13,9 +14,9 @@ using TryAtSoftware.Extensions.Reflection;
 using Xunit.Abstractions;
 using Xunit.Sdk;
 
-public abstract class BaseTestCaseDiscoverer(IMessageSink diagnosticMessageSink, TestCaseDiscoveryOptions testCaseDiscoveryOptions, ICleanTestInitializationCollection<ICleanUtilityDescriptor> initializationUtilitiesCollection, IConstructionManager constructionManager, CleanTestAssemblyData cleanTestAssemblyData)
+internal abstract class BaseTestCaseDiscoverer(IMessageSink diagnosticMessageSink, TestCaseDiscoveryOptions testCaseDiscoveryOptions, ICleanTestInitializationCollection<ICleanUtilityDescriptor> initializationUtilitiesCollection, IConstructionManager constructionManager, CleanTestAssemblyData cleanTestAssemblyData)
     : IXunitTestCaseDiscoverer
-{
+{    
     private readonly IMessageSink _diagnosticMessageSink = diagnosticMessageSink ?? throw new ArgumentNullException(nameof(diagnosticMessageSink));
     private readonly TestCaseDiscoveryOptions _testCaseDiscoveryOptions = testCaseDiscoveryOptions ?? throw new ArgumentNullException(nameof(testCaseDiscoveryOptions));
     private readonly ICleanTestInitializationCollection<ICleanUtilityDescriptor> _initializationUtilitiesCollection = initializationUtilitiesCollection ?? throw new ArgumentNullException(nameof(initializationUtilitiesCollection));
@@ -89,6 +90,15 @@ public abstract class BaseTestCaseDiscoverer(IMessageSink diagnosticMessageSink,
 
     private void SetTraits(ITestCase testCase, CleanTestCaseData testData)
     {
+        List<string> lines = [];
+        var cleanUtilities = testData.CleanUtilities.ToArray();
+        for (var i = 0; i < cleanUtilities.Length; i++)
+        {
+            for (var j = i + 1; j < cleanUtilities.Length; j++) lines.Add($"\"{cleanUtilities[i].Id}\",\"{cleanUtilities[j].Id}\",\"sibling\",\"{testCase.UniqueID}\"");
+            foreach (var dependency in cleanUtilities[i].Dependencies) lines.Add($"\"{cleanUtilities[i].Id}\",\"{dependency.Id}\",\"child\",\"{testCase.UniqueID}\"");
+        }
+        File.AppendAllLines("edges.csv", lines);
+
         if ((this._cleanTestAssemblyData.GenericTypeMappingPresentations & CleanTestMetadataPresentations.InTraits) != CleanTestMetadataPresentations.None)
         {
             foreach (var (attributeType, genericParameterType) in testData.GenericTypesMap)

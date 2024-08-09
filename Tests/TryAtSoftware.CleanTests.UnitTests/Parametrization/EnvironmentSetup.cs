@@ -26,8 +26,8 @@ public class EnvironmentSetup
         if (string.IsNullOrWhiteSpace(category)) throw new ArgumentNullException(nameof(category));
         if (utilitiesCount <= 0) throw new ArgumentException("The number of utilities for each category must be at least 1", nameof(utilitiesCount));
         
-        if (this._numberOfUtilitiesPerCategory.ContainsKey(category)) throw new InvalidOperationException("Category with that name has already been registered.");
-        this._numberOfUtilitiesPerCategory[category] = utilitiesCount;
+        if (!this._numberOfUtilitiesPerCategory.TryAdd(category, utilitiesCount))
+            throw new InvalidOperationException("Category with that name has already been registered.");
         return this;
     }
 
@@ -77,7 +77,7 @@ public class EnvironmentSetup
         return this;
     }
 
-    public ICleanTestInitializationCollection<ICleanUtilityDescriptor> Materialize()
+    internal ICleanTestInitializationCollection<ICleanUtilityDescriptor> Materialize()
     {
         var utilitiesCollection = new CleanTestInitializationCollection<ICleanUtilityDescriptor>();
 

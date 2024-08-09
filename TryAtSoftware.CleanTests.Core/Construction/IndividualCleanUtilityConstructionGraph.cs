@@ -14,7 +14,7 @@ using System.Collections.Generic;
 /// | Service 1A |   | Service 2B |   | Service 3A |
 /// </summary>
 /// <param name="Id">The value that should be set to the <see cref="Id"/> property.</param>
-public record IndividualCleanUtilityConstructionGraph(string Id)
+internal record IndividualCleanUtilityConstructionGraph(string Id)
 {
     public string Id { get; } = Id;
     public List<IndividualCleanUtilityConstructionGraph> Dependencies { get; } = new ();

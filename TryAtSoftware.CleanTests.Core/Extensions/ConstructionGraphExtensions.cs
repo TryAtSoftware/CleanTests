@@ -2,7 +2,7 @@
 
 using TryAtSoftware.CleanTests.Core.Construction;
 
-public static class ConstructionGraphExtensions
+internal static class ConstructionGraphExtensions
 {
     public static FullCleanUtilityConstructionGraph Copy(this FullCleanUtilityConstructionGraph graph)
     {

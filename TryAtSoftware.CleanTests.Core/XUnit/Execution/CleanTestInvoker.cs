@@ -14,7 +14,7 @@ using TryAtSoftware.Extensions.Reflection;
 using Xunit.Abstractions;
 using Xunit.Sdk;
 
-public class CleanTestInvoker(ITest test, IMessageBus messageBus, Type testClass, object[] constructorArguments, MethodInfo testMethod, object[] testMethodArguments, ExceptionAggregator aggregator, CancellationTokenSource cancellationTokenSource)
+internal class CleanTestInvoker(ITest test, IMessageBus messageBus, Type testClass, object[] constructorArguments, MethodInfo testMethod, object[] testMethodArguments, ExceptionAggregator aggregator, CancellationTokenSource cancellationTokenSource)
     : TestInvoker<ICleanTestCase>(test, messageBus, testClass, constructorArguments, testMethod, testMethodArguments, aggregator, cancellationTokenSource)
 {
     protected override object CreateTestClass()

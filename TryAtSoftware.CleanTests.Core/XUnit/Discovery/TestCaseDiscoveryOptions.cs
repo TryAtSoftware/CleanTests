@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using TryAtSoftware.Extensions.Collections;
 
-public class TestCaseDiscoveryOptions(IDictionary<Type, Type>? genericTypes = null)
+internal class TestCaseDiscoveryOptions(IDictionary<Type, Type>? genericTypes = null)
 {
     public IDictionary<Type, Type> GenericTypes { get; } = genericTypes.OrEmptyIfNull();
 }

@@ -8,14 +8,9 @@ using TryAtSoftware.CleanTests.Sample.Utilities.Animals;
 using Xunit.Abstractions;
 
 [TestSuiteGenericTypeMapping(typeof(NumericAttribute), typeof(int))]
-public class GenericTest<[Numeric] T> : CleanTest
+public class GenericTest<[Numeric] T>(ITestOutputHelper testOutputHelper) : CleanTest(testOutputHelper)
     where T : notnull
 {
-    public GenericTest(ITestOutputHelper testOutputHelper)
-        : base(testOutputHelper)
-    {
-    }
-
     [CleanFact]
     public void StandardFact() => Assert.Equal(4, 2 + 2);
 

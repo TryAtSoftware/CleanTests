@@ -2,7 +2,7 @@
 
 using System.Text;
 
-public static class TestParameters
+internal static class TestParameters
 {
     public static IEnumerable<object?[]> GetInvalidStringParameters()
     {

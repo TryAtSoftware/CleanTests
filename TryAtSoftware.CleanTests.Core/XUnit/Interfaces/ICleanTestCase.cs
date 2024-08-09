@@ -2,7 +2,7 @@
 
 using Xunit.Sdk;
 
-public interface ICleanTestCase : IXunitTestCase
+internal interface ICleanTestCase : IXunitTestCase
 {
     CleanTestCaseData CleanTestCaseData { get; }
 }

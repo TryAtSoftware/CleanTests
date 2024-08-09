@@ -13,7 +13,7 @@ using TryAtSoftware.Extensions.Collections;
 using Xunit.Abstractions;
 using Xunit.Sdk;
 
-public class CleanTestCase : XunitTestCase, ICleanTestCase
+internal class CleanTestCase : XunitTestCase, ICleanTestCase
 {
     private CleanTestCaseData? _cleanTestCaseData;
 

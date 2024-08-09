@@ -3,7 +3,7 @@
 using System;
 using System.Collections.Generic;
 
-public interface ICleanUtilityDescriptor
+internal interface ICleanUtilityDescriptor
 {
     string Category { get; }
     string Id => $"c:{this.Category}|n:{this.Name}";

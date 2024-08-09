@@ -11,7 +11,7 @@ using TryAtSoftware.CleanTests.Core.XUnit.Interfaces;
 using TryAtSoftware.Extensions.Collections;
 using Xunit.Sdk;
 
-public static class CleanTestsFrameworkExtensions
+internal static class CleanTestsFrameworkExtensions
 {
     public static void CopyTo<T>(this ICleanTestInitializationCollection<T> source, ICleanTestInitializationCollection<T> target)
     {

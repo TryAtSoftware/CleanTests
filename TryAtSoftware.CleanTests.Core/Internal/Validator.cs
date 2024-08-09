@@ -2,7 +2,7 @@
 
 using System;
 
-public static class Validator
+internal static class Validator
 {
     public static void ValidateMaxDegreeOfParallelism(int value)
     {
