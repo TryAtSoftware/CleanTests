@@ -6,7 +6,7 @@ using System.Linq;
 using TryAtSoftware.CleanTests.Core.Interfaces;
 using TryAtSoftware.Extensions.Collections;
 
-public class CleanTestInitializationCollection<TValue> : ICleanTestInitializationCollection<TValue>
+internal class CleanTestInitializationCollection<TValue> : ICleanTestInitializationCollection<TValue>
 {
     private readonly IDictionary<string, List<TValue>> _data = new Dictionary<string, List<TValue>>();
 

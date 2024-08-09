@@ -15,7 +15,7 @@ using Xunit;
 using Xunit.Abstractions;
 using Xunit.Sdk;
 
-public sealed class CleanTestCollectionRunner : XunitTestCollectionRunner, IDisposable
+internal sealed class CleanTestCollectionRunner : XunitTestCollectionRunner, IDisposable
 {
     private readonly ServiceProvider _globalServicesProvider;
     private readonly IGlobalUtilitiesProvider _globalUtilitiesProvider = new GlobalUtilitiesProvider();

@@ -10,7 +10,7 @@ using TryAtSoftware.CleanTests.Core.Attributes;
 using Xunit.Abstractions;
 using Xunit.Sdk;
 
-public class CleanTestMethodRunner(ITestMethod testMethod, IReflectionTypeInfo @class, IReflectionMethodInfo method, IEnumerable<IXunitTestCase> testCases, IMessageSink diagnosticMessageSink, IMessageBus messageBus, ExceptionAggregator aggregator, CancellationTokenSource cancellationTokenSource, object[] constructorArguments, CleanTestAssemblyData assemblyData)
+internal class CleanTestMethodRunner(ITestMethod testMethod, IReflectionTypeInfo @class, IReflectionMethodInfo method, IEnumerable<IXunitTestCase> testCases, IMessageSink diagnosticMessageSink, IMessageBus messageBus, ExceptionAggregator aggregator, CancellationTokenSource cancellationTokenSource, object[] constructorArguments, CleanTestAssemblyData assemblyData)
     : XunitTestMethodRunner(testMethod, @class, method, testCases, diagnosticMessageSink, messageBus, aggregator, cancellationTokenSource, constructorArguments)
 {
     private readonly CleanTestAssemblyData _assemblyData = assemblyData ?? throw new ArgumentNullException(nameof(assemblyData));

@@ -21,7 +21,7 @@ using TryAtSoftware.CleanTests.UnitTests.Parametrization;
 | GenerateAllCombinations | Setup #8 |      22.56 us |     0.163 us |     0.153 us |
 | GenerateAllCombinations | Setup #9 |      80.94 us |     0.447 us |     0.396 us |
  */
-public class CombinatorialMachineBenchmark
+internal class CombinatorialMachineBenchmark
 {
     private CombinatorialMachine _machine;
 

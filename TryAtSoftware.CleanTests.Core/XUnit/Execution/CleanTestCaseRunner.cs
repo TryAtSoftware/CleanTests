@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using TryAtSoftware.CleanTests.Core.XUnit.Interfaces;
 using Xunit.Sdk;
 
-public class CleanTestCaseRunner(ICleanTestCase testCase, IMessageBus messageBus, ExceptionAggregator aggregator, CancellationTokenSource cancellationTokenSource, object[] constructorArguments)
+internal class CleanTestCaseRunner(ICleanTestCase testCase, IMessageBus messageBus, ExceptionAggregator aggregator, CancellationTokenSource cancellationTokenSource, object[] constructorArguments)
     : TestCaseRunner<ICleanTestCase>(testCase, messageBus, aggregator, cancellationTokenSource)
 {
     private readonly object[] _constructorArguments = constructorArguments ?? throw new ArgumentNullException(nameof(constructorArguments));

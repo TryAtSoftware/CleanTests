@@ -7,12 +7,12 @@ using TryAtSoftware.CleanTests.UnitTests.Mocks;
 using Xunit.Abstractions;
 using Xunit.Sdk;
 
-public static class DiscoveryExtensions
+internal static class DiscoveryExtensions
 {
     private const int DelayBetweenDiscoveryRetries = 50;
     private const int MaxDiscoveryRetries = 20;
     
-    public static async Task<IEnumerable<IXunitTestCase>> DiscoverTestCasesAsync(this IAssemblyInfo assembly, CleanTestAssemblyData assemblyData, TestComponentMocksSuite testComponentMocks)
+    internal static async Task<IEnumerable<IXunitTestCase>> DiscoverTestCasesAsync(this IAssemblyInfo assembly, CleanTestAssemblyData assemblyData, TestComponentMocksSuite testComponentMocks)
     {
         Assert.NotNull(assembly);
         Assert.NotNull(assemblyData);

@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using Xunit.Abstractions;
 
-public interface IDecoratedComponent
+internal interface IDecoratedComponent
 {
     IEnumerable<IAttributeInfo> GetCustomAttributes(Type attributeType);
 }

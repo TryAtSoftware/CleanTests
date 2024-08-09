@@ -9,7 +9,7 @@ using TryAtSoftware.CleanTests.Core.Interfaces;
 using Xunit.Abstractions;
 using Xunit.Sdk;
 
-public class CleanTestClassRunner(ITestClass testClass, IReflectionTypeInfo @class, IEnumerable<IXunitTestCase> testCases, IMessageSink diagnosticMessageSink, IMessageBus messageBus, ITestCaseOrderer testCaseOrderer, ExceptionAggregator aggregator, CancellationTokenSource cancellationTokenSource, IDictionary<Type, object> collectionFixtureMappings, IGlobalUtilitiesProvider globalUtilitiesProvider, CleanTestAssemblyData assemblyData)
+internal class CleanTestClassRunner(ITestClass testClass, IReflectionTypeInfo @class, IEnumerable<IXunitTestCase> testCases, IMessageSink diagnosticMessageSink, IMessageBus messageBus, ITestCaseOrderer testCaseOrderer, ExceptionAggregator aggregator, CancellationTokenSource cancellationTokenSource, IDictionary<Type, object> collectionFixtureMappings, IGlobalUtilitiesProvider globalUtilitiesProvider, CleanTestAssemblyData assemblyData)
     : XunitTestClassRunner(testClass, @class, testCases, diagnosticMessageSink, messageBus, testCaseOrderer, aggregator, cancellationTokenSource, collectionFixtureMappings)
 {
     private readonly IGlobalUtilitiesProvider _globalUtilitiesProvider = globalUtilitiesProvider ?? throw new ArgumentNullException(nameof(globalUtilitiesProvider));

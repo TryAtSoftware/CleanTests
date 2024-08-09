@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using TryAtSoftware.CleanTests.Core.Interfaces;
 
-public class GlobalUtilitiesProvider : IGlobalUtilitiesProvider
+internal class GlobalUtilitiesProvider : IGlobalUtilitiesProvider
 {
     private readonly Dictionary<string, object> _utilities = new ();
 

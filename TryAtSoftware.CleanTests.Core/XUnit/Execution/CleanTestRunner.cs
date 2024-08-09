@@ -11,7 +11,7 @@ using TryAtSoftware.CleanTests.Core.XUnit.Interfaces;
 using Xunit.Abstractions;
 using Xunit.Sdk;
 
-public class CleanTestRunner(ITest test, IMessageBus messageBus, Type testClass, object[] constructorArguments, MethodInfo testMethod, object[] testMethodArguments, string skipReason, ExceptionAggregator aggregator, CancellationTokenSource cancellationTokenSource)
+internal class CleanTestRunner(ITest test, IMessageBus messageBus, Type testClass, object[] constructorArguments, MethodInfo testMethod, object[] testMethodArguments, string skipReason, ExceptionAggregator aggregator, CancellationTokenSource cancellationTokenSource)
     : TestRunner<ICleanTestCase>(test, messageBus, testClass, constructorArguments, testMethod, testMethodArguments, skipReason, aggregator, cancellationTokenSource)
 {
     protected override async Task<Tuple<decimal, string>> InvokeTestAsync(ExceptionAggregator aggregator)

@@ -20,7 +20,7 @@ using TryAtSoftware.CleanTests.UnitTests.Parametrization;
 | BuildConstructionGraphs | Setup #6 |     24.91 us |   0.175 us |   0.164 us |    6.0425 |   0.1221 |        - |    49.47 KB |
  */
 [MemoryDiagnoser]
-public class ConstructionManagerBenchmark
+internal class ConstructionManagerBenchmark
 {
     private CleanTestAssemblyData _assemblyData;
 

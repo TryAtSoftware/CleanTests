@@ -15,7 +15,7 @@ using Xunit;
 using Xunit.Abstractions;
 using Xunit.Sdk;
 
-public class CleanTestFrameworkDiscoverer : TestFrameworkDiscoverer
+internal class CleanTestFrameworkDiscoverer : TestFrameworkDiscoverer
 {
     private readonly FallbackTestFrameworkDiscoverer _fallbackTestFrameworkDiscoverer;
     private readonly CleanTestAssemblyData _cleanTestAssemblyData;

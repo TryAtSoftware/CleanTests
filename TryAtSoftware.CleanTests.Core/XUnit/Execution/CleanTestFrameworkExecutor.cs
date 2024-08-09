@@ -6,7 +6,7 @@ using System.Reflection;
 using Xunit.Abstractions;
 using Xunit.Sdk;
 
-public class CleanTestFrameworkExecutor(AssemblyName assemblyName, ISourceInformationProvider sourceInformationProvider, IMessageSink diagnosticMessageSink, Func<IAssemblyInfo, ITestFrameworkDiscoverer> createDiscoverer, CleanTestAssemblyData assemblyData)
+internal class CleanTestFrameworkExecutor(AssemblyName assemblyName, ISourceInformationProvider sourceInformationProvider, IMessageSink diagnosticMessageSink, Func<IAssemblyInfo, ITestFrameworkDiscoverer> createDiscoverer, CleanTestAssemblyData assemblyData)
     : XunitTestFrameworkExecutor(assemblyName, sourceInformationProvider, diagnosticMessageSink)
 {
     private readonly Func<IAssemblyInfo, ITestFrameworkDiscoverer> _createDiscoverer = createDiscoverer ?? throw new ArgumentNullException(nameof(createDiscoverer));

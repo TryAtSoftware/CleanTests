@@ -29,7 +29,13 @@ public class CombinatorialMachineTests
         }
     }
 
-    public static IEnumerable<object[]> GetCombinatorialMachineSetups()
-        => TestParameters.ConstructObservableCombinatorialMachineSetups()
-            .Select(combinatorialMachineSetup => new object[] { combinatorialMachineSetup.EnvironmentSetup, combinatorialMachineSetup.ExpectedCombinationsCount });
+    public static TheoryData<EnvironmentSetup, int> GetCombinatorialMachineSetups()
+    {
+        var result = new TheoryData<EnvironmentSetup, int>();
+
+        foreach (var setup in TestParameters.ConstructObservableCombinatorialMachineSetups())
+            result.Add(setup.EnvironmentSetup, setup.ExpectedCombinationsCount);
+        
+        return result;
+    }
 }

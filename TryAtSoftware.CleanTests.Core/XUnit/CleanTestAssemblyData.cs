@@ -9,7 +9,7 @@ using TryAtSoftware.Extensions.Collections;
 using TryAtSoftware.Extensions.Reflection;
 using TryAtSoftware.Extensions.Reflection.Interfaces;
 
-public class CleanTestAssemblyData
+internal class CleanTestAssemblyData
 {
     private IHierarchyScanner _hierarchyScanner = new HierarchyScanner();
     

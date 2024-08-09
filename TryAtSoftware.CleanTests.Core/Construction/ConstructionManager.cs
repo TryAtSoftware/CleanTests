@@ -9,7 +9,7 @@ using TryAtSoftware.CleanTests.Core.Utilities;
 using TryAtSoftware.CleanTests.Core.XUnit;
 using TryAtSoftware.Extensions.Collections;
 
-public class ConstructionManager(CleanTestAssemblyData cleanTestAssemblyData) : IConstructionManager
+internal class ConstructionManager(CleanTestAssemblyData cleanTestAssemblyData) : IConstructionManager
 {
     private readonly CleanTestAssemblyData _cleanTestAssemblyData = cleanTestAssemblyData ?? throw new ArgumentNullException(nameof(cleanTestAssemblyData));
     private readonly Dictionary<string, FullCleanUtilityConstructionGraph?> _constructionGraphsById = new();
@@ -36,12 +36,12 @@ public class ConstructionManager(CleanTestAssemblyData cleanTestAssemblyData) : 
     {
         if (this._constructionGraphsById.TryGetValue(utilityId, out var memoizedResult)) return memoizedResult;
 
-        var graph = this.BuildConstructionGraph(utilityId, new HashSet<string>());
+        var graph = this.BuildConstructionGraph(utilityId, []);
         this._constructionGraphsById[utilityId] = graph;
         return graph;
     }
 
-    private FullCleanUtilityConstructionGraph? BuildConstructionGraph(string utilityId, ISet<string> usedUtilities)
+    private FullCleanUtilityConstructionGraph? BuildConstructionGraph(string utilityId, HashSet<string> usedUtilities)
     {
         var utility = this._cleanTestAssemblyData.CleanUtilitiesById[utilityId];
         var graph = new FullCleanUtilityConstructionGraph(utilityId);
@@ -142,7 +142,7 @@ public class ConstructionManager(CleanTestAssemblyData cleanTestAssemblyData) : 
         }
     }
 
-    private void ExtractDependencies(ICleanUtilityDescriptor utilityDescriptor, string requirement, ISet<string> usedUtilities, ICleanTestInitializationCollection<ICleanUtilityDescriptor> dependenciesCollection, IDictionary<string, FullCleanUtilityConstructionGraph> dependencyGraphsById)
+    private void ExtractDependencies(ICleanUtilityDescriptor utilityDescriptor, string requirement, HashSet<string> usedUtilities, CleanTestInitializationCollection<ICleanUtilityDescriptor> dependenciesCollection, IDictionary<string, FullCleanUtilityConstructionGraph> dependencyGraphsById)
     {
         var localDemands = utilityDescriptor.InternalDemands.Get(requirement);
 
