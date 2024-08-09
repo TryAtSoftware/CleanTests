@@ -7,7 +7,7 @@ using TryAtSoftware.CleanTests.Core.Extensions;
 using TryAtSoftware.CleanTests.Core.Interfaces;
 using Xunit.Abstractions;
 
-public class SerializableInitializationUtility : IXunitSerializable
+internal class SerializableInitializationUtility : IXunitSerializable
 {
     private ICleanUtilityDescriptor? _initializationUtility;
 

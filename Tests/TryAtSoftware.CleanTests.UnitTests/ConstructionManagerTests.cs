@@ -11,7 +11,7 @@ public class ConstructionManagerTests
 {
     [Theory(Timeout = UnitTestConstants.Timeout)]
     [MemberData(nameof(GetDependenciesManagerSetups))]
-    public void DependencyGraphsShouldBeConstructedSuccessfully(EnvironmentSetup setup, string pathToExpectedResult)
+    public Task DependencyGraphsShouldBeConstructedSuccessfully(EnvironmentSetup setup, string pathToExpectedResult)
     {
         var assemblyTestData = setup.MaterializeAsAssemblyData();
         var manager = new ConstructionManager(assemblyTestData);
@@ -26,6 +26,8 @@ public class ConstructionManagerTests
             var output = JsonSerializer.Serialize(constructionPaths);
             Assert.Equal(expectedOutput[i], output);
         }
+
+        return Task.CompletedTask;
     }
 
     [Fact]
@@ -194,5 +196,12 @@ public class ConstructionManagerTests
         Assert.Empty(constructionGraphs);
     }
 
-    public static IEnumerable<object[]> GetDependenciesManagerSetups() => TestParameters.ConstructObservableConstructionManagerSetups().Select(dependenciesManagerSetup => new object[] { dependenciesManagerSetup.EnvironmentSetup, dependenciesManagerSetup.PathToExpectedResult });
+    public static TheoryData<EnvironmentSetup, string> GetDependenciesManagerSetups()
+    {
+        var data = new TheoryData<EnvironmentSetup, string>();
+        foreach (var dependenciesManagerSetup in TestParameters.ConstructObservableConstructionManagerSetups())
+            data.Add(dependenciesManagerSetup.EnvironmentSetup, dependenciesManagerSetup.PathToExpectedResult);
+        
+        return data;
+    }
 }

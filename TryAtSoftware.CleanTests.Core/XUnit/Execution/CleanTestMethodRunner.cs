@@ -10,15 +10,10 @@ using TryAtSoftware.CleanTests.Core.Attributes;
 using Xunit.Abstractions;
 using Xunit.Sdk;
 
-public class CleanTestMethodRunner : XunitTestMethodRunner
+public class CleanTestMethodRunner(ITestMethod testMethod, IReflectionTypeInfo @class, IReflectionMethodInfo method, IEnumerable<IXunitTestCase> testCases, IMessageSink diagnosticMessageSink, IMessageBus messageBus, ExceptionAggregator aggregator, CancellationTokenSource cancellationTokenSource, object[] constructorArguments, CleanTestAssemblyData assemblyData)
+    : XunitTestMethodRunner(testMethod, @class, method, testCases, diagnosticMessageSink, messageBus, aggregator, cancellationTokenSource, constructorArguments)
 {
-    private readonly CleanTestAssemblyData _assemblyData;
-
-    public CleanTestMethodRunner(ITestMethod testMethod, IReflectionTypeInfo @class, IReflectionMethodInfo method, IEnumerable<IXunitTestCase> testCases, IMessageSink diagnosticMessageSink, IMessageBus messageBus, ExceptionAggregator aggregator, CancellationTokenSource cancellationTokenSource, object[] constructorArguments, CleanTestAssemblyData assemblyData)
-        : base(testMethod, @class, method, testCases, diagnosticMessageSink, messageBus, aggregator, cancellationTokenSource, constructorArguments)
-    {
-        this._assemblyData = assemblyData ?? throw new ArgumentNullException(nameof(assemblyData));
-    }
+    private readonly CleanTestAssemblyData _assemblyData = assemblyData ?? throw new ArgumentNullException(nameof(assemblyData));
 
     protected override async Task<RunSummary> RunTestCasesAsync()
     {

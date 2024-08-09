@@ -200,3 +200,5 @@ dotnet_style_qualification_for_method = true:warning
 dotnet_style_qualification_for_property = true:warning
 dotnet_style_require_accessibility_modifiers = for_non_interface_members:suggestion
 file_header_template = 
+
+dotnet_diagnostic.CA1510.severity = none

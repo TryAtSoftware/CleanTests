@@ -6,17 +6,11 @@ using System.Reflection;
 using Xunit.Abstractions;
 using Xunit.Sdk;
 
-public class CleanTestFrameworkExecutor : XunitTestFrameworkExecutor
+public class CleanTestFrameworkExecutor(AssemblyName assemblyName, ISourceInformationProvider sourceInformationProvider, IMessageSink diagnosticMessageSink, Func<IAssemblyInfo, ITestFrameworkDiscoverer> createDiscoverer, CleanTestAssemblyData assemblyData)
+    : XunitTestFrameworkExecutor(assemblyName, sourceInformationProvider, diagnosticMessageSink)
 {
-    private readonly Func<IAssemblyInfo, ITestFrameworkDiscoverer> _createDiscoverer;
-    private readonly CleanTestAssemblyData _assemblyData;
-
-    public CleanTestFrameworkExecutor(AssemblyName assemblyName, ISourceInformationProvider sourceInformationProvider, IMessageSink diagnosticMessageSink, Func<IAssemblyInfo, ITestFrameworkDiscoverer> createDiscoverer, CleanTestAssemblyData assemblyData)
-        : base(assemblyName, sourceInformationProvider, diagnosticMessageSink)
-    {
-        this._createDiscoverer = createDiscoverer ?? throw new ArgumentNullException(nameof(createDiscoverer));
-        this._assemblyData = assemblyData ?? throw new ArgumentNullException(nameof(assemblyData));
-    }
+    private readonly Func<IAssemblyInfo, ITestFrameworkDiscoverer> _createDiscoverer = createDiscoverer ?? throw new ArgumentNullException(nameof(createDiscoverer));
+    private readonly CleanTestAssemblyData _assemblyData = assemblyData ?? throw new ArgumentNullException(nameof(assemblyData));
 
     protected override ITestFrameworkDiscoverer CreateDiscoverer() => this._createDiscoverer(this.AssemblyInfo);
 

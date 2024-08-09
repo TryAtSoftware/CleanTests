@@ -9,17 +9,11 @@ using TryAtSoftware.CleanTests.Core.Interfaces;
 using Xunit.Abstractions;
 using Xunit.Sdk;
 
-public class CleanTestClassRunner : XunitTestClassRunner
+public class CleanTestClassRunner(ITestClass testClass, IReflectionTypeInfo @class, IEnumerable<IXunitTestCase> testCases, IMessageSink diagnosticMessageSink, IMessageBus messageBus, ITestCaseOrderer testCaseOrderer, ExceptionAggregator aggregator, CancellationTokenSource cancellationTokenSource, IDictionary<Type, object> collectionFixtureMappings, IGlobalUtilitiesProvider globalUtilitiesProvider, CleanTestAssemblyData assemblyData)
+    : XunitTestClassRunner(testClass, @class, testCases, diagnosticMessageSink, messageBus, testCaseOrderer, aggregator, cancellationTokenSource, collectionFixtureMappings)
 {
-    private readonly IGlobalUtilitiesProvider _globalUtilitiesProvider;
-    private readonly CleanTestAssemblyData _assemblyData;
-        
-    public CleanTestClassRunner(ITestClass testClass, IReflectionTypeInfo @class, IEnumerable<IXunitTestCase> testCases, IMessageSink diagnosticMessageSink, IMessageBus messageBus, ITestCaseOrderer testCaseOrderer, ExceptionAggregator aggregator, CancellationTokenSource cancellationTokenSource, IDictionary<Type, object> collectionFixtureMappings, IGlobalUtilitiesProvider globalUtilitiesProvider, CleanTestAssemblyData assemblyData)
-        : base(testClass, @class, testCases, diagnosticMessageSink, messageBus, testCaseOrderer, aggregator, cancellationTokenSource, collectionFixtureMappings)
-    {
-        this._globalUtilitiesProvider = globalUtilitiesProvider ?? throw new ArgumentNullException(nameof(globalUtilitiesProvider));
-        this._assemblyData = assemblyData ?? throw new ArgumentNullException(nameof(assemblyData));
-    }
+    private readonly IGlobalUtilitiesProvider _globalUtilitiesProvider = globalUtilitiesProvider ?? throw new ArgumentNullException(nameof(globalUtilitiesProvider));
+    private readonly CleanTestAssemblyData _assemblyData = assemblyData ?? throw new ArgumentNullException(nameof(assemblyData));
 
     protected override Task<RunSummary> RunTestMethodAsync(ITestMethod testMethod, IReflectionMethodInfo method, IEnumerable<IXunitTestCase> testCases, object[] constructorArguments)
     {
@@ -36,7 +30,7 @@ public class CleanTestClassRunner : XunitTestClassRunner
     {
         if (parameter.ParameterType == typeof(ITestOutputHelper))
         {
-            argumentValue = new TestOutputHelperPlaceholder();
+            argumentValue = TestOutputHelperPlaceholder.Instance;
             return true;
         }
 

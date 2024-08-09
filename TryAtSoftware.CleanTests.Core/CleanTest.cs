@@ -9,19 +9,14 @@ using TryAtSoftware.CleanTests.Core.Utilities;
 using Xunit;
 using Xunit.Abstractions;
 
-public abstract class CleanTest : ICleanTest, IDisposable, IAsyncLifetime
+public abstract class CleanTest(ITestOutputHelper testOutputHelper) : ICleanTest, IDisposable, IAsyncLifetime
 {
     private ServiceProvider? _localDependenciesProvider;
     private IServiceScope? _scope;
 
     private ServiceProvider? _globalDependenciesProvider;
 
-    protected CleanTest(ITestOutputHelper testOutputHelper)
-    {
-        this.TestOutputHelper = testOutputHelper ?? throw new ArgumentNullException(nameof(testOutputHelper));
-    }
-
-    protected ITestOutputHelper TestOutputHelper { get; }
+    protected ITestOutputHelper TestOutputHelper { get; } = testOutputHelper ?? throw new ArgumentNullException(nameof(testOutputHelper));
 
     public IServiceCollection LocalDependenciesCollection { get; } = new ServiceCollection();
     public IServiceCollection GlobalDependenciesCollection { get; } = new ServiceCollection();

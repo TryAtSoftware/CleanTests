@@ -1,6 +1,6 @@
 ﻿namespace TryAtSoftware.CleanTests.UnitTests;
 
-using Moq;
+using NSubstitute;
 using TryAtSoftware.CleanTests.Core.XUnit;
 using TryAtSoftware.Extensions.Reflection.Interfaces;
 
@@ -16,11 +16,10 @@ public class CleanTestAssemblyDataTests
     [Fact]
     public void HierarchyScannerShouldBeSetSuccessfully()
     {
-        var hierarchyScannerMock = new Mock<IHierarchyScanner>();
-        var hierarchyScannerInstance = hierarchyScannerMock.Object;
+        var hierarchyScanner = Substitute.For<IHierarchyScanner>();
 
-        var assemblyData = new CleanTestAssemblyData { HierarchyScanner = hierarchyScannerInstance };
-        Assert.Same(hierarchyScannerInstance, assemblyData.HierarchyScanner);
+        var assemblyData = new CleanTestAssemblyData { HierarchyScanner = hierarchyScanner };
+        Assert.Same(hierarchyScanner, assemblyData.HierarchyScanner);
     }
 
     [Fact]

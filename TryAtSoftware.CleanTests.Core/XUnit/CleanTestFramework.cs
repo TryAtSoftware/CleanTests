@@ -13,14 +13,9 @@ using TryAtSoftware.Extensions.Collections;
 using Xunit.Abstractions;
 using Xunit.Sdk;
 
-public class CleanTestFramework : XunitTestFramework
+public class CleanTestFramework(IMessageSink messageSink) : XunitTestFramework(messageSink)
 {
     private readonly Dictionary<string, CleanTestAssemblyData> _utilityDescriptorsByAssembly = new ();
-
-    public CleanTestFramework(IMessageSink messageSink)
-        : base(messageSink)
-    {
-    }
 
     protected override ITestFrameworkExecutor CreateExecutor(AssemblyName assemblyName)
     {
@@ -66,7 +61,7 @@ public class CleanTestFramework : XunitTestFramework
         return assemblyData;
     } 
 
-    private static void RegisterUtilitiesFromAssembly(IAssemblyInfo assemblyInfo, ICollection<ICleanUtilityDescriptor> utilitiesCollection)
+    private static void RegisterUtilitiesFromAssembly(IAssemblyInfo assemblyInfo, List<ICleanUtilityDescriptor> utilitiesCollection)
     {
         foreach (var type in assemblyInfo.GetTypes(includePrivateTypes: false).OrEmptyIfNull().IgnoreNullValues())
         {

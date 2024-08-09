@@ -1,7 +1,7 @@
 ﻿namespace TryAtSoftware.CleanTests.UnitTests.Mocks;
 
 using System.Reflection;
-using Moq;
+using NSubstitute;
 using TryAtSoftware.Extensions.Reflection.Interfaces;
 using Xunit.Abstractions;
 using Xunit.Sdk;
@@ -12,85 +12,85 @@ internal static class ReflectionMocks
     {
         var originalAssemblyInfo = Reflector.Wrap(assembly);
 
-        var assemblyInfoMock = new Mock<IReflectionAssemblyInfo>();
-        assemblyInfoMock.SetupGet(x => x.Assembly).Returns(assembly);
-        assemblyInfoMock.SetupGet(x => x.Name).Returns(originalAssemblyInfo.Name);
-        assemblyInfoMock.SetupGet(x => x.AssemblyPath).Returns(originalAssemblyInfo.AssemblyPath);
-        assemblyInfoMock.Setup(x => x.GetCustomAttributes(It.IsAny<string>())).Returns<string>(x => originalAssemblyInfo.GetCustomAttributes(x));
-        assemblyInfoMock.Setup(x => x.GetTypes(It.IsAny<bool>())).Returns<bool>(_ => typesMap.Values);
-        assemblyInfoMock.Setup(x => x.GetType(It.IsAny<string>())).Returns<string>(name => typesMap.TryGetValue(name, out var type) ? type : null!);
+        var assemblyInfo = Substitute.For<IReflectionAssemblyInfo>();
+        assemblyInfo.Assembly.Returns(assembly);
+        assemblyInfo.Name.Returns(originalAssemblyInfo.Name);
+        assemblyInfo.AssemblyPath.Returns(originalAssemblyInfo.AssemblyPath);
+        assemblyInfo.GetCustomAttributes(Arg.Any<string>()).Returns(x => originalAssemblyInfo.GetCustomAttributes(x.ArgAt<string>(position: 0)));
+        assemblyInfo.GetTypes(Arg.Any<bool>()).Returns(_ => typesMap.Values);
+        assemblyInfo.GetType(Arg.Any<string>()).Returns(x => typesMap.TryGetValue(x.ArgAt<string>(position: 0), out var type) ? type : null!);
 
-        return assemblyInfoMock.Object;
+        return assemblyInfo;
     }
 
     internal static IReflectionTypeInfo MockReflectionTypeInfo(this Type type, IAssemblyInfo assemblyInfo, Dictionary<string, IMethodInfo>? methodsMap = null)
     {
         var originalTypeInfo = Reflector.Wrap(type);
 
-        var typeInfoMock = new Mock<IReflectionTypeInfo>();
-        typeInfoMock.SetupGet(x => x.Type).Returns(type);
-        typeInfoMock.SetupGet(x => x.Assembly).Returns(assemblyInfo);
-        typeInfoMock.SetupGet(x => x.Name).Returns(originalTypeInfo.Name);
-        typeInfoMock.SetupGet(x => x.Interfaces).Returns(originalTypeInfo.Interfaces);
-        typeInfoMock.SetupGet(x => x.BaseType).Returns(originalTypeInfo.BaseType);
-        typeInfoMock.SetupGet(x => x.IsAbstract).Returns(originalTypeInfo.IsAbstract);
-        typeInfoMock.SetupGet(x => x.IsSealed).Returns(originalTypeInfo.IsSealed);
-        typeInfoMock.SetupGet(x => x.IsGenericParameter).Returns(originalTypeInfo.IsGenericParameter);
-        typeInfoMock.SetupGet(x => x.IsGenericType).Returns(originalTypeInfo.IsGenericType);
-        typeInfoMock.SetupGet(x => x.IsValueType).Returns(originalTypeInfo.IsValueType);
-        typeInfoMock.Setup(x => x.GetCustomAttributes(It.IsAny<string>())).Returns<string>(x => originalTypeInfo.GetCustomAttributes(x));
-        typeInfoMock.Setup(x => x.GetGenericArguments()).Returns(() => originalTypeInfo.GetGenericArguments());
+        var typeInfo = Substitute.For<IReflectionTypeInfo>();
+        typeInfo.Type.Returns(type);
+        typeInfo.Assembly.Returns(assemblyInfo);
+        typeInfo.Name.Returns(originalTypeInfo.Name);
+        typeInfo.Interfaces.Returns(originalTypeInfo.Interfaces);
+        typeInfo.BaseType.Returns(originalTypeInfo.BaseType);
+        typeInfo.IsAbstract.Returns(originalTypeInfo.IsAbstract);
+        typeInfo.IsSealed.Returns(originalTypeInfo.IsSealed);
+        typeInfo.IsGenericParameter.Returns(originalTypeInfo.IsGenericParameter);
+        typeInfo.IsGenericType.Returns(originalTypeInfo.IsGenericType);
+        typeInfo.IsValueType.Returns(originalTypeInfo.IsValueType);
+        typeInfo.GetCustomAttributes(Arg.Any<string>()).Returns(x => originalTypeInfo.GetCustomAttributes(x.ArgAt<string>(position: 0)));
+        typeInfo.GetGenericArguments().Returns(_ => originalTypeInfo.GetGenericArguments());
 
         if (methodsMap is not null)
         {
-            typeInfoMock.Setup(x => x.GetMethod(It.IsAny<string>(), It.IsAny<bool>())).Returns<string, bool>((x, _) => methodsMap.TryGetValue(x, out var method) ? method : null!);
-            typeInfoMock.Setup(x => x.GetMethods(It.IsAny<bool>())).Returns<bool>(_ => methodsMap.Values);
+            typeInfo.GetMethod(Arg.Any<string>(), Arg.Any<bool>()).Returns((x) => methodsMap.TryGetValue(x.ArgAt<string>(position: 0), out var method) ? method : null!);
+            typeInfo.GetMethods(Arg.Any<bool>()).Returns(_ => methodsMap.Values);
         }
         else
         {
-            typeInfoMock.Setup(x => x.GetMethod(It.IsAny<string>(), It.IsAny<bool>())).Returns<string, bool>((x, y) => originalTypeInfo.GetMethod(x, y));
-            typeInfoMock.Setup(x => x.GetMethods(It.IsAny<bool>())).Returns<bool>(x => originalTypeInfo.GetMethods(x));
+            typeInfo.GetMethod(Arg.Any<string>(), Arg.Any<bool>()).Returns(x => originalTypeInfo.GetMethod(x.ArgAt<string>(position: 0), x.ArgAt<bool>(position: 1)));
+            typeInfo.GetMethods(Arg.Any<bool>()).Returns(x => originalTypeInfo.GetMethods(x.ArgAt<bool>(position: 0)));
         }
 
-        return typeInfoMock.Object;
+        return typeInfo;
     }
 
     internal static IReflectionMethodInfo MockReflectionMethodInfo(this MethodInfo method, ITypeInfo type, Dictionary<string, IReflectionAttributeInfo>? attributesMap = null)
     {
         var originalMethodInfo = Reflector.Wrap(method);
 
-        var methodInfoMock = new Mock<IReflectionMethodInfo>();
-        methodInfoMock.SetupGet(x => x.MethodInfo).Returns(method);
-        methodInfoMock.SetupGet(x => x.Type).Returns(type);
-        methodInfoMock.SetupGet(x => x.Name).Returns(originalMethodInfo.Name);
-        methodInfoMock.SetupGet(x => x.IsGenericMethodDefinition).Returns(originalMethodInfo.IsGenericMethodDefinition);
-        methodInfoMock.SetupGet(x => x.IsAbstract).Returns(originalMethodInfo.IsAbstract);
-        methodInfoMock.SetupGet(x => x.IsPublic).Returns(originalMethodInfo.IsPublic);
-        methodInfoMock.SetupGet(x => x.IsStatic).Returns(originalMethodInfo.IsStatic);
-        methodInfoMock.SetupGet(x => x.ReturnType).Returns(originalMethodInfo.ReturnType);
-        methodInfoMock.Setup(x => x.GetParameters()).Returns(() => originalMethodInfo.GetParameters());
-        methodInfoMock.Setup(x => x.GetGenericArguments()).Returns(() => originalMethodInfo.GetGenericArguments());
-        methodInfoMock.Setup(x => x.MakeGenericMethod(It.IsAny<ITypeInfo[]>())).Returns<ITypeInfo[]>(x => originalMethodInfo.MakeGenericMethod(x));
+        var methodInfo = Substitute.For<IReflectionMethodInfo>();
+        methodInfo.MethodInfo.Returns(method);
+        methodInfo.Type.Returns(type);
+        methodInfo.Name.Returns(originalMethodInfo.Name);
+        methodInfo.IsGenericMethodDefinition.Returns(originalMethodInfo.IsGenericMethodDefinition);
+        methodInfo.IsAbstract.Returns(originalMethodInfo.IsAbstract);
+        methodInfo.IsPublic.Returns(originalMethodInfo.IsPublic);
+        methodInfo.IsStatic.Returns(originalMethodInfo.IsStatic);
+        methodInfo.ReturnType.Returns(originalMethodInfo.ReturnType);
+        methodInfo.GetParameters().Returns(_ => originalMethodInfo.GetParameters());
+        methodInfo.GetGenericArguments().Returns(_ => originalMethodInfo.GetGenericArguments());
+        methodInfo.MakeGenericMethod(Arg.Any<ITypeInfo[]>()).Returns(x => originalMethodInfo.MakeGenericMethod(x.ArgAt<ITypeInfo[]>(position: 0)));
         
-        if (attributesMap is not null) methodInfoMock.Setup(x => x.GetCustomAttributes(It.IsAny<string>())).Returns<string>(x => attributesMap.TryGetValue(x, out var attribute) ? new[] { attribute } : Enumerable.Empty<IAttributeInfo>());
-        else  methodInfoMock.Setup(x => x.GetCustomAttributes(It.IsAny<string>())).Returns<string>(x => originalMethodInfo.GetCustomAttributes(x));
+        if (attributesMap is not null) methodInfo.GetCustomAttributes(Arg.Any<string>()).Returns(x => attributesMap.TryGetValue(x.ArgAt<string>(position: 0), out var attribute) ? [attribute] : []);
+        else methodInfo.GetCustomAttributes(Arg.Any<string>()).Returns(x => originalMethodInfo.GetCustomAttributes(x.ArgAt<string>(position: 0)));
 
-        return methodInfoMock.Object;
+        return methodInfo;
     }
 
     internal static IReflectionAttributeInfo MockReflectionAttributeInfo(this FactAttribute attribute)
     {
         var attributeTypeInfo = Reflector.Wrap(attribute.GetType());
 
-        var attributeInfoMock = new Mock<IReflectionAttributeInfo>();
-        attributeInfoMock.SetupGet(x => x.Attribute).Returns(attribute);
-        attributeInfoMock.Setup(x => x.GetCustomAttributes(It.IsAny<string>())).Returns<string>(x => attributeTypeInfo.GetCustomAttributes(x));
-        attributeInfoMock.Setup(x => x.GetConstructorArguments()).Returns(Enumerable.Empty<object>);
-        attributeInfoMock.Setup(x => x.GetNamedArgument<string>(nameof(FactAttribute.DisplayName))).Returns<string>(_ => attribute.DisplayName);
-        attributeInfoMock.Setup(x => x.GetNamedArgument<string>(nameof(FactAttribute.Skip))).Returns<string>(_ => attribute.Skip);
-        attributeInfoMock.Setup(x => x.GetNamedArgument<int>(nameof(FactAttribute.Timeout))).Returns<string>(_ => attribute.Timeout);
+        var attributeInfo = Substitute.For<IReflectionAttributeInfo>();
+        attributeInfo.Attribute.Returns(attribute);
+        attributeInfo.GetCustomAttributes(Arg.Any<string>()).Returns(x => attributeTypeInfo.GetCustomAttributes(x.ArgAt<string>(position: 0)));
+        attributeInfo.GetConstructorArguments().Returns(_ => []);
+        attributeInfo.GetNamedArgument<string>(nameof(FactAttribute.DisplayName)).Returns(_ => attribute.DisplayName);
+        attributeInfo.GetNamedArgument<string>(nameof(FactAttribute.Skip)).Returns<string>(_ => attribute.Skip);
+        attributeInfo.GetNamedArgument<int>(nameof(FactAttribute.Timeout)).Returns(_ => attribute.Timeout);
 
-        return attributeInfoMock.Object;
+        return attributeInfo;
     }
 
     internal static ReflectionMocksSuite MockReflectionSuite(Assembly assembly, Type type)
@@ -109,8 +109,8 @@ internal static class ReflectionMocks
     internal static IHierarchyScanner MockHierarchyScanner<TAttribute>(Type type, string memberName, TAttribute[] attributes)
         where TAttribute : Attribute
     {
-        var mockedHierarchyScanner = new Mock<IHierarchyScanner>();
-        mockedHierarchyScanner.Setup(x => x.ScanForAttribute<TAttribute>(It.Is<MemberInfo>(mi => mi .ReflectedType == type && mi.Name == memberName))).Returns<MemberInfo>(_ => attributes);
-        return mockedHierarchyScanner.Object;
+        var hierarchyScanner = Substitute.For<IHierarchyScanner>();
+        hierarchyScanner.ScanForAttribute<TAttribute>(Arg.Is<MemberInfo>(mi => mi .ReflectedType == type && mi.Name == memberName)).Returns(_ => attributes);
+        return hierarchyScanner;
     } 
 }
