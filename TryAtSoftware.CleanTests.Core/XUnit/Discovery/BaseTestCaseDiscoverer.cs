@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using TryAtSoftware.CleanTests.Core.Construction;
 using TryAtSoftware.CleanTests.Core.Enums;
@@ -90,15 +89,6 @@ internal abstract class BaseTestCaseDiscoverer(IMessageSink diagnosticMessageSin
 
     private void SetTraits(ITestCase testCase, CleanTestCaseData testData)
     {
-        List<string> lines = [];
-        var cleanUtilities = testData.CleanUtilities.ToArray();
-        for (var i = 0; i < cleanUtilities.Length; i++)
-        {
-            for (var j = i + 1; j < cleanUtilities.Length; j++) lines.Add($"\"{cleanUtilities[i].Id}\",\"{cleanUtilities[j].Id}\",\"sibling\",\"{testCase.UniqueID}\"");
-            foreach (var dependency in cleanUtilities[i].Dependencies) lines.Add($"\"{cleanUtilities[i].Id}\",\"{dependency.Id}\",\"child\",\"{testCase.UniqueID}\"");
-        }
-        File.AppendAllLines("edges.csv", lines);
-
         if ((this._cleanTestAssemblyData.GenericTypeMappingPresentations & CleanTestMetadataPresentations.InTraits) != CleanTestMetadataPresentations.None)
         {
             foreach (var (attributeType, genericParameterType) in testData.GenericTypesMap)
