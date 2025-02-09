@@ -2,6 +2,8 @@
 
 using System.Text.Json;
 using TryAtSoftware.CleanTests.Core.Construction;
+using TryAtSoftware.CleanTests.Core.Interfaces;
+using TryAtSoftware.CleanTests.Core.XUnit;
 using TryAtSoftware.CleanTests.UnitTests.Constants;
 using TryAtSoftware.CleanTests.UnitTests.Extensions;
 using TryAtSoftware.CleanTests.UnitTests.Parametrization;
@@ -9,8 +11,7 @@ using TryAtSoftware.Randomizer.Core.Helpers;
 
 public class ConstructionManagerTests
 {
-    [Theory(Timeout = UnitTestConstants.Timeout)]
-    [MemberData(nameof(GetDependenciesManagerSetups))]
+    [Theory(Timeout = UnitTestConstants.Timeout), MemberData(nameof(GetDependenciesManagerSetups))]
     public Task DependencyGraphsShouldBeConstructedSuccessfully(EnvironmentSetup setup, string pathToExpectedResult)
     {
         var assemblyTestData = setup.MaterializeAsAssemblyData();
@@ -33,167 +34,208 @@ public class ConstructionManagerTests
     [Fact]
     public void OuterDemandsShouldBeAppliedCorrectlyAtRootLevel()
     {
-        var utilitiesCount = RandomizationHelper.RandomInteger(3, 10);
         var setup = new EnvironmentSetup("outer_demands_env");
-        setup.WithCategory("FL1", 1).WithCategory("FL2", utilitiesCount).WithCategory("SL1", utilitiesCount);
-        setup.WithRequirements("FL1", 1, "SL1");
-
-        for (var i = 1; i <= utilitiesCount; i++)
+        var count = RandomizationHelper.RandomInteger(3, 10);
+        PrepareForOuterDemandsTesting(setup, depth: 1, count);
+        
+        for (var i = 1; i <= count; i++)
         {
-            var characteristic = $"C-{i}";
-            setup.WithCharacteristics("FL2", i, characteristic);
-            setup.WithOuterDemands("SL1", i, "FL2", characteristic);
+            setup.WithCharacteristics("Q", i, $"O{i}");
+            setup.WithOuterDemands("N1", i, "Q", $"O{i}");
         }
 
         var assemblyTestData = setup.MaterializeAsAssemblyData();
         var manager = new ConstructionManager(assemblyTestData);
 
-        var fl1Utilities = assemblyTestData.CleanUtilities.Get("FL1").ToArray();
-        Assert.Single(fl1Utilities);
+        var matrix = ExtractMatrixForOuterDemandsTesting(assemblyTestData, depth: 1, count);
 
-        var fl2Utilities = assemblyTestData.CleanUtilities.Get("FL2").ToArray();
-        Assert.Equal(utilitiesCount, fl2Utilities.Length);
-
-        var sl1Utilities = assemblyTestData.CleanUtilities.Get("SL1").ToArray();
-        Assert.Equal(utilitiesCount, sl1Utilities.Length);
-
-        for (var i = 0; i < utilitiesCount; i++)
+        for (var i = 0; i < count; i++)
         {
-            var utilityIds = new[] { fl1Utilities[0].Id, fl2Utilities[i].Id };
+            var utilityIds = new[] { matrix[0][0].Id, matrix[^1][i].Id };
             var constructionGraphs = manager.BuildIndividualConstructionGraphs(utilityIds);
-
             Assert.Single(constructionGraphs);
-            var fl1ConstructionGraph = constructionGraphs[0][0];
-
-            Assert.NotNull(fl1Utilities);
-            Assert.Equal(fl1Utilities[0].Id, fl1ConstructionGraph.Id);
-
-            var sl1ConstructionGraph = Assert.Single(fl1ConstructionGraph.Dependencies);
-            Assert.NotNull(sl1ConstructionGraph);
-            Assert.Equal(sl1Utilities[i].Id, sl1ConstructionGraph.Id);
-
-            var fl2ConstructionGraph = constructionGraphs[0][1];
-            Assert.NotNull(fl2ConstructionGraph);
-            Assert.Equal(fl2Utilities[i].Id, fl2ConstructionGraph.Id);
-
-            Assert.Empty(fl2ConstructionGraph.Dependencies);
+            Assert.Equal(2, constructionGraphs[0].Length);
+            
+            var penultConstructionGraph = constructionGraphs[0][0];
+            Assert.Equal(matrix[0][0].Id, penultConstructionGraph.Id);
+            Assert.Single(penultConstructionGraph.Dependencies);
+        
+            var qConstructionGraph = constructionGraphs[0][1];
+            Assert.Equal(matrix[^1][i].Id, qConstructionGraph.Id);
+            Assert.Empty(qConstructionGraph.Dependencies);
+        
+            var lastConstructionGraph = penultConstructionGraph.Dependencies[0];
+            Assert.Equal(matrix[1][i].Id, lastConstructionGraph.Id);
+            Assert.Empty(lastConstructionGraph.Dependencies);
         }
     }
 
     [Fact]
     public void UnsatisfiableOuterDemandsShouldBeHandledCorrectlyAtRootLevel()
     {
-        var utilitiesCount = RandomizationHelper.RandomInteger(3, 10);
         var setup = new EnvironmentSetup("outer_demands_env");
-        setup.WithCategory("FL1", 1).WithCategory("FL2", utilitiesCount).WithCategory("SL1", utilitiesCount);
-        setup.WithRequirements("FL1", 1, "SL1");
+        var count = RandomizationHelper.RandomInteger(3, 10);
+        PrepareForOuterDemandsTesting(setup, depth: 1, count);
 
-        for (var i = 1; i <= utilitiesCount; i++)
+        for (var i = 1; i <= count; i++)
         {
-            setup.WithCharacteristics("FL2", i, $"C{i}");
-            setup.WithOuterDemands("SL1", i, "FL2", $"D{i}");
+            setup.WithCharacteristics("Q", i, $"O{i}");
+            setup.WithOuterDemands("N1", i, "Q", $"X{i}");
         }
 
         var assemblyTestData = setup.MaterializeAsAssemblyData();
         var manager = new ConstructionManager(assemblyTestData);
 
-        var fl1Utilities = assemblyTestData.CleanUtilities.Get("FL1").ToArray();
-        Assert.Single(fl1Utilities);
+        var matrix = ExtractMatrixForOuterDemandsTesting(assemblyTestData, depth: 1, count);
 
-        var fl2Utilities = assemblyTestData.CleanUtilities.Get("FL2").ToArray();
-        Assert.Equal(utilitiesCount, fl2Utilities.Length);
-
-        for (var i = 0; i < utilitiesCount; i++)
+        for (var i = 0; i < count; i++)
         {
-            var utilityIds = new[] { fl1Utilities[0].Id, fl2Utilities[i].Id };
+            var utilityIds = new[] { matrix[0][0].Id, matrix[^1][i].Id };
             var constructionGraphs = manager.BuildIndividualConstructionGraphs(utilityIds);
-
             Assert.Empty(constructionGraphs);
         }
     }
 
-    [Fact]
-    public void OuterDemandsShouldBeAppliedCorrectlyAtDeeperLevels()
+    [Theory, MemberData(nameof(GetDepthMembers))]
+    public void OuterDemandsShouldBeAppliedCorrectlyAtDeeperLevels(int depth)
     {
-        var utilitiesCount = RandomizationHelper.RandomInteger(3, 10);
         var setup = new EnvironmentSetup("outer_demands_env");
-        setup.WithCategory("FL1", 1).WithCategory("SL1", 1).WithCategory("SL2", utilitiesCount).WithCategory("TL1", utilitiesCount);
-        setup.WithRequirements("FL1", 1, "SL1", "SL2").WithRequirements("SL1", 1, "TL1");
+        var count = RandomizationHelper.RandomInteger(3, 10);
+        PrepareForOuterDemandsTesting(setup, depth, count);
 
-        for (var i = 1; i <= utilitiesCount; i++)
+        for (var i = 1; i <= count; i++)
         {
-            var characteristic = $"C-{i}";
-            setup.WithCharacteristics("SL2", i, characteristic);
-            setup.WithOuterDemands("TL1", i, "SL2", characteristic);
+            setup.WithCharacteristics("Q", i, $"O{i}");
+            setup.WithOuterDemands($"N{depth}", i, "Q", $"O{i}");
         }
 
         var assemblyTestData = setup.MaterializeAsAssemblyData();
         var manager = new ConstructionManager(assemblyTestData);
 
-        var fl1Utilities = assemblyTestData.CleanUtilities.Get("FL1").ToArray();
-        Assert.Single(fl1Utilities);
-
-        var sl1Utilities = assemblyTestData.CleanUtilities.Get("SL1").ToArray();
-        Assert.Single(sl1Utilities);
-
-        var sl2Utilities = assemblyTestData.CleanUtilities.Get("SL2").ToArray();
-        Assert.Equal(utilitiesCount, sl2Utilities.Length);
-
-        var tl1Utilities = assemblyTestData.CleanUtilities.Get("TL1").ToArray();
-        Assert.Equal(utilitiesCount, tl1Utilities.Length);
-
-        var utilityIds = new[] { fl1Utilities[0].Id };
-        var constructionGraphs = manager.BuildIndividualConstructionGraphs(utilityIds);
-
-        Assert.Equal(utilitiesCount, constructionGraphs.Length);
-        for (var i = 0; i < utilitiesCount; i++)
-        {
-            var fl1ConstructionGraph = constructionGraphs[i][0];
-
-            Assert.NotNull(fl1Utilities);
-            Assert.Equal(fl1Utilities[0].Id, fl1ConstructionGraph.Id);
-            Assert.Equal(2, fl1ConstructionGraph.Dependencies.Count);
-
-            var sl1ConstructionGraph = fl1ConstructionGraph.Dependencies[0];
-            Assert.NotNull(sl1ConstructionGraph);
-            Assert.Equal(sl1Utilities[0].Id, sl1ConstructionGraph.Id);
-
-            var sl2ConstructionGraph = fl1ConstructionGraph.Dependencies[1];
-            Assert.NotNull(sl2ConstructionGraph);
-            Assert.Equal(sl2Utilities[i].Id, sl2ConstructionGraph.Id);
-            Assert.Empty(sl2ConstructionGraph.Dependencies);
-
-            var tl1ConstructionGraph = Assert.Single(sl1ConstructionGraph.Dependencies);
-            Assert.NotNull(tl1ConstructionGraph);
-            Assert.Equal(tl1Utilities[i].Id, tl1ConstructionGraph.Id);
-            Assert.Empty(tl1ConstructionGraph.Dependencies);
-        }
+        var matrix = ExtractMatrixForOuterDemandsTesting(assemblyTestData, depth, count);
+        var constructionGraphs = manager.BuildIndividualConstructionGraphs(matrix[0].Select(x => x.Id));
+        AssertCorrectConstructionWithOuterDemandsAtDeeperLevels(constructionGraphs, matrix, depth, count);
     }
-    
-    [Fact]
-    public void UnsatisfiableOuterDemandsShouldBeHandledCorrectlyAtDeeperLevels()
-    {
-        var utilitiesCount = RandomizationHelper.RandomInteger(3, 10);
-        var setup = new EnvironmentSetup("outer_demands_env");
-        setup.WithCategory("FL1", 1).WithCategory("SL1", 1).WithCategory("SL2", utilitiesCount).WithCategory("TL1", utilitiesCount);
-        setup.WithRequirements("FL1", 1, "SL1", "SL2").WithRequirements("SL1", 1, "TL1");
 
-        for (var i = 1; i <= utilitiesCount; i++)
+    [Theory, MemberData(nameof(GetDepthMembers))]
+    public void UnsatisfiableOuterDemandsShouldBeHandledCorrectlyAtDeeperLevels(int depth)
+    {
+        var setup = new EnvironmentSetup("outer_demands_env");
+        var count = RandomizationHelper.RandomInteger(3, 10);
+        PrepareForOuterDemandsTesting(setup, depth, count);
+
+        for (var i = 1; i <= count; i++)
         {
-            setup.WithCharacteristics("SL2", i, $"C{i}");
-            setup.WithOuterDemands("TL1", i, "SL2", $"D{i}");
+            setup.WithCharacteristics("Q", i, $"O{i}");
+            setup.WithOuterDemands($"N{depth}", i, "Q", $"X{i}");
         }
 
         var assemblyTestData = setup.MaterializeAsAssemblyData();
         var manager = new ConstructionManager(assemblyTestData);
 
-        var fl1Utilities = assemblyTestData.CleanUtilities.Get("FL1").ToArray();
-        Assert.Single(fl1Utilities);
-
-        var utilityIds = new[] { fl1Utilities[0].Id };
-        var constructionGraphs = manager.BuildIndividualConstructionGraphs(utilityIds);
-
+        var matrix = ExtractMatrixForOuterDemandsTesting(assemblyTestData, depth, count);
+        var constructionGraphs = manager.BuildIndividualConstructionGraphs(matrix[0].Select(x => x.Id));
         Assert.Empty(constructionGraphs);
+    }
+
+    /// <summary>
+    /// N{depth} defines unsatisfiable outer demands towards N0, N1, ..., N{depth - 2}.
+    /// These unsatisfiable demands do not impact the construction of individual graphs,
+    /// as the referenced utilities are not located within the immediate higher hierarchical level.
+    /// </summary>
+    [Theory, MemberData(nameof(GetDepthMembers))]
+    public void OuterDemandsShouldOnlyTargetTheImmediateHigherLevel(int depth)
+    {
+        var setup = new EnvironmentSetup("outer_demands_env");
+        var count = RandomizationHelper.RandomInteger(3, 10);
+        PrepareForOuterDemandsTesting(setup, depth, count);
+
+        for (var i = 1; i <= count; i++)
+        {
+            setup.WithCharacteristics("Q", i, $"O{i}");
+            setup.WithOuterDemands($"N{depth}", i, "Q", $"O{i}");
+
+            for (var j = 0; j < depth - 1; j++)
+            {
+                setup.WithCharacteristics($"N{j}", 1, $"O{i}");
+                setup.WithOuterDemands($"N{depth}", i, $"N{j}", $"X{i}");
+            }
+        }
+
+        var assemblyTestData = setup.MaterializeAsAssemblyData();
+        var manager = new ConstructionManager(assemblyTestData);
+
+        var matrix = ExtractMatrixForOuterDemandsTesting(assemblyTestData, depth, count);
+        var constructionGraphs = manager.BuildIndividualConstructionGraphs(matrix[0].Select(x => x.Id));
+        AssertCorrectConstructionWithOuterDemandsAtDeeperLevels(constructionGraphs, matrix, depth, count);
+    }
+
+    /// <summary>
+    /// |N0| -> |N1| -> ... -> |N{depth - 2}| -> |N{depth - 1}| -> |N{depth}|
+    ///                                       -> |Q| -----------------^
+    ///
+    /// N{depth} defines outer demands towards Q
+    /// </summary>
+    private static void PrepareForOuterDemandsTesting(EnvironmentSetup setup, int depth, int count)
+    {
+        for (var i = 0; i < depth; i++)
+        {
+            setup.WithCategory($"N{i}", 1);
+            setup.WithRequirements($"N{i}", 1, $"N{i + 1}");
+        }
+
+        setup.WithCategory($"N{depth}", count).WithCategory("Q", count);
+        if (depth > 1) setup.WithRequirements($"N{depth - 2}", 1, "Q");
+    }
+
+    /// <summary>
+    /// Returns a matrix of length `depth + 2`:
+    /// - The first `depth + 1` entries are reserved for the `N#` categories.
+    /// - The last entry is reserved for the `Q` category.
+    /// </summary>
+    private static ICleanUtilityDescriptor[][] ExtractMatrixForOuterDemandsTesting(CleanTestAssemblyData assemblyTestData, int depth, int count)
+    {
+        // NOTE: There are depth + 1 `N#` categories and `Q`.
+        var matrix = new ICleanUtilityDescriptor[depth + 2][];
+        for (var i = 0; i <= depth; i++) matrix[i] = assemblyTestData.CleanUtilities.Get($"N{i}").ToArray();
+        matrix[^1] = assemblyTestData.CleanUtilities.Get("Q").ToArray();
+
+        for (var i = 0; i < depth; i++) Assert.Single(matrix[i]);
+        for (var i = depth; i < matrix.Length; i++) Assert.Equal(count, matrix[i].Length);
+
+        return matrix;
+    }
+
+    private static void AssertCorrectConstructionWithOuterDemandsAtDeeperLevels(IndividualCleanUtilityConstructionGraph[][] constructionGraphs, ICleanUtilityDescriptor[][] matrix, int depth, int count)
+    {
+        Assert.Equal(count, constructionGraphs.Length);
+        for (var i = 0; i < count; i++)
+        {
+            var analyzedGraph = Assert.Single(constructionGraphs[i]);
+
+            for (var j = 0; j < depth - 2; j++)
+            {
+                Assert.Equal(matrix[j][0].Id, analyzedGraph.Id);
+                Assert.Single(analyzedGraph.Dependencies);
+
+                analyzedGraph = analyzedGraph.Dependencies[0];
+            }
+            
+            Assert.Equal(matrix[depth - 2][0].Id, analyzedGraph.Id);
+            Assert.Equal(2, analyzedGraph.Dependencies.Count);
+        
+            var penultConstructionGraph = analyzedGraph.Dependencies[0];
+            Assert.Equal(matrix[depth - 1][0].Id, penultConstructionGraph.Id);
+            Assert.Single(penultConstructionGraph.Dependencies);
+        
+            var qConstructionGraph = analyzedGraph.Dependencies[1];
+            Assert.Equal(matrix[^1][i].Id, qConstructionGraph.Id);
+            Assert.Empty(qConstructionGraph.Dependencies);
+        
+            var lastConstructionGraph = penultConstructionGraph.Dependencies[0];
+            Assert.Equal(matrix[depth][i].Id, lastConstructionGraph.Id);
+            Assert.Empty(lastConstructionGraph.Dependencies);
+        }
     }
 
     public static TheoryData<EnvironmentSetup, string> GetDependenciesManagerSetups()
@@ -201,7 +243,15 @@ public class ConstructionManagerTests
         var data = new TheoryData<EnvironmentSetup, string>();
         foreach (var dependenciesManagerSetup in TestParameters.ConstructObservableConstructionManagerSetups())
             data.Add(dependenciesManagerSetup.EnvironmentSetup, dependenciesManagerSetup.PathToExpectedResult);
-        
+
+        return data;
+    }
+
+    public static TheoryData<int> GetDepthMembers()
+    {
+        var data = new TheoryData<int>();
+        for (var i = 2; i <= 10; i++) data.Add(i);
+
         return data;
     }
 }

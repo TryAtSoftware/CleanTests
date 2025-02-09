@@ -3,10 +3,4 @@
 using System;
 
 [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
-public class ExternalDemandsAttribute : BaseDemandsAttribute
-{
-    public ExternalDemandsAttribute(string category, params string[] demands)
-        : base(category, demands)
-    {
-    }
-}
+public class ExternalDemandsAttribute(string category, params string[] demands) : BaseDemandsAttribute(category, demands);
