@@ -4,6 +4,7 @@ using JobAgency.Models;
 using JobAgency.Models.Benefits;
 using JobAgency.Models.Interfaces;
 using JobAgency.Models.Requirements;
+using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
 
@@ -19,6 +20,8 @@ public static class MongoDbEntitiesConfiguration
             if (_isApplied) return;
             _isApplied = true;
         }
+
+        BsonSerializer.RegisterSerializer(new GuidSerializer(GuidRepresentation.Standard));
 
         BsonClassMap.RegisterClassMap<JobAgency>(
             x =>

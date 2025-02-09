@@ -1,37 +1,38 @@
 name: Publish packages
 
 on:
-  workflow_dispatch:
+    workflow_dispatch:
 
 jobs:
-  publish:
-    name: Publish NuGet packages
-    runs-on: ubuntu-latest
-    env:
-      NUGET_KEY: ${{ secrets.NUGET_KEY }}
-      CONFIGURATION: Release
-      PACKAGES_DIRECTORY: ./packages
-      NUGET_SOURCE: https://api.nuget.org/v3/index.json
+    publish:
+        name: Publish NuGet packages
+        runs-on: ubuntu-latest
+        env:
+            NUGET_KEY: ${{ secrets.NUGET_KEY }}
+            CONFIGURATION: Release
+            PACKAGES_DIRECTORY: ./packages
+            NUGET_SOURCE: https://api.nuget.org/v3/index.json
 
-    steps:
-      - uses: actions/checkout@v4
+        steps:
+            - uses: actions/checkout@v4
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: |
-            6.x
-            7.x
-            8.x
+            - name: Setup .NET
+              uses: actions/setup-dotnet@v4
+              with:
+                  dotnet-version: |
+                      6.x
+                      7.x
+                      8.x
+                      9.x
 
-      - name: Restore dependencies
-        run: dotnet restore
+            - name: Restore dependencies
+              run: dotnet restore
 
-      - name: Build
-        run: dotnet build --no-restore --configuration "${{ env.CONFIGURATION }}"
+            - name: Build
+              run: dotnet build --no-restore --configuration "${{ env.CONFIGURATION }}"
 
-      - name: Pack 'Clean tests'
-        run: dotnet pack --no-build --configuration "${{ env.CONFIGURATION }}" ./TryAtSoftware.CleanTests.Core/TryAtSoftware.CleanTests.Core.csproj -o "${{ env.PACKAGES_DIRECTORY }}"
+            - name: Pack 'Clean tests'
+              run: dotnet pack --no-build --configuration "${{ env.CONFIGURATION }}" ./TryAtSoftware.CleanTests.Core/TryAtSoftware.CleanTests.Core.csproj -o "${{ env.PACKAGES_DIRECTORY }}"
 
-      - name: Publish all packages
-        run: dotnet nuget push "${{ env.PACKAGES_DIRECTORY }}/*.nupkg" --source "${{ env.NUGET_SOURCE }}" --api-key "${{ env.NUGET_KEY }}" --skip-duplicate
+            - name: Publish all packages
+              run: dotnet nuget push "${{ env.PACKAGES_DIRECTORY }}/*.nupkg" --source "${{ env.NUGET_SOURCE }}" --api-key "${{ env.NUGET_KEY }}" --skip-duplicate
