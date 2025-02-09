@@ -3,6 +3,7 @@
 using System.Text.Json;
 using TryAtSoftware.CleanTests.Core.Construction;
 using TryAtSoftware.CleanTests.Core.Interfaces;
+using TryAtSoftware.CleanTests.Core.XUnit;
 using TryAtSoftware.CleanTests.UnitTests.Constants;
 using TryAtSoftware.CleanTests.UnitTests.Extensions;
 using TryAtSoftware.CleanTests.UnitTests.Parametrization;
@@ -113,55 +114,20 @@ public class ConstructionManagerTests
         }
     }
 
-    [Fact]
-    public void UnsatisfiableOuterDemandsShouldBeHandledCorrectlyAtDeeperLevels()
-    {
-        var utilitiesCount = RandomizationHelper.RandomInteger(3, 10);
-        var setup = new EnvironmentSetup("outer_demands_env");
-        setup.WithCategory("FL1", 1).WithCategory("SL1", 1).WithCategory("SL2", utilitiesCount).WithCategory("TL1", utilitiesCount);
-        setup.WithRequirements("FL1", 1, "SL1", "SL2").WithRequirements("SL1", 1, "TL1");
-
-        for (var i = 1; i <= utilitiesCount; i++)
-        {
-            setup.WithCharacteristics("SL2", i, $"C{i}");
-            setup.WithOuterDemands("TL1", i, "SL2", $"D{i}");
-        }
-
-        var assemblyTestData = setup.MaterializeAsAssemblyData();
-        var manager = new ConstructionManager(assemblyTestData);
-
-        var fl1Utilities = assemblyTestData.CleanUtilities.Get("FL1").ToArray();
-        Assert.Single(fl1Utilities);
-
-        var utilityIds = new[] { fl1Utilities[0].Id };
-        var constructionGraphs = manager.BuildIndividualConstructionGraphs(utilityIds);
-
-        Assert.Empty(constructionGraphs);
-    }
-
     /// <remarks>
-    /// |N0| -> |N1| -> ... |N{depth - 2}| -> |N{depth - 1}| -> |N{depth}|
+    /// |N0| -> |N1| -> ... -> |N{depth - 2}| -> |N{depth - 1}| -> |N{depth}|
     ///                                    -> |Q|
     ///
     /// N{depth} defines outer demands towards Q
     /// </remarks>
-    [Theory]
-    [MemberData(nameof(GetDepthMembers))]
+    [Theory, MemberData(nameof(GetDepthMembers))]
     public void OuterDemandsShouldBeAppliedCorrectlyAtDeeperLevels(int depth)
     {
-        var utilitiesCount = RandomizationHelper.RandomInteger(3, 10);
         var setup = new EnvironmentSetup("outer_demands_env");
+        var count = RandomizationHelper.RandomInteger(3, 10);
+        PrepareForOuterDemandsTesting(setup, depth, count);
 
-        for (var i = 0; i < depth; i++)
-        {
-            setup.WithCategory($"N{i}", 1);
-            setup.WithRequirements($"N{i}", 1, $"N{i + 1}");
-        }
-
-        setup.WithCategory($"N{depth}", utilitiesCount).WithCategory("Q", utilitiesCount);
-        setup.WithRequirements($"N{depth - 2}", 1, "Q");
-
-        for (var i = 1; i <= utilitiesCount; i++)
+        for (var i = 1; i <= count; i++)
         {
             setup.WithCharacteristics("Q", i, $"C{i}");
             setup.WithOuterDemands($"N{depth}", i, "Q", $"C{i}");
@@ -171,18 +137,13 @@ public class ConstructionManagerTests
         var manager = new ConstructionManager(assemblyTestData);
 
         // NOTE: There are depth + 1 `N#` categories and `Q`.
-        var utilitiesMatrix = new ICleanUtilityDescriptor[depth + 2][];
-        for (var i = 0; i <= depth; i++) utilitiesMatrix[i] = assemblyTestData.CleanUtilities.Get($"N{i}").ToArray();
-        utilitiesMatrix[^1] = assemblyTestData.CleanUtilities.Get("Q").ToArray();
+        var utilitiesMatrix = ExtractUtilitiesForOuterDemandsTesting(assemblyTestData, depth, count);
 
-        for (var i = 0; i < depth; i++) Assert.Single(utilitiesMatrix[i]);
-        for (var i = depth; i < utilitiesMatrix.Length; i++) Assert.Equal(utilitiesCount, utilitiesMatrix[i].Length);
-
-        var utilityIds = new[] { utilitiesMatrix[0][0].Id };
+        var utilityIds = utilitiesMatrix[0].Select(x => x.Id);
         var constructionGraphs = manager.BuildIndividualConstructionGraphs(utilityIds);
         
-        Assert.Equal(utilitiesCount, constructionGraphs.Length);
-        for (var i = 0; i < utilitiesCount; i++)
+        Assert.Equal(count, constructionGraphs.Length);
+        for (var i = 0; i < count; i++)
         {
             var constructionGraph = constructionGraphs[i][0];
 
@@ -209,6 +170,71 @@ public class ConstructionManagerTests
             Assert.Equal(utilitiesMatrix[depth][i].Id, lastConstructionGraph.Id);
             Assert.Empty(lastConstructionGraph.Dependencies);
         }
+    }
+    
+    /// <remarks>
+    /// |N0| -> |N1| -> ... -> |N{depth - 2}| -> |N{depth - 1}| -> |N{depth}|
+    ///                                    -> |Q|
+    ///
+    /// N{depth} defines outer demands towards Q
+    /// </remarks>
+    [Theory, MemberData(nameof(GetDepthMembers))]
+    public void UnsatisfiableOuterDemandsShouldBeHandledCorrectlyAtDeeperLevels(int depth)
+    {
+        var setup = new EnvironmentSetup("outer_demands_env");
+        var count = RandomizationHelper.RandomInteger(3, 10);
+        PrepareForOuterDemandsTesting(setup, depth, count);
+
+        for (var i = 1; i <= count; i++)
+        {
+            setup.WithCharacteristics("Q", i, $"C{i}");
+            setup.WithOuterDemands($"N{depth}", i, "Q", $"D{i}");
+        }
+
+        var assemblyTestData = setup.MaterializeAsAssemblyData();
+        var manager = new ConstructionManager(assemblyTestData);
+
+        var utilitiesMatrix = ExtractUtilitiesForOuterDemandsTesting(assemblyTestData, depth, count);
+
+        var utilityIds = utilitiesMatrix[0].Select(x => x.Id);
+        var constructionGraphs = manager.BuildIndividualConstructionGraphs(utilityIds);
+        Assert.Empty(constructionGraphs);
+    }
+
+    /// <summary>
+    /// |N0| -> |N1| -> ... -> |N{depth - 2}| -> |N{depth - 1}| -> |N{depth}|<br/>
+    ///                                       -> |Q| -----------------^
+    ///
+    /// N{depth} defines outer demands towards Q
+    /// </summary>
+    private static void PrepareForOuterDemandsTesting(EnvironmentSetup setup, int depth, int count)
+    {
+        for (var i = 0; i < depth; i++)
+        {
+            setup.WithCategory($"N{i}", 1);
+            setup.WithRequirements($"N{i}", 1, $"N{i + 1}");
+        }
+
+        setup.WithCategory($"N{depth}", count).WithCategory("Q", count);
+        setup.WithRequirements($"N{depth - 2}", 1, "Q");
+    }
+
+    /// <summary>
+    /// Returns a matrix of length `depth + 2`:
+    /// - The first `depth + 1` entries are reserved for the `N#` categories.
+    /// - The last entry is reserved for the `Q` category.
+    /// </summary>
+    private static ICleanUtilityDescriptor[][] ExtractUtilitiesForOuterDemandsTesting(CleanTestAssemblyData assemblyTestData, int depth, int count)
+    {
+        // NOTE: There are depth + 1 `N#` categories and `Q`.
+        var matrix = new ICleanUtilityDescriptor[depth + 2][];
+        for (var i = 0; i <= depth; i++) matrix[i] = assemblyTestData.CleanUtilities.Get($"N{i}").ToArray();
+        matrix[^1] = assemblyTestData.CleanUtilities.Get("Q").ToArray();
+
+        for (var i = 0; i < depth; i++) Assert.Single(matrix[i]);
+        for (var i = depth; i < matrix.Length; i++) Assert.Equal(count, matrix[i].Length);
+
+        return matrix;
     }
 
     public static TheoryData<EnvironmentSetup, string> GetDependenciesManagerSetups()
