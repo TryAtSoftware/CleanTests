@@ -67,8 +67,8 @@ public class CleanTestFramework(IMessageSink messageSink) : XunitTestFramework(m
         {
             if (type.IsAbstract) continue;
 
-            var initializationUtilityAttributes = type.GetCustomAttributes(typeof(CleanUtilityAttribute)).ToArray();
-            if (initializationUtilityAttributes.Length == 0) continue;
+            var cleanUtilityAttributes = type.GetCustomAttributes(typeof(CleanUtilityAttribute)).ToArray();
+            if (cleanUtilityAttributes.Length == 0) continue;
 
             var decoratedType = new DecoratedType(type);
             var externalDemands = decoratedType.ExtractDemands<ExternalDemandsAttribute>();
@@ -76,7 +76,7 @@ public class CleanTestFramework(IMessageSink messageSink) : XunitTestFramework(m
             var outerDemands = decoratedType.ExtractDemands<OuterDemandsAttribute>();
             var requirements = ExtractRequirements(type);
 
-            foreach (var utilityAttribute in initializationUtilityAttributes.OrEmptyIfNull().IgnoreNullValues())
+            foreach (var utilityAttribute in cleanUtilityAttributes.OrEmptyIfNull().IgnoreNullValues())
             {
                 var categoryArgument = utilityAttribute.GetNamedArgument<string>(nameof(CleanUtilityAttribute.Category));
                 var nameArgument = utilityAttribute.GetNamedArgument<string>(nameof(CleanUtilityAttribute.Name));
