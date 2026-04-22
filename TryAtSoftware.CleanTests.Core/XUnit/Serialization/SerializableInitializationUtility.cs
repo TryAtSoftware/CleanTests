@@ -34,13 +34,13 @@ internal class SerializableInitializationUtility : IXunitSerializable
     public void Deserialize(IXunitSerializationInfo info)
     {
         if (info is null) throw new ArgumentNullException(nameof(info));
-            
+
         var initializationCategory = info.GetValue<string>("c");
 
         var deserializedUtilityType = info.GetValue<Type>("ut");
         var utilityName = info.GetValue<string>("un");
         var isGlobal = info.GetValue<bool>("ig");
-        
+
         var characteristics = info.GetValue<string[]>("ch");
 
         var deserializedExternalDemands = info.GetValue<SerializableDemand[]>("gd");
@@ -82,7 +82,7 @@ internal class SerializableInitializationUtility : IXunitSerializable
     private static SerializableDemand[] Serialize(ICleanTestInitializationCollection<string> demands)
     {
         if (demands is null) throw new ArgumentNullException(nameof(demands));
-            
+
         var serializableDemands = new List<SerializableDemand>();
         foreach (var (category, categoryDemands) in demands) serializableDemands.AddRange(categoryDemands.Select(categoryDemand => new SerializableDemand(category, categoryDemand)));
         return serializableDemands.ToArray();
@@ -92,6 +92,11 @@ internal class SerializableInitializationUtility : IXunitSerializable
     {
         if (deserializedGlobalDemands is null) throw new ArgumentNullException(nameof(deserializedGlobalDemands));
         if (demandsCollection is null) throw new ArgumentNullException(nameof(demandsCollection));
-        foreach (var deserializedDemand in deserializedGlobalDemands) demandsCollection.Register(deserializedDemand.InitializationCategory, deserializedDemand.Demand);
+
+        foreach (var deserializedDemand in deserializedGlobalDemands)
+        {
+            demandsCollection.Register(deserializedDemand.InitializationCategory);
+            demandsCollection.Register(deserializedDemand.InitializationCategory, deserializedDemand.Demand);
+        }
     }
 }

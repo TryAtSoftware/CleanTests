@@ -30,13 +30,10 @@ internal class CleanTestInitializationCollection<TValue> : ICleanTestInitializat
     public bool ContainsCategory(string category) => this._data.ContainsKey(category);
 
     /// <inheritdoc />
-    public void Register(string category, TValue value)
-    {
-        if (value is null) return;
+    public void Register(string category) => this._data.EnsureValue(category);
 
-        var utilities = this._data.EnsureValue(category);
-        utilities.Add(value);
-    }
+    /// <inheritdoc />
+    public void Register(string category, TValue value) => this._data[category].Add(value);
 
     /// <inheritdoc />
     public IEnumerable<TValue> GetAllValues() => this._data.Values.SelectMany(x => x.OrEmptyIfNull().IgnoreNullValues());

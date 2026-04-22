@@ -8,6 +8,7 @@ internal interface ICleanTestInitializationCollection<TValue> : IEnumerable<KeyV
     IEnumerable<TValue> Get(string category);
     int GetCount(string category);
     bool ContainsCategory(string category);
+    void Register(string category);
     void Register(string category, TValue value);
     IEnumerable<TValue> GetAllValues();
     void Clear();
