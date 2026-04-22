@@ -13,7 +13,31 @@ using Xunit.Abstractions;
 public class CleanUtilitiesDistributionTests
 {
     private const string Category = "_";
-    
+
+    [Fact(Timeout = UnitTestConstants.Timeout)]
+    public async Task TestCasesShouldNotBeDiscoveredWhenDemandsFilterOutAllRequiredUtilities()
+    {
+        var reflectionMocks = ReflectionMocks.MockReflectionSuite(Assembly.GetExecutingAssembly(), typeof(TestClassDefiningInapplicableDemands));
+        var testComponentMocks = reflectionMocks.MockTestComponentsSuite();
+        var cleanUtilityDescriptor = new CleanUtilityDescriptor(Category, typeof(MatchingUtility), "Matching utility", isGlobal: false, characteristics: ["available"]);
+        var assemblyData = new CleanTestAssemblyData([cleanUtilityDescriptor]);
+
+        var testCases = await reflectionMocks.AssemblyInfo.DiscoverTestCasesAsync(assemblyData, testComponentMocks);
+
+        Assert.Empty(testCases);
+    }
+
+    [Fact(Timeout = UnitTestConstants.Timeout)]
+    public async Task TestCasesShouldBeDiscoveredOnceWhenNoUtilitiesAreRequired()
+    {
+        var reflectionMocks = ReflectionMocks.MockReflectionSuite(Assembly.GetExecutingAssembly(), typeof(TestClassConsumingNoUtilities));
+        var testComponentMocks = reflectionMocks.MockTestComponentsSuite();
+        var assemblyData = new CleanTestAssemblyData();
+
+        var testCases = await reflectionMocks.AssemblyInfo.DiscoverTestCasesAsync(assemblyData, testComponentMocks);
+        Assert.Single(testCases);
+    }
+
     [Theory(Timeout = UnitTestConstants.Timeout)]
     [InlineData(true, typeof(TestClassConsumingGlobalUtilities))]
     [InlineData(false, typeof(TestClassConsumingLocalUtilities))]
@@ -24,7 +48,7 @@ public class CleanUtilitiesDistributionTests
 
         var cleanUtilityDescriptor = new CleanUtilityDescriptor(Category, typeof(InconclusiveUtility), "Inconclusive utility", isGlobal);
         var assemblyData = new CleanTestAssemblyData(new[] { cleanUtilityDescriptor });
-        
+
         var testCases = await reflectionMocks.AssemblyInfo.DiscoverTestCasesAsync(assemblyData, testComponentMocks);
         var cleanTestAssemblyRunner = new CleanTestAssemblyRunner(testComponentMocks.TestAssembly, testCases, testComponentMocks.DiagnosticMessageSink, testComponentMocks.ExecutionMessageSink, testComponentMocks.TestFrameworkExecutionOptions, assemblyData);
 
@@ -35,13 +59,8 @@ public class CleanUtilitiesDistributionTests
         Assert.Equal(1, executionResult.Total);
     }
 
-    private class TestClassConsumingGlobalUtilities : CleanTest
+    private class TestClassConsumingGlobalUtilities(ITestOutputHelper testOutputHelper) : CleanTest(testOutputHelper)
     {
-        public TestClassConsumingGlobalUtilities(ITestOutputHelper testOutputHelper)
-            : base(testOutputHelper)
-        {
-        }
-        
         [CleanFact, WithRequirements(Category)]
         public void Test()
         {
@@ -50,13 +69,8 @@ public class CleanUtilitiesDistributionTests
         }
     }
 
-    private class TestClassConsumingLocalUtilities : CleanTest
+    private class TestClassConsumingLocalUtilities(ITestOutputHelper testOutputHelper) : CleanTest(testOutputHelper)
     {
-        public TestClassConsumingLocalUtilities(ITestOutputHelper testOutputHelper)
-            : base(testOutputHelper)
-        {
-        }
-        
         [CleanFact, WithRequirements(Category)]
         public void Test()
         {
@@ -65,13 +79,28 @@ public class CleanUtilitiesDistributionTests
         }
     }
 
-    private class InconclusiveUtility
+    private class InconclusiveUtility(string unresolvableParameter)
     {
-        public InconclusiveUtility(string unresolvableParameter)
+        public string UnresolvableParameter { get; } = unresolvableParameter;
+    }
+
+    private class MatchingUtility
+    {
+    }
+
+    private class TestClassDefiningInapplicableDemands(ITestOutputHelper testOutputHelper) : CleanTest(testOutputHelper)
+    {
+        [CleanFact, WithRequirements(Category), TestDemands(Category, "missing")]
+        public void Test()
         {
-            this.UnresolvableParameter = unresolvableParameter;
         }
-        
-        public string UnresolvableParameter { get; }
+    }
+
+    private class TestClassConsumingNoUtilities(ITestOutputHelper testOutputHelper) : CleanTest(testOutputHelper)
+    {
+        [CleanFact]
+        public void Test()
+        {
+        }
     }
 }

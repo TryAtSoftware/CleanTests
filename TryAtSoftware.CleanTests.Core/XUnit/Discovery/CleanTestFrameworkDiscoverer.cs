@@ -34,7 +34,7 @@ internal class CleanTestFrameworkDiscoverer : TestFrameworkDiscoverer
     protected override ITestClass CreateTestClass(ITypeInfo @class)
     {
         var collection = this._fallbackTestFrameworkDiscoverer.TestCollectionFactory.Get(@class);
-        
+
         if (@class.IsCleanTest() && @class.IsGenericType)
         {
             var runtimeClass = @class.ToRuntimeType();
@@ -54,9 +54,9 @@ internal class CleanTestFrameworkDiscoverer : TestFrameworkDiscoverer
 
             @class = Reflector.Wrap(runtimeClass);
         }
-        
+
         var wrappedXUnitTypeInfo = new CleanTestReflectionTypeInfoWrapper(@class);
-        
+
         // @class.Name -> Fully qualified type name
         // The subsequently created wrapper's `Name` property should expose a readable value for generic types.
         return new CleanTestClassWrapper(collection, wrappedXUnitTypeInfo, @class.Name);
@@ -122,6 +122,8 @@ internal class CleanTestFrameworkDiscoverer : TestFrameworkDiscoverer
         var allRequirementSources = new[] { initializationRequirements, globalRequirements };
         foreach (var category in allRequirementSources.Union())
         {
+            customInitializationUtilitiesCollection.Register(category);
+
             var categoryDemands = demands.Get(category);
             foreach (var initializationUtility in this._cleanTestAssemblyData.CleanUtilities.Get(category, categoryDemands)) customInitializationUtilitiesCollection.Register(category, initializationUtility);
         }
