@@ -17,9 +17,9 @@ public class CleanUtilitiesDistributionTests
     [Fact(Timeout = UnitTestConstants.Timeout)]
     public async Task TestCasesShouldNotBeDiscoveredWhenDemandsFilterOutAllRequiredUtilities()
     {
-        var reflectionMocks = ReflectionMocks.MockReflectionSuite(Assembly.GetExecutingAssembly(), typeof(TestClassDefiningInapplicableDemands));
+        var reflectionMocks = ReflectionMocks.MockReflectionSuite(Assembly.GetExecutingAssembly(), typeof(TestDefiningUnfulfillableDemands));
         var testComponentMocks = reflectionMocks.MockTestComponentsSuite();
-        var cleanUtilityDescriptor = new CleanUtilityDescriptor(Category, typeof(MatchingUtility), "Matching utility", isGlobal: false, characteristics: ["available"]);
+        var cleanUtilityDescriptor = new CleanUtilityDescriptor(Category, typeof(StandardUtility), "Matching utility", isGlobal: false, characteristics: ["available"]);
         var assemblyData = new CleanTestAssemblyData([cleanUtilityDescriptor]);
 
         var testCases = await reflectionMocks.AssemblyInfo.DiscoverTestCasesAsync(assemblyData, testComponentMocks);
@@ -30,7 +30,7 @@ public class CleanUtilitiesDistributionTests
     [Fact(Timeout = UnitTestConstants.Timeout)]
     public async Task TestCasesShouldBeDiscoveredOnceWhenNoUtilitiesAreRequired()
     {
-        var reflectionMocks = ReflectionMocks.MockReflectionSuite(Assembly.GetExecutingAssembly(), typeof(TestClassConsumingNoUtilities));
+        var reflectionMocks = ReflectionMocks.MockReflectionSuite(Assembly.GetExecutingAssembly(), typeof(TestConsumingNoUtilities));
         var testComponentMocks = reflectionMocks.MockTestComponentsSuite();
         var assemblyData = new CleanTestAssemblyData();
 
@@ -39,8 +39,8 @@ public class CleanUtilitiesDistributionTests
     }
 
     [Theory(Timeout = UnitTestConstants.Timeout)]
-    [InlineData(true, typeof(TestClassConsumingGlobalUtilities))]
-    [InlineData(false, typeof(TestClassConsumingLocalUtilities))]
+    [InlineData(true, typeof(TestConsumingGlobalUtilities))]
+    [InlineData(false, typeof(TestConsumingLocalUtilities))]
     public async Task UtilitiesDistributionShouldHaveProperErrorHandling(bool isGlobal, Type testClass)
     {
         var reflectionMocks = ReflectionMocks.MockReflectionSuite(Assembly.GetExecutingAssembly(), testClass);
@@ -59,7 +59,16 @@ public class CleanUtilitiesDistributionTests
         Assert.Equal(1, executionResult.Total);
     }
 
-    private class TestClassConsumingGlobalUtilities(ITestOutputHelper testOutputHelper) : CleanTest(testOutputHelper)
+    private class InconclusiveUtility(string unresolvableParameter)
+    {
+        public string UnresolvableParameter { get; } = unresolvableParameter;
+    }
+
+    private class StandardUtility
+    {
+    }
+
+    private class TestConsumingGlobalUtilities(ITestOutputHelper testOutputHelper) : CleanTest(testOutputHelper)
     {
         [CleanFact, WithRequirements(Category)]
         public void Test()
@@ -69,7 +78,7 @@ public class CleanUtilitiesDistributionTests
         }
     }
 
-    private class TestClassConsumingLocalUtilities(ITestOutputHelper testOutputHelper) : CleanTest(testOutputHelper)
+    private class TestConsumingLocalUtilities(ITestOutputHelper testOutputHelper) : CleanTest(testOutputHelper)
     {
         [CleanFact, WithRequirements(Category)]
         public void Test()
@@ -79,16 +88,7 @@ public class CleanUtilitiesDistributionTests
         }
     }
 
-    private class InconclusiveUtility(string unresolvableParameter)
-    {
-        public string UnresolvableParameter { get; } = unresolvableParameter;
-    }
-
-    private class MatchingUtility
-    {
-    }
-
-    private class TestClassDefiningInapplicableDemands(ITestOutputHelper testOutputHelper) : CleanTest(testOutputHelper)
+    private class TestDefiningUnfulfillableDemands(ITestOutputHelper testOutputHelper) : CleanTest(testOutputHelper)
     {
         [CleanFact, WithRequirements(Category), TestDemands(Category, "missing")]
         public void Test()
@@ -96,7 +96,7 @@ public class CleanUtilitiesDistributionTests
         }
     }
 
-    private class TestClassConsumingNoUtilities(ITestOutputHelper testOutputHelper) : CleanTest(testOutputHelper)
+    private class TestConsumingNoUtilities(ITestOutputHelper testOutputHelper) : CleanTest(testOutputHelper)
     {
         [CleanFact]
         public void Test()
