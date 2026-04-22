@@ -82,8 +82,8 @@ public class CleanUtilitiesDistributionTests
         var testCase = Assert.IsType<CleanTestCase>(Assert.Single(testCases));
 
         Assert.Equal(2, testCase.CleanTestCaseData.CleanUtilities.Count);
-        Assert.Single(testCase.CleanTestCaseData.CleanUtilities, x => x.Id.Contains("Utility A") && !x.Id.Contains("Utility B"));
-        Assert.Single(testCase.CleanTestCaseData.CleanUtilities, x => !x.Id.Contains("Utility A") && x.Id.Contains("Utility B"));
+        Assert.Single(testCase.CleanTestCaseData.CleanUtilities, x => x.Id == "c:Multi-Category #1|n:Utility A");
+        Assert.Single(testCase.CleanTestCaseData.CleanUtilities, x => x.Id == "c:Multi-Category #2|n:Utility A");
     }
 
     private class InconclusiveUtility(string unresolvableParameter)
@@ -96,7 +96,7 @@ public class CleanUtilitiesDistributionTests
     }
 
     [CleanUtility("Multi-Category #1", "Utility A")]
-    [CleanUtility("Multi-Category #2", "Utility B")]
+    [CleanUtility("Multi-Category #2", "Utility A")]
     private class MultiUseCleanUtility
     {
     }
