@@ -91,16 +91,12 @@ public class CleanUtilitiesDistributionTests
     private class TestDefiningUnfulfillableDemands(ITestOutputHelper testOutputHelper) : CleanTest(testOutputHelper)
     {
         [CleanFact, WithRequirements(Category), TestDemands(Category, "missing")]
-        public void Test()
-        {
-        }
+        public void Test() => Assert.Fail("It is not expected that this test will be executed. It is just a mean to validate correct test case discovery.");
     }
 
     private class TestConsumingNoUtilities(ITestOutputHelper testOutputHelper) : CleanTest(testOutputHelper)
     {
         [CleanFact]
-        public void Test()
-        {
-        }
+        public void Test() => Assert.Fail("It is not expected that this test will be executed. It is just a mean to validate correct test case discovery.");
     }
 }
