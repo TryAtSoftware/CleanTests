@@ -11,17 +11,26 @@ internal static class DiscoveryExtensions
 {
     private const int DelayBetweenDiscoveryRetries = 50;
     private const int MaxDiscoveryRetries = 20;
-    
-    internal static async Task<IEnumerable<IXunitTestCase>> DiscoverTestCasesAsync(this IAssemblyInfo assembly, CleanTestAssemblyData assemblyData, TestComponentMocksSuite testComponentMocks)
+
+    internal static Task<IEnumerable<IXunitTestCase>> DiscoverTestCasesAsync(this IAssemblyInfo assembly, CleanTestAssemblyData assemblyData, TestComponentMocksSuite testComponentMocks)
     {
         Assert.NotNull(assembly);
         Assert.NotNull(assemblyData);
         Assert.NotNull(testComponentMocks);
-        
+
+        var testFrameworkDiscoverer = new CleanTestFrameworkDiscoverer(assembly, testComponentMocks.SourceInformationProvider, testComponentMocks.DiagnosticMessageSink, assemblyData);
+        return testFrameworkDiscoverer.DiscoverTestCasesAsync(testComponentMocks);
+    }
+
+    internal static async Task<IEnumerable<IXunitTestCase>> DiscoverTestCasesAsync(this ITestFrameworkDiscoverer testFrameworkDiscoverer, TestComponentMocksSuite testComponentMocks)
+    {
+        Assert.NotNull(testFrameworkDiscoverer);
+        Assert.NotNull(testComponentMocks);
+
         var discoveryIsOver = false;
         var discoveredTestCases = new List<IXunitTestCase>();
-        
-        var discoveryMessageSink = Substitute.For<IMessageSink>();
+
+        var discoveryMessageSink = TestComponentMocks.MockMessageSink();
         discoveryMessageSink.OnMessage(Arg.Any<IMessageSinkMessage>()).Returns(true);
         discoveryMessageSink.OnMessage(Arg.Any<ITestCaseDiscoveryMessage>()).Returns(true)
             .AndDoes(x =>
@@ -32,7 +41,6 @@ internal static class DiscoveryExtensions
         discoveryMessageSink.OnMessage(Arg.Any<IDiscoveryCompleteMessage>()).Returns(true)
             .AndDoes(_ => discoveryIsOver = true);
 
-        var testFrameworkDiscoverer = new CleanTestFrameworkDiscoverer(assembly, testComponentMocks.SourceInformationProvider, testComponentMocks.DiagnosticMessageSink, assemblyData);
         testFrameworkDiscoverer.Find(includeSourceInformation: true, discoveryMessageSink, testComponentMocks.TestFrameworkDiscoveryOptions);
 
         var retryId = 0;
@@ -41,7 +49,7 @@ internal static class DiscoveryExtensions
             await Task.Delay(DelayBetweenDiscoveryRetries);
             retryId++;
         }
-        
+
         Assert.True(discoveryIsOver, $"The discovery process did not finish in time after {MaxDiscoveryRetries} retries.");
         return discoveredTestCases;
     }
