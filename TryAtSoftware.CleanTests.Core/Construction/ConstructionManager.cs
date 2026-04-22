@@ -149,7 +149,7 @@ internal class ConstructionManager(CleanTestAssemblyData cleanTestAssemblyData) 
         Func<ICleanUtilityDescriptor, bool>? predicate = null;
         if (utilityDescriptor.IsGlobal) predicate = x => x.IsGlobal;
         var dependencies = this._cleanTestAssemblyData.CleanUtilities.Get(requirement, localDemands, predicate);
-        
+
         foreach (var dependency in dependencies)
         {
             if (usedUtilities.Contains(dependency.Id)) continue;
@@ -157,6 +157,7 @@ internal class ConstructionManager(CleanTestAssemblyData cleanTestAssemblyData) 
             var dependencyGraph = this.BuildConstructionGraph(dependency.Id, usedUtilities);
             if (dependencyGraph is null) continue;
 
+            dependenciesCollection.Register(requirement);
             dependenciesCollection.Register(requirement, dependency);
             dependencyGraphsById[dependency.Id] = dependencyGraph;
         }

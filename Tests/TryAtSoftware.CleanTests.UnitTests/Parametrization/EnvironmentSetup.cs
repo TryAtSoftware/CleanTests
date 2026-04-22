@@ -6,11 +6,11 @@ using TryAtSoftware.Extensions.Collections;
 
 public class EnvironmentSetup
 {
-    private readonly Dictionary<string, int> _numberOfUtilitiesPerCategory = new ();
-    private readonly Dictionary<string, Dictionary<string, List<string>>> _externalDemandsPerUtility = new ();
-    private readonly Dictionary<string, Dictionary<string, List<string>>> _outerDemandsPerUtility = new ();
-    private readonly Dictionary<string, List<string>> _characteristics = new ();
-    private readonly Dictionary<string, List<string>> _requirements = new ();
+    private readonly Dictionary<string, int> _numberOfUtilitiesPerCategory = new();
+    private readonly Dictionary<string, Dictionary<string, List<string>>> _externalDemandsPerUtility = new();
+    private readonly Dictionary<string, Dictionary<string, List<string>>> _outerDemandsPerUtility = new();
+    private readonly Dictionary<string, List<string>> _characteristics = new();
+    private readonly Dictionary<string, List<string>> _requirements = new();
 
     public EnvironmentSetup(string name)
     {
@@ -20,12 +20,12 @@ public class EnvironmentSetup
 
     public string Name { get; }
     public int CategoriesCount => this._numberOfUtilitiesPerCategory.Count;
-    
+
     public EnvironmentSetup WithCategory(string category, int utilitiesCount)
     {
         if (string.IsNullOrWhiteSpace(category)) throw new ArgumentNullException(nameof(category));
         if (utilitiesCount <= 0) throw new ArgumentException("The number of utilities for each category must be at least 1", nameof(utilitiesCount));
-        
+
         if (!this._numberOfUtilitiesPerCategory.TryAdd(category, utilitiesCount))
             throw new InvalidOperationException("Category with that name has already been registered.");
         return this;
@@ -56,7 +56,7 @@ public class EnvironmentSetup
     public EnvironmentSetup WithExternalDemands(string utilityCategory, int utilityId, string demandsCategory, params string[] demands)
     {
         this.ValidateUtilityExists(utilityCategory, utilityId);
-        
+
         var universalId = ComposeUniversalUtilityId(utilityCategory, utilityId);
         if (!this._externalDemandsPerUtility.ContainsKey(universalId)) this._externalDemandsPerUtility[universalId] = new Dictionary<string, List<string>>();
         if (!this._externalDemandsPerUtility[universalId].ContainsKey(demandsCategory)) this._externalDemandsPerUtility[universalId][demandsCategory] = new List<string>();
@@ -68,7 +68,7 @@ public class EnvironmentSetup
     public EnvironmentSetup WithOuterDemands(string utilityCategory, int utilityId, string demandsCategory, params string[] demands)
     {
         this.ValidateUtilityExists(utilityCategory, utilityId);
-        
+
         var universalId = ComposeUniversalUtilityId(utilityCategory, utilityId);
         if (!this._outerDemandsPerUtility.ContainsKey(universalId)) this._outerDemandsPerUtility[universalId] = new Dictionary<string, List<string>>();
         if (!this._outerDemandsPerUtility[universalId].ContainsKey(demandsCategory)) this._outerDemandsPerUtility[universalId][demandsCategory] = new List<string>();
@@ -94,15 +94,18 @@ public class EnvironmentSetup
                 this._externalDemandsPerUtility.TryGetValue(universalId, out var externalDemandsByCategory);
                 foreach (var (demandCategory, demands) in externalDemandsByCategory.OrEmptyIfNull())
                 {
+                    utility.ExternalDemands.Register(demandCategory);
                     foreach (var demand in demands) utility.ExternalDemands.Register(demandCategory, demand);
                 }
-                
+
                 this._outerDemandsPerUtility.TryGetValue(universalId, out var outerDemandsByCategory);
                 foreach (var (demandCategory, demands) in outerDemandsByCategory.OrEmptyIfNull())
                 {
+                    utility.OuterDemands.Register(demandCategory);
                     foreach (var demand in demands) utility.OuterDemands.Register(demandCategory, demand);
                 }
 
+                utilitiesCollection.Register(category);
                 utilitiesCollection.Register(category, utility);
             }
         }
@@ -113,7 +116,7 @@ public class EnvironmentSetup
     private void ValidateUtilityExists(string category, int utilityId)
     {
         this.ValidateCategoryExists(category);
-        
+
         var upperBound = this._numberOfUtilitiesPerCategory[category];
         if (utilityId <= 0 || utilityId > upperBound) throw new ArgumentException($"Invalid utility id. It should be in the range [1, {upperBound}]", nameof(utilityId));
     }

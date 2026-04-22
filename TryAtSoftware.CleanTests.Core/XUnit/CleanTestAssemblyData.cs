@@ -12,7 +12,7 @@ using TryAtSoftware.Extensions.Reflection.Interfaces;
 internal class CleanTestAssemblyData
 {
     private IHierarchyScanner _hierarchyScanner = new HierarchyScanner();
-    
+
     public ICleanTestInitializationCollection<ICleanUtilityDescriptor> CleanUtilities { get; } = new CleanTestInitializationCollection<ICleanUtilityDescriptor>();
     public IDictionary<string, ICleanUtilityDescriptor> CleanUtilitiesById { get; } = new Dictionary<string, ICleanUtilityDescriptor>();
 
@@ -31,6 +31,8 @@ internal class CleanTestAssemblyData
         foreach (var cleanUtility in cleanUtilities.OrEmptyIfNull().IgnoreNullValues())
         {
             if (!this.CleanUtilitiesById.TryAdd(cleanUtility.Id, cleanUtility)) throw new InvalidOperationException("Two clean utilities with the same identifier cannot co-exist.");
+
+            this.CleanUtilities.Register(cleanUtility.Category);
             this.CleanUtilities.Register(cleanUtility.Category, cleanUtility);
         }
     }

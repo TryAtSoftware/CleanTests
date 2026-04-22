@@ -20,6 +20,7 @@ internal static class CleanTestsFrameworkExtensions
 
         foreach (var (category, values) in source)
         {
+            target.Register(category);
             foreach (var value in values) target.Register(category, value);
         }
     }
@@ -49,6 +50,8 @@ internal static class CleanTestsFrameworkExtensions
         {
             var demandsArgument = attribute.GetNamedArgument<IEnumerable<string>>(nameof(BaseDemandsAttribute.Demands));
             var categoryArgument = attribute.GetNamedArgument<string>(nameof(BaseDemandsAttribute.Category));
+
+            demands.Register(categoryArgument);
             foreach (var demand in demandsArgument) demands.Register(categoryArgument, demand);
         }
 
