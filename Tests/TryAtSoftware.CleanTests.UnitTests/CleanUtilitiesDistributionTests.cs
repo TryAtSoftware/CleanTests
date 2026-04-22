@@ -12,14 +12,14 @@ using Xunit.Abstractions;
 
 public class CleanUtilitiesDistributionTests
 {
-    private const string Category = "_";
+    private const string DefaultCategory = "_";
 
     [Fact(Timeout = UnitTestConstants.Timeout)]
     public async Task TestCasesShouldNotBeDiscoveredWhenDemandsFilterOutAllRequiredUtilities()
     {
         var reflectionMocks = ReflectionMocks.MockReflectionSuite(Assembly.GetExecutingAssembly(), typeof(TestDefiningUnfulfillableDemands));
         var testComponentMocks = reflectionMocks.MockTestComponentsSuite();
-        var cleanUtilityDescriptor = new CleanUtilityDescriptor(Category, typeof(StandardUtility), "Matching utility", isGlobal: false, characteristics: ["available"]);
+        var cleanUtilityDescriptor = new CleanUtilityDescriptor(DefaultCategory, typeof(StandardUtility), "Matching utility", isGlobal: false, characteristics: ["available"]);
         var assemblyData = new CleanTestAssemblyData([cleanUtilityDescriptor]);
 
         var testCases = await reflectionMocks.AssemblyInfo.DiscoverTestCasesAsync(assemblyData, testComponentMocks);
@@ -28,7 +28,7 @@ public class CleanUtilitiesDistributionTests
     }
 
     [Fact(Timeout = UnitTestConstants.Timeout)]
-    public async Task TestCasesShouldBeDiscoveredOnceWhenNoUtilitiesAreRequired()
+    public async Task TestCasesShouldBeDiscoveredEvenIfTheyDoNotRequireAnyUtilities()
     {
         var reflectionMocks = ReflectionMocks.MockReflectionSuite(Assembly.GetExecutingAssembly(), typeof(TestConsumingNoUtilities));
         var testComponentMocks = reflectionMocks.MockTestComponentsSuite();
@@ -46,7 +46,7 @@ public class CleanUtilitiesDistributionTests
         var reflectionMocks = ReflectionMocks.MockReflectionSuite(Assembly.GetExecutingAssembly(), testClass);
         var testComponentMocks = reflectionMocks.MockTestComponentsSuite();
 
-        var cleanUtilityDescriptor = new CleanUtilityDescriptor(Category, typeof(InconclusiveUtility), "Inconclusive utility", isGlobal);
+        var cleanUtilityDescriptor = new CleanUtilityDescriptor(DefaultCategory, typeof(InconclusiveUtility), "Inconclusive utility", isGlobal);
         var assemblyData = new CleanTestAssemblyData(new[] { cleanUtilityDescriptor });
 
         var testCases = await reflectionMocks.AssemblyInfo.DiscoverTestCasesAsync(assemblyData, testComponentMocks);
@@ -59,6 +59,33 @@ public class CleanUtilitiesDistributionTests
         Assert.Equal(1, executionResult.Total);
     }
 
+    [Fact(Timeout = UnitTestConstants.Timeout)]
+    public async Task FrameworkDiscoveryShouldProduceATestCaseForEachMatchingUtilityAttribute()
+    {
+        var typesMap = new Dictionary<string, IReflectionTypeInfo>();
+        var assemblyInfo = Assembly.GetExecutingAssembly().MockReflectionAssemblyInfo(typesMap);
+
+        var cleanTestTypeInfo = typeof(TestConsumingMultiUtilities).MockReflectionTypeInfo(assemblyInfo);
+        var utilityTypeInfo = typeof(MultiUseCleanUtility).MockReflectionTypeInfo(assemblyInfo);
+
+        typesMap[typeof(TestConsumingMultiUtilities).AssemblyQualifiedName!] = cleanTestTypeInfo;
+        typesMap[typeof(MultiUseCleanUtility).AssemblyQualifiedName!] = utilityTypeInfo;
+
+        var reflectionMocks = new ReflectionMocksSuite(assemblyInfo, cleanTestTypeInfo);
+        var testComponentMocks = reflectionMocks.MockTestComponentsSuite();
+
+        var messageSink = testComponentMocks.DiagnosticMessageSink;
+        var framework = new CleanTestFramework(messageSink);
+        var discoverer = framework.GetDiscoverer(assemblyInfo);
+
+        var testCases = await discoverer.DiscoverTestCasesAsync(testComponentMocks);
+        var testCase = Assert.IsType<CleanTestCase>(Assert.Single(testCases));
+
+        Assert.Equal(2, testCase.CleanTestCaseData.CleanUtilities.Count);
+        Assert.Single(testCase.CleanTestCaseData.CleanUtilities, x => x.Id.Contains("Utility A") && !x.Id.Contains("Utility B"));
+        Assert.Single(testCase.CleanTestCaseData.CleanUtilities, x => !x.Id.Contains("Utility A") && x.Id.Contains("Utility B"));
+    }
+
     private class InconclusiveUtility(string unresolvableParameter)
     {
         public string UnresolvableParameter { get; } = unresolvableParameter;
@@ -68,9 +95,15 @@ public class CleanUtilitiesDistributionTests
     {
     }
 
+    [CleanUtility("Multi-Category #1", "Utility A")]
+    [CleanUtility("Multi-Category #2", "Utility B")]
+    private class MultiUseCleanUtility
+    {
+    }
+
     private class TestConsumingGlobalUtilities(ITestOutputHelper testOutputHelper) : CleanTest(testOutputHelper)
     {
-        [CleanFact, WithRequirements(Category)]
+        [CleanFact, WithRequirements(DefaultCategory)]
         public void Test()
         {
             _ = this.GetGlobalService<InconclusiveUtility>();
@@ -80,7 +113,7 @@ public class CleanUtilitiesDistributionTests
 
     private class TestConsumingLocalUtilities(ITestOutputHelper testOutputHelper) : CleanTest(testOutputHelper)
     {
-        [CleanFact, WithRequirements(Category)]
+        [CleanFact, WithRequirements(DefaultCategory)]
         public void Test()
         {
             _ = this.GetService<InconclusiveUtility>();
@@ -90,13 +123,20 @@ public class CleanUtilitiesDistributionTests
 
     private class TestDefiningUnfulfillableDemands(ITestOutputHelper testOutputHelper) : CleanTest(testOutputHelper)
     {
-        [CleanFact, WithRequirements(Category), TestDemands(Category, "missing")]
+        [CleanFact, WithRequirements(DefaultCategory), TestDemands(DefaultCategory, "missing")]
         public void Test() => Assert.Fail("It is not expected that this test will be executed. It is just a mean to validate correct test case discovery.");
     }
 
     private class TestConsumingNoUtilities(ITestOutputHelper testOutputHelper) : CleanTest(testOutputHelper)
     {
         [CleanFact]
+        public void Test() => Assert.Fail("It is not expected that this test will be executed. It is just a mean to validate correct test case discovery.");
+    }
+
+    private class TestConsumingMultiUtilities(ITestOutputHelper testOutputHelper) : CleanTest(testOutputHelper)
+    {
+        [CleanFact]
+        [WithRequirements("Multi-Category #1", "Multi-Category #2")]
         public void Test() => Assert.Fail("It is not expected that this test will be executed. It is just a mean to validate correct test case discovery.");
     }
 }
