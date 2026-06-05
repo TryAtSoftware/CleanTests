@@ -15,7 +15,7 @@ using Xunit.Sdk;
 
 public class CleanTestFramework(IMessageSink messageSink) : XunitTestFramework(messageSink)
 {
-    private readonly Dictionary<string, CleanTestAssemblyData> _utilityDescriptorsByAssembly = new ();
+    private readonly Dictionary<string, CleanTestAssemblyData> _utilityDescriptorsByAssembly = new();
 
     protected override ITestFrameworkExecutor CreateExecutor(AssemblyName assemblyName)
     {
@@ -35,9 +35,9 @@ public class CleanTestFramework(IMessageSink messageSink) : XunitTestFramework(m
     private CleanTestAssemblyData ExtractAssemblyData(IAssemblyInfo assemblyInfo)
     {
         if (this._utilityDescriptorsByAssembly.TryGetValue(assemblyInfo.Name, out var memoizedResult)) return memoizedResult;
-        
+
         var utilitiesCollection = new List<ICleanUtilityDescriptor>();
-        
+
         RegisterUtilitiesFromAssembly(assemblyInfo, utilitiesCollection);
         var sharedUtilitiesAttributes = assemblyInfo.GetCustomAttributes(typeof(SharesUtilitiesWithAttribute));
         foreach (var sharedUtilitiesAttribute in sharedUtilitiesAttributes)
@@ -48,7 +48,7 @@ public class CleanTestFramework(IMessageSink messageSink) : XunitTestFramework(m
         }
 
         var assemblyData = new CleanTestAssemblyData(utilitiesCollection);
-        
+
         var configurationAttribute = assemblyInfo.GetCustomAttributes(typeof(ConfigureCleanTestsFrameworkAttribute)).FirstOrDefault();
         if (configurationAttribute is not null)
         {
@@ -56,10 +56,10 @@ public class CleanTestFramework(IMessageSink messageSink) : XunitTestFramework(m
             assemblyData.UtilitiesPresentations = configurationAttribute.GetNamedArgument<CleanTestMetadataPresentations>(nameof(ConfigureCleanTestsFrameworkAttribute.UtilitiesPresentations));
             assemblyData.GenericTypeMappingPresentations = configurationAttribute.GetNamedArgument<CleanTestMetadataPresentations>(nameof(ConfigureCleanTestsFrameworkAttribute.GenericTypeMappingPresentations));
         }
-        
+
         this._utilityDescriptorsByAssembly[assemblyInfo.Name] = assemblyData;
         return assemblyData;
-    } 
+    }
 
     private static void RegisterUtilitiesFromAssembly(IAssemblyInfo assemblyInfo, List<ICleanUtilityDescriptor> utilitiesCollection)
     {
@@ -67,8 +67,8 @@ public class CleanTestFramework(IMessageSink messageSink) : XunitTestFramework(m
         {
             if (type.IsAbstract) continue;
 
-            var initializationUtilityAttributes = type.GetCustomAttributes(typeof(CleanUtilityAttribute)).ToArray();
-            if (initializationUtilityAttributes.Length == 0) continue;
+            var cleanUtilityAttributes = type.GetCustomAttributes(typeof(CleanUtilityAttribute)).ToArray();
+            if (cleanUtilityAttributes.Length == 0) continue;
 
             var decoratedType = new DecoratedType(type);
             var externalDemands = decoratedType.ExtractDemands<ExternalDemandsAttribute>();
@@ -76,19 +76,19 @@ public class CleanTestFramework(IMessageSink messageSink) : XunitTestFramework(m
             var outerDemands = decoratedType.ExtractDemands<OuterDemandsAttribute>();
             var requirements = ExtractRequirements(type);
 
-            foreach (var utilityAttribute in initializationUtilityAttributes.OrEmptyIfNull().IgnoreNullValues())
+            foreach (var utilityAttribute in cleanUtilityAttributes.OrEmptyIfNull().IgnoreNullValues())
             {
                 var categoryArgument = utilityAttribute.GetNamedArgument<string>(nameof(CleanUtilityAttribute.Category));
                 var nameArgument = utilityAttribute.GetNamedArgument<string>(nameof(CleanUtilityAttribute.Name));
                 var isGlobalArgument = utilityAttribute.GetNamedArgument<bool>(nameof(CleanUtilityAttribute.IsGlobal));
                 var characteristicsArgument = utilityAttribute.GetNamedArgument<IEnumerable<string>>(nameof(CleanUtilityAttribute.Characteristics));
 
-                var initializationUtility = new CleanUtilityDescriptor(categoryArgument, type.ToRuntimeType(), nameArgument, isGlobalArgument, characteristicsArgument, requirements);
-                externalDemands.CopyTo(initializationUtility.ExternalDemands);
-                internalDemands.CopyTo(initializationUtility.InternalDemands);
-                outerDemands.CopyTo(initializationUtility.OuterDemands);
+                var cleanUtility = new CleanUtilityDescriptor(categoryArgument, type.ToRuntimeType(), nameArgument, isGlobalArgument, characteristicsArgument, requirements);
+                externalDemands.CopyTo(cleanUtility.ExternalDemands);
+                internalDemands.CopyTo(cleanUtility.InternalDemands);
+                outerDemands.CopyTo(cleanUtility.OuterDemands);
 
-                utilitiesCollection.Add(initializationUtility);
+                utilitiesCollection.Add(cleanUtility);
             }
         }
     }

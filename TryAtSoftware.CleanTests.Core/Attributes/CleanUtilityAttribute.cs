@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using TryAtSoftware.Extensions.Collections;
 
-[AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
+[AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
 public class CleanUtilityAttribute : Attribute
 {
     public string Name { get; }

@@ -22,7 +22,7 @@ public class GenericAutomationTests
         var testCases = await reflectionMocks.AssemblyInfo.DiscoverTestCasesAsync(assemblyData, testComponentMocks);
         Assert.Empty(testCases);
     }
-    
+
     [Fact(Timeout = UnitTestConstants.Timeout)]
     public async Task TestCasesShouldPassForCompleteGenericTestClasses()
     {
@@ -40,14 +40,9 @@ public class GenericAutomationTests
         Assert.Equal(4, executionResult.Total);
     }
 
-    private class IncompleteGenericTestClass<T> : CleanTest
+    private class IncompleteGenericTestClass<T>(ITestOutputHelper testOutputHelper) : CleanTest(testOutputHelper)
         where T : new()
     {
-        public IncompleteGenericTestClass(ITestOutputHelper testOutputHelper)
-            : base(testOutputHelper)
-        {
-        }
-
         [CleanFact]
         public static void Test() => Assert.NotNull(new T());
     }
@@ -56,21 +51,16 @@ public class GenericAutomationTests
     private class TestGenericParameterAttribute : Attribute
     {
     }
-    
-// To be removed when upgrading `TryAtSoftware.Extensions.Reflection`.
+
+    // To be removed when upgrading `TryAtSoftware.Extensions.Reflection`.
 #nullable disable
     [TestSuiteGenericTypeMapping(typeof(TestGenericParameterAttribute), typeof(object))]
-    private class CompleteGenericTestClass<[TestGenericParameter] T> : CleanTest
+    private class CompleteGenericTestClass<[TestGenericParameter] T>(ITestOutputHelper testOutputHelper) : CleanTest(testOutputHelper)
         where T : new()
     {
-        public CompleteGenericTestClass(ITestOutputHelper testOutputHelper)
-            : base(testOutputHelper)
-        {
-        }
-
         [Fact]
         public static void Fact() => Assert.NotNull(new T());
-        
+
         [Theory]
         [MemberData(nameof(GetTheoryData))]
         public static void Theory(int iterations)
