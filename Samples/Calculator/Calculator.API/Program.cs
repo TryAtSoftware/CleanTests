@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc.Versioning;
+using Asp.Versioning;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddApiVersioning(
@@ -13,7 +13,3 @@ var app = builder.Build();
 
 app.MapControllers();
 app.Run();
-
-#pragma warning disable S1118 // This class is needed for API tests
-public partial class Program {}
-#pragma warning restore S1118
