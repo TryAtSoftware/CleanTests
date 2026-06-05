@@ -3,6 +3,7 @@
 using Calculator.API.InputModels.V1;
 using Calculator.API.OutputModels;
 using Calculator.API.OutputModels.V1;
+using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 
 [ApiController, ApiVersion("1.0"), ApiVersion("2.0"), Route("api/v{version:apiVersion}/triangle")]

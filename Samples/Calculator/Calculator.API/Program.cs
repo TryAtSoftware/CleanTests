@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc.Versioning;
+using Asp.Versioning;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddApiVersioning(

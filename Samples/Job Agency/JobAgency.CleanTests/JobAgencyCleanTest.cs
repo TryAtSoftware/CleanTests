@@ -19,14 +19,9 @@ using Xunit.Abstractions;
 
 [Collection("Job agency clean tests collection")]
 [WithRequirements(CleanUtilitiesCategories.Database)]
-public abstract class JobAgencyCleanTest : CleanTest
+public abstract class JobAgencyCleanTest(ITestOutputHelper testOutputHelper) : CleanTest(testOutputHelper)
 {
     private int _databaseId;
-
-    protected JobAgencyCleanTest(ITestOutputHelper testOutputHelper)
-        : base(testOutputHelper)
-    {
-    }
 
     protected IDatabaseManager DatabaseManager => this.GetGlobalService<IDatabaseManager>();
     protected IModelBuilder<IJobAgency, Nothing> JobAgencyModelBuilder => this.GetService<IModelBuilder<IJobAgency, Nothing>>();
@@ -40,10 +35,10 @@ public abstract class JobAgencyCleanTest : CleanTest
         this.InitializeGlobalDependenciesProvider();
 
         this._databaseId = await this.DatabaseManager.GetDatabaseIdAsync(this.GetCancellationToken());
-        
+
         this.DatabaseManager.SetupEntities();
         this.DatabaseManager.RegisterDependencies(this._databaseId, this.LocalDependenciesCollection);
-        
+
         this.InitializeLocalDependenciesProvider();
     }
 
@@ -84,19 +79,19 @@ public abstract class JobAgencyCleanTest : CleanTest
         var equalizationProfileProvider = new DedicatedProfileProvider();
         RegisterGeneralEqualizationProfile<IJobAgency>();
         RegisterGeneralEqualizationProfile<IJobOffer>();
-        
+
         // Benefits
         RegisterGeneralEqualizationProfile<CanHaveMoreFreeDays>();
         RegisterGeneralEqualizationProfile<CanHavePerformanceBonus>();
         RegisterGeneralEqualizationProfile<CanUseInsurance>();
         RegisterGeneralEqualizationProfile<CanUseMultiSportCard>();
-        
+
         // Requirements
         RegisterGeneralEqualizationProfile<MustHaveDrivingLicense>();
         RegisterGeneralEqualizationProfile<MustHaveEducation>();
         RegisterGeneralEqualizationProfile<MustHaveMinimumExperience>();
         RegisterGeneralEqualizationProfile<MustWorkFromOffice>();
-        
+
         equalizer.AddProfileProvider(equalizationProfileProvider);
         return equalizer;
 
