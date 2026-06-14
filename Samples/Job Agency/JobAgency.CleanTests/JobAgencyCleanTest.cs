@@ -15,7 +15,6 @@ using TryAtSoftware.Equalizer.Core;
 using TryAtSoftware.Equalizer.Core.Interfaces;
 using TryAtSoftware.Equalizer.Core.ProfileProviders;
 using TryAtSoftware.Equalizer.Core.Profiles.General;
-using Xunit.Abstractions;
 
 [Collection("Job agency clean tests collection")]
 [WithRequirements(CleanUtilitiesCategories.Database)]

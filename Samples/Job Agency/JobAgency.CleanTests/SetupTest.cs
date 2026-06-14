@@ -2,15 +2,9 @@
 
 using JobAgency.CleanTests.Utilities.Constants;
 using TryAtSoftware.CleanTests.Core.Attributes;
-using Xunit.Abstractions;
 
-public class SetupTest : JobAgencyCleanTest
+public class SetupTest(ITestOutputHelper testOutputHelper) : JobAgencyCleanTest(testOutputHelper)
 {
-    public SetupTest(ITestOutputHelper testOutputHelper)
-        : base(testOutputHelper)
-    {
-    }
-
     [CleanFact]
     public void EnsureDatabaseManagerIsSuccessfullyProvided() => Assert.NotNull(this.DatabaseManager);
 

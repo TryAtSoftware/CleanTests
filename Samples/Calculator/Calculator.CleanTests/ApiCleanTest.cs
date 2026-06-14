@@ -6,31 +6,23 @@ using System.Text;
 using System.Text.Json;
 using Calculator.CleanTests.Constants;
 using Calculator.CleanTests.Equalizers;
-using Calculator.CleanTests.Utilities;
 using Calculator.CleanTests.Utilities.Interfaces;
 using TryAtSoftware.CleanTests.Core;
 using TryAtSoftware.CleanTests.Core.Attributes;
 using TryAtSoftware.Equalizer.Core;
 using TryAtSoftware.Equalizer.Core.Interfaces;
 using TryAtSoftware.Equalizer.Core.ProfileProviders;
-using Xunit.Abstractions;
 
 [WithRequirements(InitializationCategories.ApiProvider)]
-public abstract class ApiCleanTest : CleanTest
+public abstract class ApiCleanTest(ITestOutputHelper testOutputHelper) : CleanTest(testOutputHelper)
 {
     private int _apiAccessorId;
-
-    protected ApiCleanTest(ITestOutputHelper testOutputHelper)
-        : base(testOutputHelper)
-    {
-        this.Equalizer = PrepareEqualizer();
-    }
 
     private IApiProvider ApiProvider { get; set; } = null!;
 
     protected IApiAccessor ApiAccessor { get; private set; } = null!;
     protected IApiSpecification ApiSpecification => this.GetGlobalService<IApiSpecification>();
-    protected IEqualizer Equalizer { get; }
+    protected IEqualizer Equalizer { get; } = PrepareEqualizer();
 
     public override async Task InitializeAsync()
     {

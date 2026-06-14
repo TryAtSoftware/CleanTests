@@ -7,15 +7,9 @@ using TryAtSoftware.CleanTests.Sample.Utilities;
 using TryAtSoftware.CleanTests.Sample.Utilities.Creations;
 using TryAtSoftware.CleanTests.Sample.Utilities.People;
 using TryAtSoftware.Extensions.Reflection;
-using Xunit.Abstractions;
 
-public class SampleCleanTest : CleanTest
+public class SampleCleanTest(ITestOutputHelper testOutputHelper) : CleanTest(testOutputHelper)
 {
-    public SampleCleanTest(ITestOutputHelper testOutputHelper)
-        : base(testOutputHelper)
-    {
-    }
-
     [CleanFact]
     public void CleanFact() => Assert.Equal(4, 2 + 2);
 

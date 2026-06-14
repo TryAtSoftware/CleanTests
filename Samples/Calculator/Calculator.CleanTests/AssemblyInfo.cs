@@ -1,1 +1,1 @@
-﻿[assembly: Xunit.TestFramework("TryAtSoftware.CleanTests.Core.XUnit.CleanTestFramework", "TryAtSoftware.CleanTests.Core")]
+﻿[assembly: TestFramework(typeof(TryAtSoftware.CleanTests.Core.XUnit.CleanTestFramework))]

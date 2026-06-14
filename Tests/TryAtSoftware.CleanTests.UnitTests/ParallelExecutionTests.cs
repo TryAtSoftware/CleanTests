@@ -8,7 +8,6 @@ using TryAtSoftware.CleanTests.Core.XUnit.Execution;
 using TryAtSoftware.CleanTests.UnitTests.Constants;
 using TryAtSoftware.CleanTests.UnitTests.Extensions;
 using TryAtSoftware.CleanTests.UnitTests.Mocks;
-using Xunit.Abstractions;
 
 public class ParallelExecutionTests
 {

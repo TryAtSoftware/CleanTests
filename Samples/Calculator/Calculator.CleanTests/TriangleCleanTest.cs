@@ -3,15 +3,9 @@
 using Calculator.CleanTests.Constants;
 using TryAtSoftware.CleanTests.Core.Attributes;
 using TryAtSoftware.Randomizer.Core.Helpers;
-using Xunit.Abstractions;
 
-public class TriangleCleanTest : ApiCleanTest
+public class TriangleCleanTest(ITestOutputHelper testOutputHelper) : ApiCleanTest(testOutputHelper)
 {
-    public TriangleCleanTest(ITestOutputHelper testOutputHelper)
-        : base(testOutputHelper)
-    {
-    }
-
     [CleanFact]
     [WithRequirements(InitializationCategories.ApiSpecification)]
     public async Task PerimeterShouldBeCalculatedSuccessfully()

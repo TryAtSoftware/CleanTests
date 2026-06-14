@@ -2,15 +2,9 @@
 
 using JobAgency.CleanTests.Utilities.Constants;
 using TryAtSoftware.CleanTests.Core.Attributes;
-using Xunit.Abstractions;
 
-public class JobAgencyRepositoryCleanTests : JobAgencyCleanTest
+public class JobAgencyRepositoryCleanTests(ITestOutputHelper testOutputHelper) : JobAgencyCleanTest(testOutputHelper)
 {
-    public JobAgencyRepositoryCleanTests(ITestOutputHelper testOutputHelper)
-        : base(testOutputHelper)
-    {
-    }
-
     [CleanFact, WithRequirements(CleanUtilitiesCategories.JobAgency)]
     public async Task JobAgenciesShouldBeCreatedSuccessfully()
     {

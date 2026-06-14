@@ -5,15 +5,9 @@ using JobAgency.Models.Interfaces;
 using TryAtSoftware.CleanTests.Core.Attributes;
 using TryAtSoftware.Equalizer.Core.PartialValues;
 using TryAtSoftware.Randomizer.Core.Helpers;
-using Xunit.Abstractions;
 
-public class JobOfferRepositoryCleanTests : JobAgencyCleanTest
+public class JobOfferRepositoryCleanTests(ITestOutputHelper testOutputHelper) : JobAgencyCleanTest(testOutputHelper)
 {
-    public JobOfferRepositoryCleanTests(ITestOutputHelper testOutputHelper)
-        : base(testOutputHelper)
-    {
-    }
-
     [CleanFact, WithRequirements(CleanUtilitiesCategories.JobAgency, CleanUtilitiesCategories.JobOffer)]
     public async Task JobOffersShouldBeCreatedSuccessfully()
     {

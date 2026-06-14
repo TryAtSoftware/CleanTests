@@ -4,7 +4,6 @@ using NSubstitute;
 using TryAtSoftware.CleanTests.Core.XUnit;
 using TryAtSoftware.CleanTests.Core.XUnit.Discovery;
 using TryAtSoftware.CleanTests.UnitTests.Mocks;
-using Xunit.Abstractions;
 using Xunit.Sdk;
 
 internal static class DiscoveryExtensions
