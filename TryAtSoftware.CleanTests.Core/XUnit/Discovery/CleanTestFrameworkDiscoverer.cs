@@ -2,27 +2,28 @@ namespace TryAtSoftware.CleanTests.Core.XUnit.Discovery;
 
 using System;
 using System.Collections.Generic;
+using System.Reflection;
+using System.Threading.Tasks;
 using TryAtSoftware.CleanTests.Core.Attributes;
 using TryAtSoftware.CleanTests.Core.Construction;
 using TryAtSoftware.CleanTests.Core.Extensions;
 using TryAtSoftware.CleanTests.Core.Interfaces;
 using TryAtSoftware.CleanTests.Core.XUnit.Extensions;
 using TryAtSoftware.CleanTests.Core.XUnit.Interfaces;
-using TryAtSoftware.CleanTests.Core.XUnit.Wrappers;
 using TryAtSoftware.Extensions.Collections;
 using TryAtSoftware.Extensions.Reflection;
 using Xunit;
-using Xunit.Abstractions;
 using Xunit.Sdk;
+using Xunit.v3;
 
-internal class CleanTestFrameworkDiscoverer : TestFrameworkDiscoverer
+internal class CleanTestFrameworkDiscoverer : XunitTestFrameworkDiscoverer
 {
     private readonly FallbackTestFrameworkDiscoverer _fallbackTestFrameworkDiscoverer;
     private readonly CleanTestAssemblyData _cleanTestAssemblyData;
     private readonly IConstructionManager _constructionManager;
 
-    public CleanTestFrameworkDiscoverer(IAssemblyInfo assemblyInfo, ISourceInformationProvider sourceProvider, IMessageSink diagnosticMessageSink, CleanTestAssemblyData assemblyData)
-        : base(assemblyInfo, sourceProvider, diagnosticMessageSink)
+    public CleanTestFrameworkDiscoverer(CleanTestAssemblyData assemblyData, IXunitTestAssembly testAssembly)
+        : base(testAssembly)
     {
         this._cleanTestAssemblyData = assemblyData ?? throw new ArgumentNullException(nameof(assemblyData));
         this._fallbackTestFrameworkDiscoverer = new FallbackTestFrameworkDiscoverer(assemblyInfo, sourceProvider, diagnosticMessageSink);
@@ -31,52 +32,40 @@ internal class CleanTestFrameworkDiscoverer : TestFrameworkDiscoverer
     }
 
     /// <inheritdoc />
-    protected override ITestClass CreateTestClass(ITypeInfo @class)
+    protected override ValueTask<IXunitTestClass> CreateTestClass(Type @class)
     {
-        var collection = this._fallbackTestFrameworkDiscoverer.TestCollectionFactory.Get(@class);
-
         if (@class.IsCleanTest() && @class.IsGenericType)
         {
-            var runtimeClass = @class.ToRuntimeType();
             try
             {
                 var genericTypesMap = ExtractGenericTypesMap(@class);
-                var genericTypesSetup = runtimeClass.ExtractGenericParametersSetup(genericTypesMap);
-                runtimeClass = runtimeClass.MakeGenericType(genericTypesSetup);
+                var genericTypesSetup = @class.ExtractGenericParametersSetup(genericTypesMap);
+                @class = @class.MakeGenericType(genericTypesSetup);
             }
             catch (Exception e)
             {
-                var diagnosticMessage = new DiagnosticMessage($"Exception occurred while trying to build the generic type {TypeNames.Get(runtimeClass)}: {e.Message}");
-                this.DiagnosticMessageSink.OnMessage(diagnosticMessage);
-
-                return null!;
+                TestContext.Current.SendDiagnosticMessage("Exception occurred while trying to build the generic type {Type}: {Message}", TypeNames.Get(@class), e.Message);
+                return ValueTask.FromResult<IXunitTestClass>(null!);
             }
-
-            @class = Reflector.Wrap(runtimeClass);
         }
 
-        var wrappedXUnitTypeInfo = new CleanTestReflectionTypeInfoWrapper(@class);
-
-        // @class.Name -> Fully qualified type name
-        // The subsequently created wrapper's `Name` property should expose a readable value for generic types.
-        return new CleanTestClassWrapper(collection, wrappedXUnitTypeInfo, @class.Name);
+        return base.CreateTestClass(@class);
     }
 
     /// <inheritdoc />
-    protected override bool FindTestsForType(ITestClass? testClass, bool includeSourceInformation, IMessageBus messageBus, ITestFrameworkDiscoveryOptions discoveryOptions)
+    protected override ValueTask<bool> FindTestsForType(IXunitTestClass? testClass, ITestFrameworkDiscoveryOptions discoveryOptions, Func<ITestCase, ValueTask<bool>> discoveryCallback)
     {
-        if (testClass is not null) this.FindTests(testClass, includeSourceInformation, messageBus, discoveryOptions);
-        return true;
+        if (testClass is null) return ValueTask.FromResult(true);
+        return this.FindTests(testClass, discoveryOptions, discoveryCallback);
     }
 
-    private void FindTests(ITestClass testClass, bool includeSourceInformation, IMessageBus messageBus, ITestFrameworkDiscoveryOptions discoveryOptions)
+    private ValueTask<bool> FindTests(IXunitTestClass testClass, ITestFrameworkDiscoveryOptions discoveryOptions, Func<ITestCase, ValueTask<bool>> discoveryCallback)
     {
         var genericTypesMap = ExtractGenericTypesMap(testClass.Class);
         var testCaseDiscoveryOptions = new TestCaseDiscoveryOptions(genericTypesMap);
 
-        var decoratedClass = new DecoratedType(testClass.Class);
         var isCleanTestClass = testClass.Class.IsCleanTest();
-        var globalRequirements = ExtractRequirements(decoratedClass);
+        var globalRequirements = testClass.Class.ExtractRequirements();
 
         var options = (includeSourceInformation, messageBus, discoveryOptions, testCaseDiscoveryOptions, isCleanTestClass, globalRequirements);
         foreach (var methodInfo in testClass.Class.GetMethods(includePrivateMethods: false).OrEmptyIfNull().IgnoreNullValues())
@@ -86,7 +75,7 @@ internal class CleanTestFrameworkDiscoverer : TestFrameworkDiscoverer
         }
     }
 
-    private void DiscoverTestCasesForMethod(ITestMethod testMethod, (bool IncludeSourceInformation, IMessageBus messageBus, ITestFrameworkDiscoveryOptions TestFrameworkDiscoveryOptions, TestCaseDiscoveryOptions TestCaseDiscoveryOptions, bool IsCleanTestClass, HashSet<string> GlobalRequirements) options)
+    private void DiscoverTestCasesForMethod(IXunitTestMethod testMethod, (bool IncludeSourceInformation, IMessageBus messageBus, ITestFrameworkDiscoveryOptions TestFrameworkDiscoveryOptions, TestCaseDiscoveryOptions TestCaseDiscoveryOptions, bool IsCleanTestClass, HashSet<string> GlobalRequirements) options)
     {
         var methodAttributeContainer = new DecoratedMethod(testMethod.Method);
         if (!methodAttributeContainer.TryGetSingleAttribute(typeof(FactAttribute), out var factAttribute)) return;
@@ -102,7 +91,7 @@ internal class CleanTestFrameworkDiscoverer : TestFrameworkDiscoverer
         if (testCaseDiscovererType is null) return;
 
         var customInitializationUtilitiesCollection = this.GetInitializationUtilities(methodAttributeContainer, options.GlobalRequirements);
-        var testCaseDiscoverer = Activator.CreateInstance(testCaseDiscovererType, this.DiagnosticMessageSink, options.TestCaseDiscoveryOptions, customInitializationUtilitiesCollection, this._constructionManager, this._cleanTestAssemblyData) as IXunitTestCaseDiscoverer;
+        var testCaseDiscoverer = Activator.CreateInstance(testCaseDiscovererType, options.TestCaseDiscoveryOptions, customInitializationUtilitiesCollection, this._constructionManager, this._cleanTestAssemblyData) as IXunitTestCaseDiscoverer;
 
         if (testCaseDiscoverer is null) return;
 
@@ -111,13 +100,13 @@ internal class CleanTestFrameworkDiscoverer : TestFrameworkDiscoverer
             this.ReportDiscoveredTestCase(testCase, options.IncludeSourceInformation, options.messageBus);
     }
 
-    private CleanTestInitializationCollection<ICleanUtilityDescriptor> GetInitializationUtilities(DecoratedMethod? method, HashSet<string> globalRequirements)
+    private CleanTestInitializationCollection<ICleanUtilityDescriptor> GetInitializationUtilities(MethodInfo? method, HashSet<string> globalRequirements)
     {
         var customInitializationUtilitiesCollection = new CleanTestInitializationCollection<ICleanUtilityDescriptor>();
         if (method is null) return customInitializationUtilitiesCollection;
 
-        var initializationRequirements = ExtractRequirements(method);
         var demands = method.ExtractDemands<TestDemandsAttribute>();
+        var initializationRequirements = method.ExtractRequirements();
 
         var allRequirementSources = new[] { initializationRequirements, globalRequirements };
         foreach (var category in allRequirementSources.Union())
@@ -131,28 +120,9 @@ internal class CleanTestFrameworkDiscoverer : TestFrameworkDiscoverer
         return customInitializationUtilitiesCollection;
     }
 
-    private static IDictionary<Type, Type> ExtractGenericTypesMap(ITypeInfo typeInfo)
+    private static IDictionary<Type, Type> ExtractGenericTypesMap(Type @class)
     {
-        if (typeInfo is null) throw new ArgumentNullException(nameof(typeInfo));
-
-        var decoratedClass = new DecoratedType(typeInfo);
-        var genericTypeMappingAttributes = decoratedClass.GetCustomAttributes(typeof(TestSuiteGenericTypeMappingAttribute));
-        return genericTypeMappingAttributes.MapSafely(a => a.GetNamedArgument<Type>(nameof(TestSuiteGenericTypeMappingAttribute.AttributeType)), a => a.GetNamedArgument<Type>(nameof(TestSuiteGenericTypeMappingAttribute.ParameterType)));
-    }
-
-    private static HashSet<string> ExtractRequirements(IDecoratedComponent? component)
-    {
-        var requirements = new HashSet<string>();
-        if (component is null) return requirements;
-
-        var requirementsAttributeType = typeof(WithRequirementsAttribute);
-        foreach (var attribute in component.GetCustomAttributes(requirementsAttributeType).OrEmptyIfNull().IgnoreNullValues())
-        {
-            var initializationCategories = attribute.GetNamedArgument<IEnumerable<string>>("Categories");
-            foreach (var category in initializationCategories.OrEmptyIfNull())
-                requirements.Add(category);
-        }
-
-        return requirements;
+        var genericTypeMappingAttributes = @class.GetCustomAttributes<TestSuiteGenericTypeMappingAttribute>();
+        return genericTypeMappingAttributes.MapSafely(a => a.AttributeType, a => a.ParameterType);
     }
 }

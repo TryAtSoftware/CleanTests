@@ -8,7 +8,7 @@ using TryAtSoftware.Extensions.Collections;
 
 internal class CleanTestInitializationCollection<TValue> : ICleanTestInitializationCollection<TValue>
 {
-    private readonly IDictionary<string, List<TValue>> _data = new Dictionary<string, List<TValue>>();
+    private readonly Dictionary<string, List<TValue>> _data = [];
 
     /// <inheritdoc />
     public IReadOnlyCollection<string> Categories => this._data.Keys.AsReadOnlyCollection();

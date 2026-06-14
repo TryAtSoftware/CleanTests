@@ -6,7 +6,7 @@ using TryAtSoftware.CleanTests.Core.Interfaces;
 
 internal class GlobalUtilitiesProvider : IGlobalUtilitiesProvider
 {
-    private readonly Dictionary<string, object> _utilities = new ();
+    private readonly Dictionary<string, object> _utilities = [];
 
     public bool RegisterUtility(string uniqueId, object instance)
     {

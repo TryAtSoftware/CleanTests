@@ -2,11 +2,10 @@
 
 using System.Collections.Generic;
 using TryAtSoftware.CleanTests.Core.Interfaces;
-using Xunit.Abstractions;
+using Xunit.Sdk;
 
-internal class CleanFactTestCaseDiscoverer(IMessageSink diagnosticMessageSink, TestCaseDiscoveryOptions testCaseDiscoveryOptions, ICleanTestInitializationCollection<ICleanUtilityDescriptor> initializationUtilitiesCollection, IConstructionManager constructionManager, CleanTestAssemblyData cleanTestAssemblyData)
-    : BaseTestCaseDiscoverer(diagnosticMessageSink, testCaseDiscoveryOptions, initializationUtilitiesCollection, constructionManager, cleanTestAssemblyData)
+internal class CleanFactTestCaseDiscoverer(TestCaseDiscoveryOptions testCaseDiscoveryOptions, ICleanTestInitializationCollection<ICleanUtilityDescriptor> initializationUtilitiesCollection, IConstructionManager constructionManager, CleanTestAssemblyData cleanTestAssemblyData)
+    : BaseTestCaseDiscoverer(testCaseDiscoveryOptions, initializationUtilitiesCollection, constructionManager, cleanTestAssemblyData)
 {
-    protected override IEnumerable<object[]> GetTestMethodArguments(IMessageSink diagnosticMessageSink,
-        ITestMethod testMethod) => [[]];
+    protected override IEnumerable<object[]> GetTestMethodArguments(ITestMethod testMethod) => [[]];
 }

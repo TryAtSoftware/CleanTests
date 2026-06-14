@@ -17,5 +17,5 @@ using System.Collections.Generic;
 internal record IndividualCleanUtilityConstructionGraph(string Id)
 {
     public string Id { get; } = Id;
-    public List<IndividualCleanUtilityConstructionGraph> Dependencies { get; } = new ();
+    public List<IndividualCleanUtilityConstructionGraph> Dependencies { get; } = [];
 }

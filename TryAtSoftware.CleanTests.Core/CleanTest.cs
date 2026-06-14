@@ -7,9 +7,8 @@ using Microsoft.Extensions.DependencyInjection;
 using TryAtSoftware.CleanTests.Core.Interfaces;
 using TryAtSoftware.CleanTests.Core.Utilities;
 using Xunit;
-using Xunit.Abstractions;
 
-public abstract class CleanTest(ITestOutputHelper testOutputHelper) : ICleanTest, IDisposable, IAsyncLifetime
+public abstract class CleanTest(ITestOutputHelper testOutputHelper) : ICleanTest, IAsyncLifetime
 {
     private ServiceProvider? _localDependenciesProvider;
     private IServiceScope? _scope;
@@ -21,20 +20,20 @@ public abstract class CleanTest(ITestOutputHelper testOutputHelper) : ICleanTest
     public IServiceCollection LocalDependenciesCollection { get; } = new ServiceCollection();
     public IServiceCollection GlobalDependenciesCollection { get; } = new ServiceCollection();
 
-    public virtual Task InitializeAsync()
+    public virtual ValueTask InitializeAsync()
     {
         this.InitializeGlobalDependenciesProvider();
         this.InitializeLocalDependenciesProvider();
 
-        return Task.CompletedTask;
+        return ValueTask.CompletedTask;
     }
 
-    public virtual Task DisposeAsync() => Task.CompletedTask;
-
-    public void Dispose()
+    public virtual ValueTask DisposeAsync()
     {
-        this.Dispose(true);
+        this.Dispose(disposing: true);
         GC.SuppressFinalize(this);
+
+        return ValueTask.CompletedTask;
     }
 
     protected void InitializeGlobalDependenciesProvider()

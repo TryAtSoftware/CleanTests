@@ -1,22 +1,20 @@
 ﻿namespace TryAtSoftware.CleanTests.Core.XUnit.Execution;
 
-using System;
 using System.Collections.Generic;
-using System.Reflection;
-using Xunit.Abstractions;
+using System.Threading;
+using System.Threading.Tasks;
+using TryAtSoftware.CleanTests.Core.XUnit.Discovery;
 using Xunit.Sdk;
+using Xunit.v3;
 
-internal class CleanTestFrameworkExecutor(AssemblyName assemblyName, ISourceInformationProvider sourceInformationProvider, IMessageSink diagnosticMessageSink, Func<IAssemblyInfo, ITestFrameworkDiscoverer> createDiscoverer, CleanTestAssemblyData assemblyData)
-    : XunitTestFrameworkExecutor(assemblyName, sourceInformationProvider, diagnosticMessageSink)
+internal class CleanTestFrameworkExecutor(CleanTestAssemblyData assemblyData, IXunitTestAssembly testAssembly)
+    : TestFrameworkExecutor<IXunitTestCase>(testAssembly)
 {
-    private readonly Func<IAssemblyInfo, ITestFrameworkDiscoverer> _createDiscoverer = createDiscoverer ?? throw new ArgumentNullException(nameof(createDiscoverer));
-    private readonly CleanTestAssemblyData _assemblyData = assemblyData ?? throw new ArgumentNullException(nameof(assemblyData));
+    protected override ITestFrameworkDiscoverer CreateDiscoverer() => new CleanTestFrameworkDiscoverer(assemblyData, this.TestAssembly);
 
-    protected override ITestFrameworkDiscoverer CreateDiscoverer() => this._createDiscoverer(this.AssemblyInfo);
-
-    protected override async void RunTestCases(IEnumerable<IXunitTestCase> testCases, IMessageSink executionMessageSink, ITestFrameworkExecutionOptions executionOptions)
+    public override ValueTask RunTestCases(IReadOnlyCollection<IXunitTestCase> testCases, IMessageSink executionMessageSink, ITestFrameworkExecutionOptions executionOptions, CancellationToken cancellationToken)
     {
-        using var assemblyRunner = new CleanTestAssemblyRunner(this.TestAssembly, testCases, this.DiagnosticMessageSink, executionMessageSink, executionOptions, this._assemblyData);
-        await assemblyRunner.RunAsync();
+        var assemblyRunner = new CleanTestAssemblyRunner(assemblyData);
+        return assemblyRunner.Run(this.TestAssembly, testCases, executionMessageSink, executionOptions, cancellationToken);
     }
 }

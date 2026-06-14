@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using TryAtSoftware.CleanTests.Core.Construction;
 using TryAtSoftware.CleanTests.Core.Enums;
 using TryAtSoftware.CleanTests.Core.Extensions;
@@ -10,25 +11,24 @@ using TryAtSoftware.CleanTests.Core.Interfaces;
 using TryAtSoftware.CleanTests.Core.Utilities;
 using TryAtSoftware.Extensions.Collections;
 using TryAtSoftware.Extensions.Reflection;
-using Xunit.Abstractions;
 using Xunit.Sdk;
+using Xunit.v3;
 
-internal abstract class BaseTestCaseDiscoverer(IMessageSink diagnosticMessageSink, TestCaseDiscoveryOptions testCaseDiscoveryOptions, ICleanTestInitializationCollection<ICleanUtilityDescriptor> initializationUtilitiesCollection, IConstructionManager constructionManager, CleanTestAssemblyData cleanTestAssemblyData)
+internal abstract class BaseTestCaseDiscoverer(TestCaseDiscoveryOptions testCaseDiscoveryOptions, ICleanTestInitializationCollection<ICleanUtilityDescriptor> initializationUtilitiesCollection, IConstructionManager constructionManager, CleanTestAssemblyData cleanTestAssemblyData)
     : IXunitTestCaseDiscoverer
 {    
-    private readonly IMessageSink _diagnosticMessageSink = diagnosticMessageSink ?? throw new ArgumentNullException(nameof(diagnosticMessageSink));
     private readonly TestCaseDiscoveryOptions _testCaseDiscoveryOptions = testCaseDiscoveryOptions ?? throw new ArgumentNullException(nameof(testCaseDiscoveryOptions));
     private readonly ICleanTestInitializationCollection<ICleanUtilityDescriptor> _initializationUtilitiesCollection = initializationUtilitiesCollection ?? throw new ArgumentNullException(nameof(initializationUtilitiesCollection));
     private readonly IConstructionManager _constructionManager = constructionManager ?? throw new ArgumentNullException(nameof(constructionManager));
     private readonly CleanTestAssemblyData _cleanTestAssemblyData = cleanTestAssemblyData ?? throw new ArgumentNullException(nameof(cleanTestAssemblyData));
 
     /// <inheritdoc />
-    public IEnumerable<IXunitTestCase> Discover(ITestFrameworkDiscoveryOptions discoveryOptions, ITestMethod testMethod, IAttributeInfo factAttribute)
+    public ValueTask<IReadOnlyCollection<IXunitTestCase>> Discover(ITestFrameworkDiscoveryOptions discoveryOptions, IXunitTestMethod testMethod, IFactAttribute factAttribute)
     {
         var graphIterator = new CombinatorialMachine(this._initializationUtilitiesCollection);
         var combinations = graphIterator.GenerateAllCombinations();
 
-        var argumentsCollection = this.GetTestMethodArguments(this._diagnosticMessageSink, testMethod).ToArray();
+        var argumentsCollection = this.GetTestMethodArguments(testMethod).ToArray();
 
         var testCases = new List<IXunitTestCase>();
         foreach (var combination in combinations)
@@ -42,12 +42,12 @@ internal abstract class BaseTestCaseDiscoverer(IMessageSink diagnosticMessageSin
             }
         }
 
-        return testCases;
+        return ValueTask.FromResult<IReadOnlyCollection<IXunitTestCase>>(testCases.AsReadOnly());
     }
 
-    protected abstract IEnumerable<object[]> GetTestMethodArguments(IMessageSink diagnosticMessageSink, ITestMethod testMethod);
+    protected abstract IEnumerable<object[]> GetTestMethodArguments(IXunitTestMethod testMethod);
 
-    private List<IXunitTestCase> ExtractTestCases(ITestFrameworkDiscoveryOptions discoveryOptions, ITestMethod testMethod, IndividualCleanUtilityConstructionGraph[] dependencies, object[][] argumentsCollection)
+    private List<IXunitTestCase> ExtractTestCases(ITestFrameworkDiscoveryOptions discoveryOptions, IXunitTestMethod testMethod, IndividualCleanUtilityConstructionGraph[] dependencies, object[][] argumentsCollection)
     {
         var result = new List<IXunitTestCase>();
 
@@ -57,7 +57,7 @@ internal abstract class BaseTestCaseDiscoverer(IMessageSink diagnosticMessageSin
 
         foreach (var testCaseArguments in argumentsCollection)
         {
-            var testCase = new CleanTestCase(this._diagnosticMessageSink, methodDisplay, methodDisplayOptions, testMethod, testCaseArguments, testData);
+            var testCase = new CleanTestCase(methodDisplay, methodDisplayOptions, testMethod, testCaseArguments, testData);
             this.SetTraits(testCase, testData);
 
             result.Add(testCase);

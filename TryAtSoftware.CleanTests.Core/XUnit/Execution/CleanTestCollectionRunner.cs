@@ -14,6 +14,7 @@ using TryAtSoftware.CleanTests.Core.XUnit.Interfaces;
 using Xunit;
 using Xunit.Abstractions;
 using Xunit.Sdk;
+using Xunit.v3;
 
 internal sealed class CleanTestCollectionRunner : XunitTestCollectionRunner, IDisposable
 {
@@ -21,8 +22,7 @@ internal sealed class CleanTestCollectionRunner : XunitTestCollectionRunner, IDi
     private readonly IGlobalUtilitiesProvider _globalUtilitiesProvider = new GlobalUtilitiesProvider();
     private readonly CleanTestAssemblyData _assemblyData;
 
-    public CleanTestCollectionRunner(ITestCollection testCollection, IEnumerable<IXunitTestCase> testCases, IMessageSink diagnosticMessageSink, IMessageBus messageBus, ITestCaseOrderer testCaseOrderer, ExceptionAggregator aggregator, CancellationTokenSource cancellationTokenSource, CleanTestAssemblyData assemblyData)
-        : base(testCollection, testCases, diagnosticMessageSink, messageBus, testCaseOrderer, aggregator, cancellationTokenSource)
+    public CleanTestCollectionRunner(CleanTestAssemblyData assemblyData)
     {
         this._assemblyData = assemblyData ?? throw new ArgumentNullException(nameof(assemblyData));
 

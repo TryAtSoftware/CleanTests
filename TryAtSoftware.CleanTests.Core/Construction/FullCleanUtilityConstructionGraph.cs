@@ -13,5 +13,5 @@ using System.Collections.Generic;
 internal record FullCleanUtilityConstructionGraph(string Id)
 {
     public string Id { get; } = Id;
-    public List<FullCleanUtilityConstructionGraph[]> ConstructionDescriptors { get; } = new ();
+    public List<FullCleanUtilityConstructionGraph[]> ConstructionDescriptors { get; } = [];
 }

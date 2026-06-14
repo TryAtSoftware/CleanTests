@@ -9,7 +9,7 @@ using TryAtSoftware.CleanTests.Core.Attributes;
 using TryAtSoftware.CleanTests.Core.Interfaces;
 using TryAtSoftware.CleanTests.Core.XUnit.Interfaces;
 using TryAtSoftware.Extensions.Collections;
-using Xunit.Sdk;
+using Xunit.v3;
 
 internal static class CleanTestsFrameworkExtensions
 {
@@ -42,20 +42,29 @@ internal static class CleanTestsFrameworkExtensions
         return demands.All(utilityDescriptor.ContainsCharacteristic);
     }
 
-    internal static ICleanTestInitializationCollection<string> ExtractDemands<TAttribute>(this IDecoratedComponent decoratedComponent)
+    internal static ICleanTestInitializationCollection<string> ExtractDemands<TAttribute>(this MemberInfo member)
         where TAttribute : BaseDemandsAttribute
     {
         var demands = new CleanTestInitializationCollection<string>();
-        foreach (var attribute in decoratedComponent.GetCustomAttributes(typeof(TAttribute)))
+        foreach (var attribute in member.GetCustomAttributes<TAttribute>())
         {
-            var demandsArgument = attribute.GetNamedArgument<IEnumerable<string>>(nameof(BaseDemandsAttribute.Demands));
-            var categoryArgument = attribute.GetNamedArgument<string>(nameof(BaseDemandsAttribute.Category));
+            var demandsArgument = attribute.Demands;
+            var categoryArgument = attribute.Category;
 
             demands.Register(categoryArgument);
             foreach (var demand in demandsArgument) demands.Register(categoryArgument, demand);
         }
 
         return demands;
+    }
+
+    public static HashSet<string> ExtractRequirements(this MemberInfo member)
+    {
+        var requirements = new HashSet<string>();
+        foreach (var attribute in member.GetCustomAttributes<WithRequirementsAttribute>())
+            foreach (var category in attribute.Categories) requirements.Add(category);
+
+        return requirements;
     }
 
     internal static (List<ICleanTestCase> CleanTestCases, List<IXunitTestCase> OtherTestCases) ExtractCleanTestCases(this IEnumerable<IXunitTestCase>? testCases)

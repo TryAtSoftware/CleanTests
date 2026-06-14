@@ -12,6 +12,7 @@ using TryAtSoftware.CleanTests.Core.XUnit.Serialization;
 using TryAtSoftware.Extensions.Collections;
 using Xunit.Abstractions;
 using Xunit.Sdk;
+using Xunit.v3;
 
 internal class CleanTestCase : XunitTestCase, ICleanTestCase
 {
@@ -33,8 +34,8 @@ internal class CleanTestCase : XunitTestCase, ICleanTestCase
     }
 #pragma warning restore CS0618
 
-    public CleanTestCase(IMessageSink diagnosticMessageSink, TestMethodDisplay defaultMethodDisplay, TestMethodDisplayOptions defaultMethodDisplayOptions, ITestMethod testMethod, object[] testMethodArguments, CleanTestCaseData cleanTestData)
-        : base(diagnosticMessageSink, defaultMethodDisplay, defaultMethodDisplayOptions, testMethod, testMethodArguments)
+    public CleanTestCase(TestMethodDisplay defaultMethodDisplay, TestMethodDisplayOptions defaultMethodDisplayOptions, ITestMethod testMethod, object[] testMethodArguments, CleanTestCaseData cleanTestData)
+        : base(defaultMethodDisplay, defaultMethodDisplayOptions, testMethod, testMethodArguments)
     {
         this.CleanTestCaseData = cleanTestData ?? throw new ArgumentNullException(nameof(cleanTestData));
     }

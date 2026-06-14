@@ -2,21 +2,18 @@
 
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
-using Xunit.Abstractions;
-using Xunit.Sdk;
+using Xunit.v3;
 
-internal class CleanTestAssemblyRunner(ITestAssembly testAssembly, IEnumerable<IXunitTestCase> testCases, IMessageSink diagnosticMessageSink, IMessageSink executionMessageSink, ITestFrameworkExecutionOptions executionOptions, CleanTestAssemblyData assemblyData)
-    : XunitTestAssemblyRunner(testAssembly, testCases, diagnosticMessageSink, executionMessageSink, executionOptions)
+internal class CleanTestAssemblyRunner(CleanTestAssemblyData assemblyData) : XunitTestAssemblyRunner
 {
     private readonly CleanTestAssemblyData _assemblyData = assemblyData ?? throw new ArgumentNullException(nameof(assemblyData));
 
-    protected override async Task<RunSummary> RunTestCollectionAsync(IMessageBus messageBus, ITestCollection testCollection, IEnumerable<IXunitTestCase> testCases, CancellationTokenSource cancellationTokenSource)
+    protected override ValueTask<RunSummary> RunTestCollection(XunitTestAssemblyRunnerContext ctxt, IXunitTestCollection testCollection, IReadOnlyCollection<IXunitTestCase> testCases)
     {
-        using var collectionRunner = new CleanTestCollectionRunner(testCollection, testCases, this.DiagnosticMessageSink, messageBus, this.TestCaseOrderer, new ExceptionAggregator(this.Aggregator), cancellationTokenSource, this._assemblyData);
+        using var collectionRunner = new CleanTestCollectionRunner(this._assemblyData);
 
-        var runSummary = await collectionRunner.RunAsync();
+        var runSummary = await collectionRunner.Run(ctxt, testCollection, testCases);
         return runSummary;
     }
 }

@@ -1,89 +1,97 @@
 ﻿namespace TryAtSoftware.CleanTests.Core.XUnit;
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using TryAtSoftware.CleanTests.Core.Attributes;
-using TryAtSoftware.CleanTests.Core.Enums;
 using TryAtSoftware.CleanTests.Core.Extensions;
 using TryAtSoftware.CleanTests.Core.Interfaces;
 using TryAtSoftware.CleanTests.Core.XUnit.Discovery;
 using TryAtSoftware.CleanTests.Core.XUnit.Execution;
-using TryAtSoftware.Extensions.Collections;
-using Xunit.Abstractions;
-using Xunit.Sdk;
+using Xunit.v3;
 
-public class CleanTestFramework(IMessageSink messageSink) : XunitTestFramework(messageSink)
+public class CleanTestFramework : TestFramework
 {
-    private readonly Dictionary<string, CleanTestAssemblyData> _utilityDescriptorsByAssembly = new();
+    private readonly Dictionary<string, CleanTestAssemblyData> _utilityDescriptorsByAssembly = [];
+    private readonly string? _configFileName;
 
-    protected override ITestFrameworkExecutor CreateExecutor(AssemblyName assemblyName)
+    public CleanTestFramework() { }
+
+    public CleanTestFramework(string? configFileName)
     {
-        var assembly = CleanTestsFrameworkExtensions.LoadAssemblySafely(assemblyName.FullName);
-        var assemblyInfo = Reflector.Wrap(assembly);
-
-        var assemblyData = this.ExtractAssemblyData(assemblyInfo);
-        return new CleanTestFrameworkExecutor(assemblyName, this.SourceInformationProvider, this.DiagnosticMessageSink, this.CreateDiscoverer, assemblyData);
+        this._configFileName = configFileName;
     }
 
-    protected override ITestFrameworkDiscoverer CreateDiscoverer(IAssemblyInfo assemblyInfo)
+    protected override ITestFrameworkExecutor CreateExecutor(Assembly assembly)
     {
-        var assemblyData = this.ExtractAssemblyData(assemblyInfo);
-        return new CleanTestFrameworkDiscoverer(assemblyInfo, this.SourceInformationProvider, this.DiagnosticMessageSink, assemblyData);
+        ArgumentNullException.ThrowIfNull(assembly);
+
+        var assemblyName = assembly.GetName();
+        var assemblyData = this.ExtractAssemblyData(assembly, assemblyName);
+        var xunitAssembly = new XunitTestAssembly(assembly, this._configFileName, assemblyName.Version);
+
+        return new CleanTestFrameworkExecutor(assemblyData, xunitAssembly);
     }
 
-    private CleanTestAssemblyData ExtractAssemblyData(IAssemblyInfo assemblyInfo)
+    public override string TestFrameworkDisplayName => "TryAtSoftware.CleanTests";
+
+    protected override ITestFrameworkDiscoverer CreateDiscoverer(Assembly assembly)
     {
-        if (this._utilityDescriptorsByAssembly.TryGetValue(assemblyInfo.Name, out var memoizedResult)) return memoizedResult;
+        ArgumentNullException.ThrowIfNull(assembly);
+
+        var assemblyName = assembly.GetName();
+        var assemblyData = this.ExtractAssemblyData(assembly, assemblyName);
+        var xunitAssembly = new XunitTestAssembly(assembly, this._configFileName, assemblyName.Version);
+        
+        return new CleanTestFrameworkDiscoverer(assemblyData, xunitAssembly);
+    }
+
+    private CleanTestAssemblyData ExtractAssemblyData(Assembly assembly, AssemblyName assemblyName)
+    {
+        if (this._utilityDescriptorsByAssembly.TryGetValue(assemblyName.FullName, out var memoizedResult)) return memoizedResult;
 
         var utilitiesCollection = new List<ICleanUtilityDescriptor>();
 
-        RegisterUtilitiesFromAssembly(assemblyInfo, utilitiesCollection);
-        var sharedUtilitiesAttributes = assemblyInfo.GetCustomAttributes(typeof(SharesUtilitiesWithAttribute));
+        RegisterUtilitiesFromAssembly(assembly, utilitiesCollection);
+        var sharedUtilitiesAttributes = assembly.GetCustomAttributes<SharesUtilitiesWithAttribute>();
         foreach (var sharedUtilitiesAttribute in sharedUtilitiesAttributes)
         {
-            var assemblyNameArgument = sharedUtilitiesAttribute.GetNamedArgument<string>(nameof(SharesUtilitiesWithAttribute.AssemblyName));
-            var loadedAssembly = CleanTestsFrameworkExtensions.LoadAssemblySafely(assemblyNameArgument);
-            if (loadedAssembly is not null) RegisterUtilitiesFromAssembly(Reflector.Wrap(loadedAssembly), utilitiesCollection);
+            var loadedAssembly = CleanTestsFrameworkExtensions.LoadAssemblySafely(sharedUtilitiesAttribute.AssemblyName);
+            if (loadedAssembly is not null) RegisterUtilitiesFromAssembly(loadedAssembly, utilitiesCollection);
         }
 
         var assemblyData = new CleanTestAssemblyData(utilitiesCollection);
 
-        var configurationAttribute = assemblyInfo.GetCustomAttributes(typeof(ConfigureCleanTestsFrameworkAttribute)).FirstOrDefault();
+        var configurationAttribute = assembly.GetCustomAttribute<ConfigureCleanTestsFrameworkAttribute>();
         if (configurationAttribute is not null)
         {
-            assemblyData.MaxDegreeOfParallelism = configurationAttribute.GetNamedArgument<int>(nameof(ConfigureCleanTestsFrameworkAttribute.MaxDegreeOfParallelism));
-            assemblyData.UtilitiesPresentations = configurationAttribute.GetNamedArgument<CleanTestMetadataPresentations>(nameof(ConfigureCleanTestsFrameworkAttribute.UtilitiesPresentations));
-            assemblyData.GenericTypeMappingPresentations = configurationAttribute.GetNamedArgument<CleanTestMetadataPresentations>(nameof(ConfigureCleanTestsFrameworkAttribute.GenericTypeMappingPresentations));
+            assemblyData.MaxDegreeOfParallelism = configurationAttribute.MaxDegreeOfParallelism;
+            assemblyData.UtilitiesPresentations = configurationAttribute.UtilitiesPresentations;
+            assemblyData.GenericTypeMappingPresentations = configurationAttribute.GenericTypeMappingPresentations;
         }
 
-        this._utilityDescriptorsByAssembly[assemblyInfo.Name] = assemblyData;
+        this._utilityDescriptorsByAssembly[assemblyName.FullName] = assemblyData;
         return assemblyData;
     }
 
-    private static void RegisterUtilitiesFromAssembly(IAssemblyInfo assemblyInfo, List<ICleanUtilityDescriptor> utilitiesCollection)
+    private static void RegisterUtilitiesFromAssembly(Assembly assembly, List<ICleanUtilityDescriptor> utilitiesCollection)
     {
-        foreach (var type in assemblyInfo.GetTypes(includePrivateTypes: false).OrEmptyIfNull().IgnoreNullValues())
+        foreach (var type in assembly.GetTypes())
         {
             if (type.IsAbstract) continue;
 
-            var cleanUtilityAttributes = type.GetCustomAttributes(typeof(CleanUtilityAttribute)).ToArray();
+            var cleanUtilityAttributes = type.GetCustomAttributes<CleanUtilityAttribute>().ToArray();
             if (cleanUtilityAttributes.Length == 0) continue;
 
-            var decoratedType = new DecoratedType(type);
-            var externalDemands = decoratedType.ExtractDemands<ExternalDemandsAttribute>();
-            var internalDemands = decoratedType.ExtractDemands<InternalDemandsAttribute>();
-            var outerDemands = decoratedType.ExtractDemands<OuterDemandsAttribute>();
-            var requirements = ExtractRequirements(type);
+            var externalDemands = type.ExtractDemands<ExternalDemandsAttribute>();
+            var internalDemands = type.ExtractDemands<InternalDemandsAttribute>();
+            var outerDemands = type.ExtractDemands<OuterDemandsAttribute>();
+            var requirements = type.ExtractRequirements();
 
-            foreach (var utilityAttribute in cleanUtilityAttributes.OrEmptyIfNull().IgnoreNullValues())
+            foreach (var utilityAttribute in cleanUtilityAttributes)
             {
-                var categoryArgument = utilityAttribute.GetNamedArgument<string>(nameof(CleanUtilityAttribute.Category));
-                var nameArgument = utilityAttribute.GetNamedArgument<string>(nameof(CleanUtilityAttribute.Name));
-                var isGlobalArgument = utilityAttribute.GetNamedArgument<bool>(nameof(CleanUtilityAttribute.IsGlobal));
-                var characteristicsArgument = utilityAttribute.GetNamedArgument<IEnumerable<string>>(nameof(CleanUtilityAttribute.Characteristics));
-
-                var cleanUtility = new CleanUtilityDescriptor(categoryArgument, type.ToRuntimeType(), nameArgument, isGlobalArgument, characteristicsArgument, requirements);
+                var cleanUtility = new CleanUtilityDescriptor(utilityAttribute.Category, type, utilityAttribute.Name, utilityAttribute.IsGlobal, utilityAttribute.Characteristics, requirements);
                 externalDemands.CopyTo(cleanUtility.ExternalDemands);
                 internalDemands.CopyTo(cleanUtility.InternalDemands);
                 outerDemands.CopyTo(cleanUtility.OuterDemands);
@@ -91,17 +99,5 @@ public class CleanTestFramework(IMessageSink messageSink) : XunitTestFramework(m
                 utilitiesCollection.Add(cleanUtility);
             }
         }
-    }
-
-    private static HashSet<string> ExtractRequirements(ITypeInfo type)
-    {
-        var requirements = new HashSet<string>();
-        foreach (var attribute in type.GetCustomAttributes(typeof(WithRequirementsAttribute)))
-        {
-            var categoriesArgument = attribute.GetNamedArgument<IEnumerable<string>>(nameof(WithRequirementsAttribute.Categories));
-            foreach (var category in categoriesArgument) requirements.Add(category);
-        }
-
-        return requirements;
     }
 }

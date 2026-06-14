@@ -7,8 +7,8 @@ using TryAtSoftware.Extensions.Collections;
 
 internal class CleanUtilityDescriptor : ICleanUtilityDescriptor
 {
-    private readonly HashSet<string> _characteristics = new();
-    private readonly HashSet<string> _internalRequirements = new ();
+    private readonly HashSet<string> _characteristics = [];
+    private readonly HashSet<string> _internalRequirements = [];
 
     /// <inheritdoc />
     public string Category { get; }

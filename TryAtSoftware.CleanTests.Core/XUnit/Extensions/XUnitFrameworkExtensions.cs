@@ -10,6 +10,7 @@ using TryAtSoftware.CleanTests.Core.XUnit.Interfaces;
 using TryAtSoftware.Extensions.Collections;
 using TryAtSoftware.Extensions.Reflection;
 using Xunit.Abstractions;
+using Xunit.Sdk;
 
 internal static class XUnitFrameworkExtensions
 {
@@ -44,5 +45,5 @@ internal static class XUnitFrameworkExtensions
         return $"{value} ({string.Join(", ", node.Dependencies.Select(x => x.GetUniqueId()))})";
     }
 
-    public static bool IsCleanTest(this ITypeInfo? typeInfo) => typeInfo is not null && typeInfo.Interfaces.Any(i => i.ToRuntimeType() == typeof(ICleanTest));
+    public static bool IsCleanTest(this Type? typeInfo) => typeInfo is not null && typeInfo.Implements(typeof(ICleanTest));
 }
